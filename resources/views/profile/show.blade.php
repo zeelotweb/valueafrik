@@ -24,11 +24,20 @@ $countryFlag = \App\Support\Countries::flag($profile?->country);
                 </div>
             </div>
 
-            @if ($isOwnProfile)
-                <a href="{{ route('profile.edit') }}" wire:navigate class="absolute top-4 end-4">
-                    <flux:button size="sm" variant="ghost">{{ __('Edit profile') }}</flux:button>
-                </a>
-            @endif
+            <div class="absolute top-4 end-4 flex items-center gap-2">
+                @if ($isOwnProfile)
+                    <a href="{{ route('profile.edit') }}" wire:navigate>
+                        <flux:button size="sm" variant="ghost">{{ __('Edit profile') }}</flux:button>
+                    </a>
+                @else
+                    <flux:tooltip content="{{ __('Messaging is coming soon') }}">
+                        <flux:button size="sm" variant="ghost" disabled data-test="message-button">
+                            {{ __('Message') }}
+                        </flux:button>
+                    </flux:tooltip>
+                    <livewire:pages::profile.follow-button :user="$user" :key="'follow-'.$user->id" />
+                @endif
+            </div>
         </div>
 
         <div class="mt-12 px-2">
@@ -40,6 +49,8 @@ $countryFlag = \App\Support\Countries::flag($profile?->country);
                     <span>{{ $countryName }}</span>
                 </div>
             @endif
+
+            <livewire:pages::profile.follower-counts :user="$user" :key="'counts-'.$user->id" />
 
             @if ($profile?->bio)
                 <div
