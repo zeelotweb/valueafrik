@@ -42,7 +42,25 @@ $countryFlag = \App\Support\Countries::flag($profile?->country);
             @endif
 
             @if ($profile?->bio)
-                <p class="mt-4 max-w-xl text-zinc-700 dark:text-zinc-300">{{ $profile->bio }}</p>
+                <div
+                    x-data="{ expanded: false, isLong: {{ Str::length($profile->bio) > 220 ? 'true' : 'false' }} }"
+                    class="mt-4 max-w-xl"
+                >
+                    <p
+                        class="text-zinc-700 dark:text-zinc-300"
+                        x-bind:class="isLong && ! expanded ? 'line-clamp-3' : ''"
+                    >{{ $profile->bio }}</p>
+
+                    <button
+                        type="button"
+                        x-show="isLong"
+                        x-on:click="expanded = ! expanded"
+                        class="mt-1 text-sm font-medium text-cyan-600 hover:text-cyan-500 dark:text-cyan-400"
+                    >
+                        <span x-show="! expanded">{{ __('Show more') }}</span>
+                        <span x-show="expanded">{{ __('Show less') }}</span>
+                    </button>
+                </div>
             @endif
 
             @if ($user->languages->isNotEmpty())
