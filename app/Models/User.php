@@ -99,6 +99,38 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
         return $this->following()->whereKey($user->id)->exists();
     }
 
+    public function wallPosts(): HasMany
+    {
+        return $this->hasMany(WallPost::class);
+    }
+
+    public function ownedCommunities(): HasMany
+    {
+        return $this->hasMany(Community::class, 'owner_id');
+    }
+
+    /**
+     * Communities this user is a member of (including ones they own).
+     */
+    public function communities(): BelongsToMany
+    {
+        return $this->belongsToMany(Community::class, 'community_user')
+            ->withPivot('role')
+            ->withTimestamps();
+    }
+
+    public function communityPosts(): HasMany
+    {
+        return $this->hasMany(CommunityPost::class);
+    }
+
+    public function conversations(): BelongsToMany
+    {
+        return $this->belongsToMany(Conversation::class, 'conversation_user')
+            ->withPivot('last_read_at')
+            ->withTimestamps();
+    }
+
     /**
      * Get the user's initials
      */

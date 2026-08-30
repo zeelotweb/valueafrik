@@ -119,6 +119,18 @@ $countryFlag = \App\Support\Countries::flag($profile?->country);
                     </flux:text>
                 </div>
             @endif
+
+            <div class="mt-10 border-t border-zinc-200 pt-8 dark:border-zinc-700">
+                <flux:heading size="lg">{{ __('Wall') }}</flux:heading>
+
+                <div class="mt-4">
+                    @if ($isOwnProfile)
+                        <livewire:pages::profile.wall-composer :key="'wall-composer-'.$user->id" />
+                    @endif
+
+                    <livewire:pages::profile.wall-posts :user="$user" :key="'wall-posts-'.$user->id" />
+                </div>
+            </div>
         </div>
     </div>
 </x-layouts::app>
