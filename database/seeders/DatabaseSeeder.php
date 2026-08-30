@@ -15,17 +15,25 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Reference data every environment needs, production included.
+        // Safe to run with `composer install --no-dev` since it never
+        // touches model factories / the fake() helper.
         $this->call([
             LanguageSeeder::class,
             HeritageSeeder::class,
             InterestSeeder::class,
         ]);
 
-        // User::factory(10)->create();
+        // Local/testing convenience data only — factories require
+        // fakerphp/faker, which is deliberately dev-only and won't be
+        // installed in production.
+        if (! app()->isProduction()) {
+            // User::factory(10)->create();
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+            User::factory()->create([
+                'name' => 'Test User',
+                'email' => 'test@example.com',
+            ]);
+        }
     }
 }
