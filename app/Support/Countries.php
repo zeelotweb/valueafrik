@@ -41,4 +41,25 @@ class Countries
             'TO' => 'Tonga', 'PG' => 'Papua New Guinea',
         ];
     }
+
+    public static function name(?string $code): ?string
+    {
+        return $code ? (self::all()[$code] ?? null) : null;
+    }
+
+    /**
+     * Build a flag emoji from an ISO 3166-1 alpha-2 code by mapping each
+     * letter to its Unicode regional indicator symbol.
+     */
+    public static function flag(?string $code): ?string
+    {
+        if (! $code || strlen($code) !== 2) {
+            return null;
+        }
+
+        return implode('', array_map(
+            fn (string $letter) => mb_chr(127397 + ord($letter)),
+            str_split(strtoupper($code))
+        ));
+    }
 }

@@ -1,13 +1,18 @@
 <?php
 
 use App\Http\Controllers\Auth\SocialAuthController;
+use App\Http\Controllers\ProfileShowController;
 use App\Livewire\Actions\Logout;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
+
+    Route::get('profile', fn () => redirect()->route('profile.show', Auth::user()));
+    Route::get('u/{user}', ProfileShowController::class)->name('profile.show');
 });
 
 Route::post('logout', Logout::class)
