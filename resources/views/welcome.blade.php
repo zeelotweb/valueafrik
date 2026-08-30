@@ -43,6 +43,8 @@ $pillars = [
         'phase' => 'Cross-phase',
     ],
 ];
+
+$recentMembers = \App\Models\User::with('profile')->latest()->take(5)->get();
 ?>
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -140,6 +142,42 @@ $pillars = [
                     </div>
                 </div>
             </section>
+
+            @if ($recentMembers->isNotEmpty())
+                <section class="border-t border-stone-200 dark:border-stone-800">
+                    <div class="mx-auto max-w-6xl px-6 py-16">
+                        <h2 class="text-sm font-medium tracking-widest text-cyan-600 uppercase dark:text-cyan-400">
+                            Members
+                        </h2>
+                        <p class="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
+                            Sneak Peek: Our Community
+                        </p>
+                        <p class="mt-3 text-stone-600 dark:text-stone-400">
+                            Temporary jump-off point to real profiles while proper discovery is still being built.
+                        </p>
+
+                        <div class="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+                            @foreach ($recentMembers as $member)
+                                <a
+                                    href="{{ route('profile.show', $member) }}"
+                                    class="flex flex-col items-center gap-3 rounded-xl border border-stone-200 p-5 text-center hover:border-cyan-600 dark:border-stone-800 dark:hover:border-cyan-500"
+                                >
+                                    <div class="size-14 overflow-hidden rounded-full bg-stone-100 dark:bg-stone-800">
+                                        @if ($member->profile?->avatarUrl())
+                                            <img src="{{ $member->profile->avatarUrl() }}" class="size-full object-cover" alt="">
+                                        @else
+                                            <div class="flex size-full items-center justify-center text-stone-400">
+                                                <flux:icon.user class="size-6" />
+                                            </div>
+                                        @endif
+                                    </div>
+                                    <span class="truncate text-sm font-medium">{{ $member->name }}</span>
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+                </section>
+            @endif
         </main>
 
         <footer class="border-t border-stone-200 dark:border-stone-800">
