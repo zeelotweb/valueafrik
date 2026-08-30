@@ -6,3 +6,4 @@
 
 import './echo';
 import './passkeys';
+import './uploads';
