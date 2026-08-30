@@ -15,6 +15,7 @@
 
             <template x-if="! usingRecoveryCode">
                 <flux:input
+                    icon="device-phone-mobile"
                     name="code"
                     :label="__('Code')"
                     type="text"
@@ -27,6 +28,7 @@
 
             <template x-if="usingRecoveryCode">
                 <flux:input
+                    icon="key"
                     name="recovery_code"
                     :label="__('Recovery code')"
                     type="text"

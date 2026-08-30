@@ -71,7 +71,7 @@ $pillars = [
                         <a href="{{ route('login') }}" class="text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white">
                             Log in
                         </a>
-                        <a href="{{ route('login') }}" class="rounded-md bg-cyan-600 px-4 py-2 font-medium text-white hover:bg-cyan-500">
+                        <a href="{{ route('register') }}" class="rounded-md bg-cyan-600 px-4 py-2 font-medium text-white hover:bg-cyan-500">
                             Join Free
                         </a>
                     @endauth
@@ -94,7 +94,7 @@ $pillars = [
                 </p>
                 <div class="mt-8 flex items-center justify-center gap-4">
                     @guest
-                        <a href="{{ route('login') }}" class="rounded-md bg-cyan-600 px-6 py-3 font-medium text-white hover:bg-cyan-500">
+                        <a href="{{ route('register') }}" class="rounded-md bg-cyan-600 px-6 py-3 font-medium text-white hover:bg-cyan-500">
                             Join Free
                         </a>
                         <a href="{{ route('login') }}" class="rounded-md border border-stone-300 px-6 py-3 font-medium text-stone-700 hover:border-stone-400 dark:border-stone-700 dark:text-stone-300 dark:hover:border-stone-600">

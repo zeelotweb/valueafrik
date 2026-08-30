@@ -7,10 +7,10 @@
         <div class="bg-background flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
             <div class="flex w-full max-w-sm flex-col gap-2">
                 <a href="{{ route('home') }}" class="flex flex-col items-center gap-2 font-medium" wire:navigate>
-                    <span class="flex h-9 w-9 mb-1 items-center justify-center rounded-md">
-                        <x-app-logo-icon class="size-9 fill-current text-black dark:text-white" />
+                    <img src="{{ asset('apple-touch-icon-180x180.png') }}" alt="valueAFRIK" class="mb-1 size-9 dark:invert">
+                    <span class="text-lg font-semibold tracking-tight">
+                        <span class="text-cyan-600">value</span><span class="text-stone-900 dark:text-white">AFRIK</span>
                     </span>
-                    <span class="sr-only">{{ config('app.name', 'Laravel') }}</span>
                 </a>
                 <div class="flex flex-col gap-6">
                     {{ $slot }}

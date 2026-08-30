@@ -12,6 +12,7 @@
 
             <!-- Email Address -->
             <flux:input
+                icon="envelope"
                 name="email"
                 value="{{ request('email') }}"
                 :label="__('Email')"
@@ -22,6 +23,7 @@
 
             <!-- Password -->
             <flux:input
+                icon="lock-closed"
                 name="password"
                 :label="__('Password')"
                 type="password"
@@ -34,6 +36,7 @@
 
             <!-- Confirm Password -->
             <flux:input
+                icon="lock-closed"
                 name="password_confirmation"
                 :label="__('Confirm password')"
                 type="password"

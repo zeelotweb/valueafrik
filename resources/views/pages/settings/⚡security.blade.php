@@ -207,4 +207,65 @@ new #[Title('Security settings')] class extends Component {
         </div>
         </x-pages::settings.layout>
     @endif
+
+    @if (Features::enabled(Features::passkeys()))
+        <flux:separator variant="subtle" class="my-10" />
+
+        <x-pages::settings.layout :heading="__('Passkeys')" :subheading="__('Manage your passkeys for passwordless sign-in')">
+            <div
+                x-data="{ name: '', busy: false, error: null }"
+                class="mt-6 space-y-6"
+            >
+                @forelse (Auth::user()->passkeys as $passkey)
+                    <div class="flex items-center justify-between rounded-lg border border-zinc-200 px-4 py-3 dark:border-zinc-700">
+                        <div>
+                            <flux:text class="font-medium text-zinc-900 dark:text-white">{{ $passkey->name }}</flux:text>
+                            <flux:text class="text-sm">
+                                {{ __('Added :date', ['date' => $passkey->created_at->diffForHumans()]) }}
+                                @if ($passkey->last_used_at)
+                                    &middot; {{ __('Last used :date', ['date' => $passkey->last_used_at->diffForHumans()]) }}
+                                @endif
+                            </flux:text>
+                        </div>
+                        <flux:button
+                            variant="danger"
+                            size="sm"
+                            x-on:click="if (confirm('{{ __('Remove this passkey?') }}')) { window.Passkeys.deletePasskey({{ $passkey->id }}).then(() => window.location.reload()); }"
+                        >
+                            {{ __('Remove') }}
+                        </flux:button>
+                    </div>
+                @empty
+                    <flux:text>
+                        {{ __('Add a passkey to sign in without a password') }}
+                    </flux:text>
+                @endforelse
+
+                <template x-if="error">
+                    <flux:callout variant="danger" icon="exclamation-triangle" x-bind:heading="error" />
+                </template>
+
+                <form
+                    class="flex max-w-sm items-end gap-4"
+                    x-on:submit.prevent="
+                        busy = true; error = null;
+                        window.Passkeys.registerPasskey(name)
+                            .then(() => window.location.reload())
+                            .catch((e) => { error = e.message; busy = false; });
+                    "
+                >
+                    <flux:input
+                        x-model="name"
+                        :label="__('Passkey name')"
+                        type="text"
+                        required
+                        placeholder="{{ __('e.g. MacBook Touch ID') }}"
+                    />
+                    <flux:button type="submit" variant="primary" x-bind:disabled="busy" data-test="add-passkey-button">
+                        {{ __('Add passkey') }}
+                    </flux:button>
+                </form>
+            </div>
+        </x-pages::settings.layout>
+    @endif
 </section>

@@ -10,6 +10,7 @@
 
             <!-- Email Address -->
             <flux:input
+                icon="envelope"
                 name="email"
                 :label="__('Email address')"
                 type="email"
