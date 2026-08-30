@@ -4,9 +4,12 @@ use App\Concerns\PasswordValidationRules;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use Laravel\Fortify\Actions\ConfirmTwoFactorAuthentication;
 use Laravel\Fortify\Actions\DisableTwoFactorAuthentication;
+use Laravel\Fortify\Actions\EnableTwoFactorAuthentication;
+use Laravel\Fortify\Actions\GenerateNewRecoveryCodes;
 use Laravel\Fortify\Features;
-use Laravel\Fortify\Fortify;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
@@ -17,15 +20,10 @@ new #[Title('Security settings')] class extends Component {
     public string $password = '';
     public string $password_confirmation = '';
 
+    public string $code = '';
 
-
-    /**
-     * Mount the component.
-     */
-    public function mount(DisableTwoFactorAuthentication $disableTwoFactorAuthentication): void
-    {
-
-    }
+    public bool $showingQrCode = false;
+    public bool $showingRecoveryCodes = false;
 
     /**
      * Update the password for the currently authenticated user.
@@ -52,6 +50,53 @@ new #[Title('Security settings')] class extends Component {
         Flux::toast(variant: 'success', text: __('Password updated.'));
     }
 
+    #[Computed]
+    public function twoFactorEnabled(): bool
+    {
+        return Auth::user()->hasEnabledTwoFactorAuthentication();
+    }
+
+    public function enableTwoFactorAuthentication(EnableTwoFactorAuthentication $enable): void
+    {
+        $enable(Auth::user());
+
+        $this->showingQrCode = true;
+
+        unset($this->twoFactorEnabled);
+    }
+
+    public function confirmTwoFactorAuthentication(ConfirmTwoFactorAuthentication $confirm): void
+    {
+        $confirm(Auth::user(), $this->code);
+
+        $this->reset('code');
+        $this->showingQrCode = false;
+        $this->showingRecoveryCodes = true;
+
+        unset($this->twoFactorEnabled);
+
+        Flux::toast(variant: 'success', text: __('Two-factor authentication confirmed.'));
+    }
+
+    public function disableTwoFactorAuthentication(DisableTwoFactorAuthentication $disable): void
+    {
+        $disable(Auth::user());
+
+        $this->reset('code', 'showingQrCode', 'showingRecoveryCodes');
+
+        unset($this->twoFactorEnabled);
+
+        Flux::toast(variant: 'success', text: __('Two-factor authentication disabled.'));
+    }
+
+    public function regenerateRecoveryCodes(GenerateNewRecoveryCodes $generate): void
+    {
+        $generate(Auth::user());
+
+        $this->showingRecoveryCodes = true;
+
+        Flux::toast(variant: 'success', text: __('Recovery codes regenerated.'));
+    }
 
 }; ?>
 
@@ -95,8 +140,71 @@ new #[Title('Security settings')] class extends Component {
                 </flux:button>
             </div>
         </form>
-
-
     </x-pages::settings.layout>
 
+    @if (Features::enabled(Features::twoFactorAuthentication()))
+        <flux:separator variant="subtle" class="my-10" />
+
+        <x-pages::settings.layout :heading="__('Two-factor authentication')" :subheading="__('Add an extra layer of security to your account using an authenticator app')">
+        <div class="mt-6 space-y-6">
+            @if ($this->twoFactorEnabled && ! $showingQrCode)
+                <flux:callout variant="success" icon="shield-check" :heading="__('Two-factor authentication is enabled.')" />
+
+                @if ($showingRecoveryCodes)
+                    <div class="space-y-3">
+                        <flux:text>
+                            {{ __('Store these recovery codes in a secure password manager. They can be used to recover access to your account if your two-factor authentication device is lost.') }}
+                        </flux:text>
+                        <div class="grid gap-1 rounded-lg bg-zinc-100 p-4 font-mono text-sm dark:bg-zinc-800">
+                            @foreach (Auth::user()->recoveryCodes() as $code)
+                                <div>{{ $code }}</div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
+                <div class="flex items-center gap-4">
+                    <flux:button wire:click="regenerateRecoveryCodes" variant="ghost" data-test="regenerate-recovery-codes-button">
+                        {{ __('Regenerate recovery codes') }}
+                    </flux:button>
+                    <flux:button wire:click="disableTwoFactorAuthentication" variant="danger" data-test="disable-two-factor-button">
+                        {{ __('Disable') }}
+                    </flux:button>
+                </div>
+            @elseif ($showingQrCode)
+                <flux:text>
+                    {{ __('Scan the QR code below with your authenticator app, then enter the generated code to confirm setup.') }}
+                </flux:text>
+
+                <div class="w-fit rounded-lg bg-white p-4">
+                    {!! Auth::user()->twoFactorQrCodeSvg() !!}
+                </div>
+
+                <form wire:submit="confirmTwoFactorAuthentication" class="flex max-w-xs items-end gap-4">
+                    <flux:input
+                        wire:model="code"
+                        :label="__('Confirmation code')"
+                        type="text"
+                        inputmode="numeric"
+                        autocomplete="one-time-code"
+                        autofocus
+                        required
+                        data-test="two-factor-code-input"
+                    />
+                    <flux:button variant="primary" type="submit" data-test="confirm-two-factor-button">
+                        {{ __('Confirm') }}
+                    </flux:button>
+                </form>
+            @else
+                <flux:text>
+                    {{ __('Two-factor authentication is not enabled yet. Enable it to require a code from your authenticator app when logging in.') }}
+                </flux:text>
+
+                <flux:button wire:click="enableTwoFactorAuthentication" variant="primary" data-test="enable-two-factor-button">
+                    {{ __('Enable two-factor authentication') }}
+                </flux:button>
+            @endif
+        </div>
+        </x-pages::settings.layout>
+    @endif
 </section>
