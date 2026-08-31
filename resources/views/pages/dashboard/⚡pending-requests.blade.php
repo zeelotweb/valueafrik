@@ -64,7 +64,7 @@ new class extends Component {
         </div>
     @empty
         <div class="rounded-lg border border-dashed border-zinc-300 p-6 text-center dark:border-zinc-700">
-            <flux:text>{{ __("You're all caught up.") }}</flux:text>
+            <flux:text>{{ __('No pending community requests.') }}</flux:text>
         </div>
     @endforelse
 </div>

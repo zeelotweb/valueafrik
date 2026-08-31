@@ -1,0 +1,167 @@
+<?php
+
+use App\Models\BridgePost;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+use Livewire\Component;
+use Livewire\WithFileUploads;
+
+new class extends Component {
+    use WithFileUploads;
+
+    public User $user;
+    public ?int $editingId = null;
+    public string $sideBody = '';
+
+    /** @var \Livewire\Features\SupportFileUploads\TemporaryUploadedFile[] */
+    public array $sidePhotos = [];
+
+    public function startSide(int $bridgePostId): void
+    {
+        $this->editingId = $bridgePostId;
+        $this->sideBody = '';
+        $this->sidePhotos = [];
+    }
+
+    public function cancelSide(): void
+    {
+        $this->editingId = null;
+        $this->reset(['sideBody', 'sidePhotos']);
+    }
+
+    public function submitSide(): void
+    {
+        $bridgePost = BridgePost::findOrFail($this->editingId);
+        $side = $bridgePost->sideFor(Auth::user());
+
+        abort_if($side === null, 403);
+
+        $this->validate([
+            'sideBody' => ['required', 'string', 'max:3000'],
+            'sidePhotos' => ['array', 'max:4'],
+            'sidePhotos.*' => ['image', 'max:8192'],
+        ]);
+
+        $bridgePost->update(["{$side}_body" => $this->sideBody]);
+
+        foreach ($this->sidePhotos as $photo) {
+            $bridgePost->media()->create([
+                'user_id' => Auth::id(),
+                'disk' => 'public',
+                'path' => $photo->store('bridge-post-media', 'public'),
+                'mime_type' => $photo->getMimeType(),
+                'type' => 'image',
+                'size' => $photo->getSize(),
+            ]);
+        }
+
+        if ($bridgePost->fresh()->isComplete()) {
+            $bridgePost->initiator->awardBridgeScore('bridge_post_completed', $bridgePost);
+            $bridgePost->partner->awardBridgeScore('bridge_post_completed', $bridgePost);
+        }
+
+        $this->editingId = null;
+        $this->reset(['sideBody', 'sidePhotos']);
+    }
+
+    public function with(): array
+    {
+        $bridgePosts = BridgePost::query()
+            ->where('status', BridgePost::STATUS_ACTIVE)
+            ->where(fn ($query) => $query->where('initiator_id', $this->user->id)->orWhere('partner_id', $this->user->id))
+            ->with(['initiator.profile', 'partner.profile', 'media'])
+            ->latest()
+            ->get();
+
+        return ['bridgePosts' => $bridgePosts];
+    }
+}; ?>
+
+<div class="mb-6 space-y-4" wire:key="bridge-posts-{{ $user->id }}">
+    @foreach ($bridgePosts as $post)
+        @php
+            $viewerSide = $post->sideFor(Auth::user());
+            $initiatorMedia = $post->media->where('user_id', $post->initiator_id);
+            $partnerMedia = $post->media->where('user_id', $post->partner_id);
+        @endphp
+
+        <div class="overflow-hidden rounded-xl border border-cyan-200 dark:border-cyan-900" wire:key="bridge-post-{{ $post->id }}">
+            <div class="flex items-center gap-2 bg-cyan-50 px-4 py-2 dark:bg-cyan-950/40">
+                <flux:icon.arrows-right-left class="size-4 text-cyan-600 dark:text-cyan-400" />
+                <span class="text-sm font-medium text-cyan-700 dark:text-cyan-300">{{ __('Bridge Post') }} — {{ $post->theme }}</span>
+            </div>
+
+            <div class="grid divide-y divide-zinc-200 sm:grid-cols-2 sm:divide-x sm:divide-y-0 dark:divide-zinc-700">
+                @foreach ([
+                    ['user' => $post->initiator, 'body' => $post->initiator_body, 'media' => $initiatorMedia, 'side' => 'initiator'],
+                    ['user' => $post->partner, 'body' => $post->partner_body, 'media' => $partnerMedia, 'side' => 'partner'],
+                ] as $column)
+                    <div class="p-4">
+                        <div class="flex items-center gap-2">
+                            <div class="size-8 shrink-0 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-700">
+                                @if ($column['user']->profile?->avatarUrl())
+                                    <img src="{{ $column['user']->profile->avatarUrl() }}" class="size-full object-cover">
+                                @else
+                                    <div class="flex size-full items-center justify-center text-zinc-500">
+                                        <flux:icon.user class="size-4" />
+                                    </div>
+                                @endif
+                            </div>
+                            <span class="text-sm font-medium text-zinc-900 dark:text-white">{{ $column['user']->name }}</span>
+                        </div>
+
+                        @if ($column['body'])
+                            <p class="mt-3 whitespace-pre-line text-sm text-zinc-700 dark:text-zinc-300">{{ $column['body'] }}</p>
+
+                            @if ($column['media']->isNotEmpty())
+                                <div class="mt-3 grid grid-cols-2 gap-2">
+                                    @foreach ($column['media'] as $media)
+                                        <img src="{{ $media->url() }}" class="aspect-square w-full rounded-lg object-cover">
+                                    @endforeach
+                                </div>
+                            @endif
+                        @elseif ($viewerSide === $column['side'])
+                            @if ($editingId === $post->id)
+                                <div class="mt-3 space-y-2">
+                                    <flux:textarea wire:model="sideBody" rows="3" placeholder="{{ __('Your side of the story…') }}" />
+
+                                    @if ($sidePhotos)
+                                        <div class="grid grid-cols-4 gap-2">
+                                            @foreach ($sidePhotos as $photo)
+                                                <img src="{{ $photo->temporaryUrl() }}" class="aspect-square w-full rounded-lg object-cover">
+                                            @endforeach
+                                        </div>
+                                    @endif
+
+                                    <div class="flex items-center justify-between">
+                                        <label class="cursor-pointer text-xs font-medium text-cyan-600 hover:text-cyan-500 dark:text-cyan-400">
+                                            <input type="file" wire:model="sidePhotos" multiple accept="image/*" class="hidden">
+                                            {{ __('Add photos') }}
+                                        </label>
+
+                                        <div class="flex gap-2">
+                                            <flux:button size="sm" variant="ghost" wire:click="cancelSide">{{ __('Cancel') }}</flux:button>
+                                            <flux:button size="sm" variant="primary" class="!bg-cyan-600 hover:!bg-cyan-500" wire:click="submitSide">
+                                                {{ __('Post my side') }}
+                                            </flux:button>
+                                        </div>
+                                    </div>
+
+                                    @error('sideBody') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                                </div>
+                            @else
+                                <flux:button size="sm" variant="ghost" class="mt-3" wire:click="startSide({{ $post->id }})">
+                                    {{ __('Add your side') }}
+                                </flux:button>
+                            @endif
+                        @else
+                            <p class="mt-3 text-sm italic text-zinc-400 dark:text-zinc-500">
+                                {{ __('Waiting for :name to add their side.', ['name' => $column['user']->name]) }}
+                            </p>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endforeach
+</div>

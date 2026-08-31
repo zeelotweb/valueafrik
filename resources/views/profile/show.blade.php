@@ -154,7 +154,10 @@ $countryFlag = \App\Support\Countries::flag($profile?->country);
                 <div x-show="tab === 'wall'" class="mt-4">
                     @if ($isOwnProfile)
                         <livewire:pages::profile.wall-composer :key="'wall-composer-'.$user->id" />
+                        <livewire:pages::profile.bridge-post-composer :key="'bridge-post-composer-'.$user->id" />
                     @endif
+
+                    <livewire:pages::profile.bridge-posts :user="$user" :key="'bridge-posts-'.$user->id" />
 
                     <livewire:pages::profile.wall-posts :user="$user" :key="'wall-posts-'.$user->id" />
                 </div>

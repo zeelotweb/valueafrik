@@ -66,8 +66,19 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
                 <div class="flex items-center justify-between">
                     <flux:heading size="lg">{{ __('Needs your attention') }}</flux:heading>
                 </div>
+
                 <div class="mt-3">
-                    <livewire:pages::dashboard.pending-requests />
+                    <flux:subheading>{{ __('Bridge Post invites') }}</flux:subheading>
+                    <div class="mt-2">
+                        <livewire:pages::dashboard.bridge-post-invites />
+                    </div>
+                </div>
+
+                <div class="mt-5">
+                    <flux:subheading>{{ __('Community requests') }}</flux:subheading>
+                    <div class="mt-2">
+                        <livewire:pages::dashboard.pending-requests />
+                    </div>
                 </div>
             </div>
 

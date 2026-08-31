@@ -52,5 +52,5 @@ test('a non moderator sees no pending requests on the dashboard', function () {
 
     Livewire::actingAs($user)
         ->test('pages::dashboard.pending-requests')
-        ->assertSee("You're all caught up.");
+        ->assertSee('No pending community requests.');
 });

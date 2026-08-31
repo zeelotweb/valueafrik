@@ -23,6 +23,7 @@ return [
         'community_post' => 1,
         'conversation_started' => 3,
         'promoted_to_monitor' => 10,
+        'bridge_post_completed' => 5,
     ],
 
     /*
