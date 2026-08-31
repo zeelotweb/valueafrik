@@ -30,11 +30,7 @@ $countryFlag = \App\Support\Countries::flag($profile?->country);
                         <flux:button size="sm" variant="ghost">{{ __('Edit profile') }}</flux:button>
                     </a>
                 @else
-                    <flux:tooltip content="{{ __('Messaging is coming soon') }}">
-                        <flux:button size="sm" variant="ghost" disabled data-test="message-button">
-                            {{ __('Message') }}
-                        </flux:button>
-                    </flux:tooltip>
+                    <livewire:pages::profile.message-button :user="$user" :key="'message-'.$user->id" />
                     <livewire:pages::profile.follow-button :user="$user" :key="'follow-'.$user->id" />
                 @endif
             </div>

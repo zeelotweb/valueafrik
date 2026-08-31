@@ -15,6 +15,15 @@
                     <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
                         {{ __('Dashboard') }}
                     </flux:sidebar.item>
+
+                    <flux:sidebar.item icon="chat-bubble-left-right" :href="route('messages.index')" :current="request()->routeIs('messages.*')" wire:navigate>
+                        {{ __('Messages') }}
+
+                        @php $unread = auth()->user()->unreadConversationsCount(); @endphp
+                        @if ($unread > 0)
+                            <flux:badge size="sm" color="cyan" class="ms-auto">{{ $unread }}</flux:badge>
+                        @endif
+                    </flux:sidebar.item>
                 </flux:sidebar.group>
             </flux:sidebar.nav>
 

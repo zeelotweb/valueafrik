@@ -127,8 +127,23 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     public function conversations(): BelongsToMany
     {
         return $this->belongsToMany(Conversation::class, 'conversation_user')
+            ->using(ConversationUser::class)
             ->withPivot('last_read_at')
             ->withTimestamps();
+    }
+
+    public function unreadConversationsCount(): int
+    {
+        return $this->conversations()
+            ->with('latestMessage')
+            ->whereHas('latestMessage', fn ($query) => $query->where('user_id', '!=', $this->id))
+            ->get()
+            ->filter(function ($conversation) {
+                $lastRead = $conversation->pivot->last_read_at;
+
+                return ! $lastRead || $lastRead->lt($conversation->latestMessage->created_at);
+            })
+            ->count();
     }
 
     /**

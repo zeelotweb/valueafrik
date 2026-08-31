@@ -13,6 +13,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('profile', fn () => redirect()->route('profile.show', Auth::user()));
     Route::get('u/{user}', ProfileShowController::class)->name('profile.show');
+
+    Route::livewire('messages', 'pages::messages.inbox')->name('messages.index');
+    Route::livewire('messages/{conversation}', 'pages::messages.show')->name('messages.show');
 });
 
 Route::post('logout', Logout::class)
