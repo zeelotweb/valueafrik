@@ -30,6 +30,8 @@ new class extends Component {
             'body' => $this->body !== '' ? $this->body : null,
         ]);
 
+        Auth::user()->awardBridgeScore('wall_post', $post);
+
         foreach ($this->photos as $photo) {
             $post->media()->create([
                 'user_id' => Auth::id(),

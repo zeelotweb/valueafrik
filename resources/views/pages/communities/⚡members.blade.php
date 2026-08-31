@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Community;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -20,6 +21,8 @@ new class extends Component {
 
         $this->community->members()->updateExistingPivot($userId, ['status' => 'active']);
 
+        User::find($userId)?->awardBridgeScore('community_joined', $this->community);
+
         $this->dispatch('community-membership-changed');
     }
 
@@ -38,6 +41,8 @@ new class extends Component {
         abort_unless($this->community->canPromoteMonitor(), 422);
 
         $this->community->members()->updateExistingPivot($userId, ['role' => 'monitor']);
+
+        User::find($userId)?->awardBridgeScore('promoted_to_monitor', $this->community);
 
         $this->dispatch('community-membership-changed');
     }

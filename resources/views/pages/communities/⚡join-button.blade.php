@@ -31,6 +31,10 @@ new class extends Component {
 
         $this->community->members()->attach($user->id, ['role' => 'member', 'status' => $status]);
 
+        if ($status === 'active') {
+            $user->awardBridgeScore('community_joined', $this->community);
+        }
+
         unset($this->membership, $this->joinable);
         $this->dispatch('community-membership-changed');
     }

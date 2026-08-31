@@ -42,6 +42,8 @@ new class extends Component {
             'body' => $this->body !== '' ? $this->body : null,
         ]);
 
+        Auth::user()->awardBridgeScore('community_post', $post);
+
         foreach ($this->photos as $photo) {
             $post->media()->create([
                 'user_id' => Auth::id(),

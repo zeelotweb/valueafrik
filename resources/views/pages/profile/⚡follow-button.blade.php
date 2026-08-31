@@ -24,6 +24,14 @@ new class extends Component {
             $viewer->following()->detach($this->user->id);
         } else {
             $viewer->following()->attach($this->user->id);
+
+            $viewer->awardBridgeScore('follow', $this->user);
+
+            if ($viewer->isCrossHeritageWith($this->user)) {
+                $viewer->awardBridgeScore('follow_cross_heritage_bonus', $this->user);
+            }
+
+            $this->user->awardBridgeScore('followed_by_someone', $viewer);
         }
 
         unset($this->isFollowing);

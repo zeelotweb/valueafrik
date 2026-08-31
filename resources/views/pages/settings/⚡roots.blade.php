@@ -102,6 +102,15 @@ new #[Title('Roots')] class extends Component {
         $user->heritages()->sync($this->heritageIds);
         $user->interests()->sync($this->interestIds);
 
+        if (
+            ! $user->hasEarnedBridgeScoreFor('roots_completed')
+            && $this->bio !== ''
+            && $this->languageIds !== []
+            && $this->heritageIds !== []
+        ) {
+            $user->awardBridgeScore('roots_completed');
+        }
+
         Flux::toast(variant: 'success', text: __('Your Roots have been updated.'));
     }
 }; ?>

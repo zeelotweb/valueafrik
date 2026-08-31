@@ -7,6 +7,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -167,6 +168,70 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
                 return ! $lastRead || $lastRead->lt($conversation->latestMessage->created_at);
             })
             ->count();
+    }
+
+    /**
+     * Whether this user and another share no declared heritage — used to award
+     * a bonus for connections that actually cross a cultural line, not just
+     * any connection.
+     */
+    public function isCrossHeritageWith(User $other): bool
+    {
+        $mine = $this->heritages()->pluck('heritages.id');
+        $theirs = $other->heritages()->pluck('heritages.id');
+
+        return $mine->isNotEmpty() && $theirs->isNotEmpty() && $mine->intersect($theirs)->isEmpty();
+    }
+
+    public function bridgeScoreEvents(): HasMany
+    {
+        return $this->hasMany(BridgeScoreEvent::class);
+    }
+
+    public function bridgeScore(): int
+    {
+        return (int) $this->bridgeScoreEvents()->sum('points');
+    }
+
+    public function hasEarnedBridgeScoreFor(string $reason): bool
+    {
+        return $this->bridgeScoreEvents()->where('reason', $reason)->exists();
+    }
+
+    public function awardBridgeScore(string $reason, ?Model $subject = null): BridgeScoreEvent
+    {
+        $event = new BridgeScoreEvent([
+            'user_id' => $this->id,
+            'points' => config("bridge_score.points.{$reason}"),
+            'reason' => $reason,
+        ]);
+
+        if ($subject) {
+            $event->subject()->associate($subject);
+        }
+
+        $event->save();
+
+        return $event;
+    }
+
+    /**
+     * The highest badge threshold this user has crossed, or null if none yet.
+     *
+     * @return array{key: string, name: string}|null
+     */
+    public function bridgeBadge(): ?array
+    {
+        $score = $this->bridgeScore();
+        $earned = null;
+
+        foreach (config('bridge_score.badges') as $threshold => $badge) {
+            if ($score >= $threshold) {
+                $earned = $badge;
+            }
+        }
+
+        return $earned;
     }
 
     /**

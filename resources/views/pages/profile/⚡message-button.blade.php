@@ -16,6 +16,10 @@ new class extends Component {
 
         $conversation = Conversation::between($viewer, $this->user);
 
+        if ($conversation->wasRecentlyCreated) {
+            $viewer->awardBridgeScore('conversation_started', $conversation);
+        }
+
         return $this->redirect(route('messages.show', $conversation), navigate: true);
     }
 }; ?>

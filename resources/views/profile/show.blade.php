@@ -48,6 +48,21 @@ $countryFlag = \App\Support\Countries::flag($profile?->country);
 
             <livewire:pages::profile.follower-counts :user="$user" :key="'counts-'.$user->id" />
 
+            @php
+                $bridgeScore = $user->bridgeScore();
+                $bridgeBadge = $user->bridgeBadge();
+            @endphp
+
+            <div class="mt-3 flex flex-wrap items-center gap-2">
+                <flux:badge variant="pill" color="cyan" icon="sparkles">
+                    {{ trans_choice('1 bridge point|:count bridge points', $bridgeScore) }}
+                </flux:badge>
+
+                @if ($bridgeBadge)
+                    <flux:badge variant="pill" color="zinc">{{ $bridgeBadge['name'] }}</flux:badge>
+                @endif
+            </div>
+
             @if ($profile?->bio)
                 <div
                     x-data="{ expanded: false, isLong: {{ Str::length($profile->bio) > 220 ? 'true' : 'false' }} }"
