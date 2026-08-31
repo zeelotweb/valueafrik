@@ -115,8 +115,31 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     public function communities(): BelongsToMany
     {
         return $this->belongsToMany(Community::class, 'community_user')
-            ->withPivot('role')
+            ->withPivot(['role', 'status', 'points'])
             ->withTimestamps();
+    }
+
+    /**
+     * How many communities this user is currently allowed to own, based on their follower count.
+     */
+    public function communitySlotLimit(): int
+    {
+        $followerCount = $this->followers()->count();
+
+        $limit = 1;
+
+        foreach (config('communities.creation_milestones') as $threshold => $slots) {
+            if ($followerCount >= $threshold) {
+                $limit = $slots;
+            }
+        }
+
+        return $limit;
+    }
+
+    public function canCreateCommunity(): bool
+    {
+        return $this->ownedCommunities()->count() < $this->communitySlotLimit();
     }
 
     public function communityPosts(): HasMany

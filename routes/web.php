@@ -16,6 +16,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::livewire('messages', 'pages::messages.inbox')->name('messages.index');
     Route::livewire('messages/{conversation}', 'pages::messages.show')->name('messages.show');
+
+    Route::livewire('communities', 'pages::communities.index')->name('communities.index');
+    Route::livewire('communities/create', 'pages::communities.create')->name('communities.create');
+    Route::livewire('communities/{community:slug}', 'pages::communities.show')->name('communities.show');
 });
 
 Route::post('logout', Logout::class)
