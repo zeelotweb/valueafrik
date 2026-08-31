@@ -86,7 +86,11 @@ new #[Title('Messages')] class extends Component {
 
         $this->conversation->participants()->updateExistingPivot(Auth::id(), ['last_read_at' => now()]);
 
-        broadcast(new MessageSent($message))->toOthers();
+        try {
+            broadcast(new MessageSent($message))->toOthers();
+        } catch (\Throwable $e) {
+            report($e);
+        }
 
         $this->reset(['body', 'photo']);
     }

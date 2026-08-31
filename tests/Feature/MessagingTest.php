@@ -88,6 +88,23 @@ test('sending a message creates it, broadcasts it, and marks the thread read', f
     });
 });
 
+test('sending a message still succeeds even if broadcasting the event fails', function () {
+    config(['broadcasting.default' => 'not-a-real-driver']);
+
+    $a = User::factory()->create();
+    $b = User::factory()->create();
+    $conversation = Conversation::between($a, $b);
+
+    Livewire::actingAs($a)
+        ->test('pages::messages.show', ['conversation' => $conversation])
+        ->set('body', 'Should still send')
+        ->call('send')
+        ->assertHasNoErrors();
+
+    expect($conversation->messages()->count())->toBe(1);
+    expect($conversation->messages()->first()->body)->toBe('Should still send');
+});
+
 test('a message can carry a photo attachment', function () {
     $a = User::factory()->create();
     $b = User::factory()->create();
