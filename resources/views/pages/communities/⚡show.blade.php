@@ -50,7 +50,13 @@ new #[Title('Community')] class extends Component {
         </div>
 
         <div class="absolute top-4 end-4">
-            <livewire:pages::communities.join-button :community="$community" :key="'join-'.$community->id" />
+            @if (Auth::id() === $community->owner_id)
+                <flux:button :href="route('communities.edit', $community)" wire:navigate size="sm" variant="ghost">
+                    {{ __('Edit community') }}
+                </flux:button>
+            @else
+                <livewire:pages::communities.join-button :community="$community" :key="'join-'.$community->id" />
+            @endif
         </div>
     </div>
 

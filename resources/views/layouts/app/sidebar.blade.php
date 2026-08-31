@@ -28,6 +28,10 @@
                     <flux:sidebar.item icon="user-group" :href="route('communities.index')" :current="request()->routeIs('communities.*')" wire:navigate>
                         {{ __('Communities') }}
                     </flux:sidebar.item>
+
+                    <flux:sidebar.item icon="magnifying-glass" :href="route('discover.index')" :current="request()->routeIs('discover.*')" wire:navigate>
+                        {{ __('Discover') }}
+                    </flux:sidebar.item>
                 </flux:sidebar.group>
             </flux:sidebar.nav>
 

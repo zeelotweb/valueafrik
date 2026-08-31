@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\SocialAuthController;
+use App\Http\Controllers\CommunityPhotoController;
 use App\Http\Controllers\ProfileShowController;
 use App\Livewire\Actions\Logout;
 use Illuminate\Support\Facades\Auth;
@@ -17,9 +18,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('messages', 'pages::messages.inbox')->name('messages.index');
     Route::livewire('messages/{conversation}', 'pages::messages.show')->name('messages.show');
 
+    Route::livewire('discover', 'pages::discover.index')->name('discover.index');
+
     Route::livewire('communities', 'pages::communities.index')->name('communities.index');
     Route::livewire('communities/create', 'pages::communities.create')->name('communities.create');
     Route::livewire('communities/{community:slug}', 'pages::communities.show')->name('communities.show');
+    Route::livewire('communities/{community:slug}/edit', 'pages::communities.edit')->name('communities.edit');
+
+    Route::post('communities/{community:slug}/avatar', [CommunityPhotoController::class, 'updateAvatar'])->name('communities.avatar');
+    Route::post('communities/{community:slug}/cover', [CommunityPhotoController::class, 'updateCover'])->name('communities.cover');
 });
 
 Route::post('logout', Logout::class)

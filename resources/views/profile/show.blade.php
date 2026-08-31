@@ -131,15 +131,36 @@ $countryFlag = \App\Support\Countries::flag($profile?->country);
                 </div>
             @endif
 
-            <div class="mt-10 border-t border-zinc-200 pt-8 dark:border-zinc-700">
-                <flux:heading size="lg">{{ __('Wall') }}</flux:heading>
+            <div x-data="{ tab: 'wall' }" class="mt-10 border-t border-zinc-200 pt-8 dark:border-zinc-700">
+                <div class="flex items-center gap-6 border-b border-zinc-200 dark:border-zinc-700">
+                    <button
+                        type="button"
+                        x-on:click="tab = 'wall'"
+                        x-bind:class="tab === 'wall' ? 'border-cyan-600 text-cyan-600' : 'border-transparent text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'"
+                        class="border-b-2 pb-3 text-sm font-medium"
+                    >
+                        {{ __('Wall') }}
+                    </button>
+                    <button
+                        type="button"
+                        x-on:click="tab = 'communities'"
+                        x-bind:class="tab === 'communities' ? 'border-cyan-600 text-cyan-600' : 'border-transparent text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'"
+                        class="border-b-2 pb-3 text-sm font-medium"
+                    >
+                        {{ __('Communities') }}
+                    </button>
+                </div>
 
-                <div class="mt-4">
+                <div x-show="tab === 'wall'" class="mt-4">
                     @if ($isOwnProfile)
                         <livewire:pages::profile.wall-composer :key="'wall-composer-'.$user->id" />
                     @endif
 
                     <livewire:pages::profile.wall-posts :user="$user" :key="'wall-posts-'.$user->id" />
+                </div>
+
+                <div x-show="tab === 'communities'" class="mt-4">
+                    <livewire:pages::profile.communities-list :user="$user" :key="'communities-list-'.$user->id" />
                 </div>
             </div>
         </div>
