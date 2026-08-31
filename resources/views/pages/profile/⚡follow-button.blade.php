@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Notifications\NewFollower;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -32,6 +33,8 @@ new class extends Component {
             }
 
             $this->user->awardBridgeScore('followed_by_someone', $viewer);
+
+            $this->user->notify(new NewFollower($viewer));
         }
 
         unset($this->isFollowing);

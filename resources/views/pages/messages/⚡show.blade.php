@@ -4,6 +4,7 @@ use App\Events\MessageSent;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\User;
+use App\Notifications\NewMessageReceived;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -85,6 +86,8 @@ new #[Title('Messages')] class extends Component {
         $this->messages[] = $this->formatMessage($message);
 
         $this->conversation->participants()->updateExistingPivot(Auth::id(), ['last_read_at' => now()]);
+
+        $this->otherParticipant?->notify(new NewMessageReceived($message));
 
         try {
             broadcast(new MessageSent($message))->toOthers();

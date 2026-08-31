@@ -2,6 +2,7 @@
 
 use App\Models\BridgePost;
 use App\Models\User;
+use App\Notifications\BridgePostInvited;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
@@ -50,12 +51,14 @@ new class extends Component {
 
         abort_if($this->partnerId === Auth::id(), 403);
 
-        BridgePost::create([
+        $bridgePost = BridgePost::create([
             'theme' => $this->theme,
             'initiator_id' => Auth::id(),
             'partner_id' => $this->partnerId,
             'status' => BridgePost::STATUS_PENDING,
         ]);
+
+        $bridgePost->partner->notify(new BridgePostInvited($bridgePost));
 
         Flux::toast(variant: 'success', text: __('Bridge Post invite sent to :name.', ['name' => $this->partnerName]));
 

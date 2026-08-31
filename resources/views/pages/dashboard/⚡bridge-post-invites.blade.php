@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\BridgePost;
+use App\Notifications\BridgePostAccepted;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
@@ -12,6 +13,8 @@ new class extends Component {
         abort_unless($bridgePost->partner_id === Auth::id(), 403);
 
         $bridgePost->update(['status' => BridgePost::STATUS_ACTIVE, 'responded_at' => now()]);
+
+        $bridgePost->initiator->notify(new BridgePostAccepted($bridgePost));
     }
 
     public function decline(int $id): void

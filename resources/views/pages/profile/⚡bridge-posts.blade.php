@@ -2,6 +2,7 @@
 
 use App\Models\BridgePost;
 use App\Models\User;
+use App\Notifications\BridgePostCompleted;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -58,6 +59,9 @@ new class extends Component {
         if ($bridgePost->fresh()->isComplete()) {
             $bridgePost->initiator->awardBridgeScore('bridge_post_completed', $bridgePost);
             $bridgePost->partner->awardBridgeScore('bridge_post_completed', $bridgePost);
+
+            $other = $side === 'initiator' ? $bridgePost->partner : $bridgePost->initiator;
+            $other->notify(new BridgePostCompleted($bridgePost, Auth::user()));
         }
 
         $this->editingId = null;

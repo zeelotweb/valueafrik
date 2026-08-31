@@ -16,6 +16,15 @@
                         {{ __('Dashboard') }}
                     </flux:sidebar.item>
 
+                    <flux:sidebar.item icon="bell" :href="route('notifications.index')" :current="request()->routeIs('notifications.*')" wire:navigate>
+                        {{ __('Notifications') }}
+
+                        @php $unreadNotifications = auth()->user()->unreadNotifications()->count(); @endphp
+                        @if ($unreadNotifications > 0)
+                            <flux:badge size="sm" color="cyan" class="ms-auto">{{ $unreadNotifications }}</flux:badge>
+                        @endif
+                    </flux:sidebar.item>
+
                     <flux:sidebar.item icon="chat-bubble-left-right" :href="route('messages.index')" :current="request()->routeIs('messages.*')" wire:navigate>
                         {{ __('Messages') }}
 

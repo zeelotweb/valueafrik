@@ -2,6 +2,8 @@
 
 use App\Models\Community;
 use App\Models\User;
+use App\Notifications\CommunityJoinApproved;
+use App\Notifications\PromotedToMonitor;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -21,7 +23,9 @@ new class extends Component {
 
         $this->community->members()->updateExistingPivot($userId, ['status' => 'active']);
 
-        User::find($userId)?->awardBridgeScore('community_joined', $this->community);
+        $requester = User::find($userId);
+        $requester?->awardBridgeScore('community_joined', $this->community);
+        $requester?->notify(new CommunityJoinApproved($this->community));
 
         $this->dispatch('community-membership-changed');
     }
@@ -42,7 +46,9 @@ new class extends Component {
 
         $this->community->members()->updateExistingPivot($userId, ['role' => 'monitor']);
 
-        User::find($userId)?->awardBridgeScore('promoted_to_monitor', $this->community);
+        $promoted = User::find($userId);
+        $promoted?->awardBridgeScore('promoted_to_monitor', $this->community);
+        $promoted?->notify(new PromotedToMonitor($this->community));
 
         $this->dispatch('community-membership-changed');
     }

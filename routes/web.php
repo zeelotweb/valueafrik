@@ -18,6 +18,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('messages', 'pages::messages.inbox')->name('messages.index');
     Route::livewire('messages/{conversation}', 'pages::messages.show')->name('messages.show');
 
+    Route::livewire('notifications', 'pages::notifications.index')->name('notifications.index');
+
     Route::livewire('discover', 'pages::discover.index')->name('discover.index');
 
     Route::livewire('communities', 'pages::communities.index')->name('communities.index');
