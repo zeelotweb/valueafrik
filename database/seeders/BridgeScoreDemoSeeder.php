@@ -22,6 +22,12 @@ class BridgeScoreDemoSeeder extends Seeder
      */
     public function run(): void
     {
+        if (app()->isProduction()) {
+            $this->command?->error('BridgeScoreDemoSeeder seeds fake demo accounts and refuses to run in production.');
+
+            return;
+        }
+
         $password = Hash::make('password');
 
         $liam = $this->makeUser('Liam O\'Brien', 'liam@example.com', $password);
