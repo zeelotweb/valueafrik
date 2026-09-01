@@ -5,6 +5,7 @@ use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\User;
 use App\Notifications\NewMessageReceived;
+use App\Support\SafeNotifier;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -87,7 +88,9 @@ new #[Title('Messages')] class extends Component {
 
         $this->conversation->participants()->updateExistingPivot(Auth::id(), ['last_read_at' => now()]);
 
-        $this->otherParticipant?->notify(new NewMessageReceived($message));
+        if ($this->otherParticipant) {
+            SafeNotifier::send($this->otherParticipant, new NewMessageReceived($message));
+        }
 
         try {
             broadcast(new MessageSent($message))->toOthers();
@@ -101,7 +104,7 @@ new #[Title('Messages')] class extends Component {
     public function getListeners(): array
     {
         return [
-            "echo-private:conversation.{$this->conversation->id},MessageSent" => 'onMessageReceived',
+            "echo-private:conversation.{$this->conversation->id},.MessageSent" => 'onMessageReceived',
         ];
     }
 

@@ -29,6 +29,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::post('communities/{community:slug}/avatar', [CommunityPhotoController::class, 'updateAvatar'])->name('communities.avatar');
     Route::post('communities/{community:slug}/cover', [CommunityPhotoController::class, 'updateCover'])->name('communities.cover');
+
+    Route::livewire('live', 'pages::live.index')->name('live.index');
+    Route::livewire('live/{liveSession}', 'pages::live.show')->name('live.show');
 });
 
 Route::post('logout', Logout::class)

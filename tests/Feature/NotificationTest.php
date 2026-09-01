@@ -159,6 +159,38 @@ test('sending a message notifies the other participant', function () {
     Notification::assertSentTo($b, NewMessageReceived::class);
 });
 
+test('every notification broadcasts on the same event over the users private channel', function () {
+    $user = User::factory()->create();
+    $actor = User::factory()->create();
+
+    $notification = new NewFollower($actor);
+
+    expect($notification->via($user))->toBe(['database', 'broadcast']);
+
+    // broadcastType() only labels the payload's "type" field — the actual wire
+    // event name Echo has to match against comes from broadcastAs(). Missing
+    // this once meant every notification silently broadcast under Laravel's
+    // default event name instead, and no client listener ever matched it.
+    expect($notification->broadcastType())->toBe('notification.created');
+    expect($notification->broadcastAs())->toBe('notification.created');
+});
+
+test('a broken broadcast connection does not stop the notification or the triggering action', function () {
+    config(['broadcasting.default' => 'not-a-real-driver']);
+
+    $follower = User::factory()->create();
+    $followed = User::factory()->create();
+
+    Livewire::actingAs($follower)
+        ->test('pages::profile.follow-button', ['user' => $followed])
+        ->call('toggle')
+        ->assertHasNoErrors();
+
+    expect($follower->fresh()->isFollowing($followed))->toBeTrue();
+    expect($followed->fresh()->bridgeScore())->toBe(config('bridge_score.points.followed_by_someone'));
+    expect($followed->notifications()->count())->toBe(1);
+});
+
 test('the notifications page lists notifications and marking one read redirects and updates its state', function () {
     $user = User::factory()->create();
     $actor = User::factory()->create(['name' => 'Actor Name']);

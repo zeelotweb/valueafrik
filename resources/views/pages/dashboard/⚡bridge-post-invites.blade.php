@@ -2,6 +2,7 @@
 
 use App\Models\BridgePost;
 use App\Notifications\BridgePostAccepted;
+use App\Support\SafeNotifier;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
@@ -14,7 +15,7 @@ new class extends Component {
 
         $bridgePost->update(['status' => BridgePost::STATUS_ACTIVE, 'responded_at' => now()]);
 
-        $bridgePost->initiator->notify(new BridgePostAccepted($bridgePost));
+        SafeNotifier::send($bridgePost->initiator, new BridgePostAccepted($bridgePost));
     }
 
     public function decline(int $id): void

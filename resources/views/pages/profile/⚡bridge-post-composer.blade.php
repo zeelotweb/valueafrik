@@ -3,6 +3,7 @@
 use App\Models\BridgePost;
 use App\Models\User;
 use App\Notifications\BridgePostInvited;
+use App\Support\SafeNotifier;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
@@ -58,7 +59,7 @@ new class extends Component {
             'status' => BridgePost::STATUS_PENDING,
         ]);
 
-        $bridgePost->partner->notify(new BridgePostInvited($bridgePost));
+        SafeNotifier::send($bridgePost->partner, new BridgePostInvited($bridgePost));
 
         Flux::toast(variant: 'success', text: __('Bridge Post invite sent to :name.', ['name' => $this->partnerName]));
 

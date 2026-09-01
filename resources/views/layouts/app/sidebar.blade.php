@@ -18,20 +18,12 @@
 
                     <flux:sidebar.item icon="bell" :href="route('notifications.index')" :current="request()->routeIs('notifications.*')" wire:navigate>
                         {{ __('Notifications') }}
-
-                        @php $unreadNotifications = auth()->user()->unreadNotifications()->count(); @endphp
-                        @if ($unreadNotifications > 0)
-                            <flux:badge size="sm" color="cyan" class="ms-auto">{{ $unreadNotifications }}</flux:badge>
-                        @endif
+                        <livewire:pages::layout.notifications-badge :key="'notifications-badge-'.auth()->id()" />
                     </flux:sidebar.item>
 
                     <flux:sidebar.item icon="chat-bubble-left-right" :href="route('messages.index')" :current="request()->routeIs('messages.*')" wire:navigate>
                         {{ __('Messages') }}
-
-                        @php $unread = auth()->user()->unreadConversationsCount(); @endphp
-                        @if ($unread > 0)
-                            <flux:badge size="sm" color="cyan" class="ms-auto">{{ $unread }}</flux:badge>
-                        @endif
+                        <livewire:pages::layout.messages-badge :key="'messages-badge-'.auth()->id()" />
                     </flux:sidebar.item>
 
                     <flux:sidebar.item icon="user-group" :href="route('communities.index')" :current="request()->routeIs('communities.*')" wire:navigate>
@@ -40,6 +32,10 @@
 
                     <flux:sidebar.item icon="magnifying-glass" :href="route('discover.index')" :current="request()->routeIs('discover.*')" wire:navigate>
                         {{ __('Discover') }}
+                    </flux:sidebar.item>
+
+                    <flux:sidebar.item icon="video-camera" :href="route('live.index')" :current="request()->routeIs('live.*')" wire:navigate>
+                        {{ __('Live') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
             </flux:sidebar.nav>

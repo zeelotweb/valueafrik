@@ -7,3 +7,4 @@
 import './echo';
 import './passkeys';
 import './uploads';
+import './live';

@@ -4,61 +4,110 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Livewire\WithPagination;
 
 new #[Title('Discover')] class extends Component {
-    use WithPagination;
-
     public function with(): array
     {
-        return [
-            'users' => User::query()
-                ->whereKeyNot(Auth::id())
+        $viewer = Auth::user();
+        $followingIds = $viewer->following()->pluck('users.id');
+        $viewerInterestIds = $viewer->interests()->pluck('interests.id');
+        $viewerHeritageIds = $viewer->heritages()->pluck('heritages.id');
+
+        $excluded = $followingIds->push($viewer->id);
+
+        $sharedInterests = collect();
+
+        if ($viewerInterestIds->isNotEmpty()) {
+            $sharedInterests = User::query()
+                ->whereKeyNot($excluded)
+                ->whereHas('interests', fn ($query) => $query->whereIn('interests.id', $viewerInterestIds))
+                ->withCount(['interests as shared_interests_count' => fn ($query) => $query->whereIn('interests.id', $viewerInterestIds)])
                 ->with(['profile', 'heritages'])
-                ->latest()
-                ->paginate(20),
+                ->orderByDesc('shared_interests_count')
+                ->limit(10)
+                ->get()
+                ->map(fn ($person) => [
+                    'user' => $person,
+                    'caption' => trans_choice('1 shared interest|:count shared interests', $person->shared_interests_count),
+                ]);
+        }
+
+        $crossHeritage = collect();
+
+        if ($viewerHeritageIds->isNotEmpty()) {
+            $crossHeritage = User::query()
+                ->whereKeyNot($excluded)
+                ->whereHas('heritages')
+                ->whereDoesntHave('heritages', fn ($query) => $query->whereIn('heritages.id', $viewerHeritageIds))
+                ->with(['profile', 'heritages'])
+                ->inRandomOrder()
+                ->limit(10)
+                ->get()
+                ->map(fn ($person) => [
+                    'user' => $person,
+                    'caption' => __('A different heritage — a bridge worth building.'),
+                ]);
+        }
+
+        $newHere = User::query()
+            ->whereKeyNot($excluded)
+            ->with(['profile', 'heritages'])
+            ->latest()
+            ->limit(10)
+            ->get()
+            ->map(fn ($person) => [
+                'user' => $person,
+                'caption' => __('New here.'),
+            ]);
+
+        return [
+            'sharedInterests' => $sharedInterests,
+            'crossHeritage' => $crossHeritage,
+            'newHere' => $newHere,
         ];
     }
 }; ?>
 
 <div class="mx-auto w-full max-w-3xl">
     <flux:heading size="xl">{{ __('Discover') }}</flux:heading>
-    <flux:subheading>{{ __('Everyone on valueAFRIK — browse and connect.') }}</flux:subheading>
+    <flux:subheading>{{ __('People worth connecting with — through curiosity, not follower counts.') }}</flux:subheading>
 
-    <div class="mt-6 grid gap-3 sm:grid-cols-2">
-        @forelse ($users as $person)
-            <a
-                href="{{ route('profile.show', $person) }}"
-                wire:navigate
-                class="flex items-center gap-3 rounded-xl border border-zinc-200 p-4 hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800"
-            >
-                <div class="size-12 shrink-0 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-700">
-                    @if ($person->profile?->avatarUrl())
-                        <img src="{{ $person->profile->avatarUrl() }}" class="size-full object-cover">
-                    @else
-                        <div class="flex size-full items-center justify-center text-zinc-500">
-                            <flux:icon.user class="size-6" />
-                        </div>
-                    @endif
-                </div>
+    @if ($sharedInterests->isEmpty() && $crossHeritage->isEmpty() && $newHere->isEmpty())
+        <div class="mt-6 rounded-lg border border-dashed border-zinc-300 p-6 text-center dark:border-zinc-700">
+            <flux:text>{{ __('No one else here yet.') }}</flux:text>
+        </div>
+    @endif
 
-                <div class="min-w-0 flex-1">
-                    <div class="truncate font-medium text-zinc-900 dark:text-white">{{ $person->name }}</div>
-                    @if ($person->heritages->isNotEmpty())
-                        <p class="mt-0.5 truncate text-sm text-zinc-500 dark:text-zinc-400">
-                            {{ $person->heritages->pluck('name')->join(', ') }}
-                        </p>
-                    @endif
-                </div>
-            </a>
-        @empty
-            <div class="col-span-2 rounded-lg border border-dashed border-zinc-300 p-6 text-center dark:border-zinc-700">
-                <flux:text>{{ __('No one else here yet.') }}</flux:text>
+    @if ($sharedInterests->isNotEmpty())
+        <div class="mt-8">
+            <flux:heading size="lg">{{ __('Shares your curiosities') }}</flux:heading>
+            <div class="mt-3 grid gap-3 sm:grid-cols-2">
+                @foreach ($sharedInterests as $entry)
+                    @include('pages.discover._person-card', $entry)
+                @endforeach
             </div>
-        @endforelse
-    </div>
+        </div>
+    @endif
 
-    <div class="mt-6">
-        {{ $users->links() }}
-    </div>
+    @if ($crossHeritage->isNotEmpty())
+        <div class="mt-8">
+            <flux:heading size="lg">{{ __('A different perspective') }}</flux:heading>
+            <div class="mt-3 grid gap-3 sm:grid-cols-2">
+                @foreach ($crossHeritage as $entry)
+                    @include('pages.discover._person-card', $entry)
+                @endforeach
+            </div>
+        </div>
+    @endif
+
+    @if ($newHere->isNotEmpty())
+        <div class="mt-8">
+            <flux:heading size="lg">{{ __('New here') }}</flux:heading>
+            <div class="mt-3 grid gap-3 sm:grid-cols-2">
+                @foreach ($newHere as $entry)
+                    @include('pages.discover._person-card', $entry)
+                @endforeach
+            </div>
+        </div>
+    @endif
 </div>

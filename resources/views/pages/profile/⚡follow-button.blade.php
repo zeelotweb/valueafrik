@@ -2,8 +2,10 @@
 
 use App\Models\User;
 use App\Notifications\NewFollower;
+use App\Support\SafeNotifier;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 new class extends Component {
@@ -13,6 +15,12 @@ new class extends Component {
     public function isFollowing(): bool
     {
         return Auth::user()->isFollowing($this->user);
+    }
+
+    #[On('follow-toggled')]
+    public function refresh(): void
+    {
+        unset($this->isFollowing);
     }
 
     public function toggle(): void
@@ -34,7 +42,7 @@ new class extends Component {
 
             $this->user->awardBridgeScore('followed_by_someone', $viewer);
 
-            $this->user->notify(new NewFollower($viewer));
+            SafeNotifier::send($this->user, new NewFollower($viewer));
         }
 
         unset($this->isFollowing);

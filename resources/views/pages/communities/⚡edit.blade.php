@@ -2,6 +2,7 @@
 
 use App\Models\Community;
 use App\Notifications\CommunityJoinApproved;
+use App\Support\SafeNotifier;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Title;
@@ -45,7 +46,7 @@ new #[Title('Edit community')] class extends Component {
             $this->community->members()->wherePivot('status', 'pending')->get()->each(function ($user) {
                 $this->community->members()->updateExistingPivot($user->id, ['status' => 'active']);
                 $user->awardBridgeScore('community_joined', $this->community);
-                $user->notify(new CommunityJoinApproved($this->community));
+                SafeNotifier::send($user, new CommunityJoinApproved($this->community));
             });
         }
 

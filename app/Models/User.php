@@ -115,6 +115,11 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
         return $this->hasMany(BridgePost::class, 'partner_id');
     }
 
+    public function liveSessions(): HasMany
+    {
+        return $this->hasMany(LiveSession::class, 'host_id');
+    }
+
     public function ownedCommunities(): HasMany
     {
         return $this->hasMany(Community::class, 'owner_id');

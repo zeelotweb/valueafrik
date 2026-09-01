@@ -4,6 +4,7 @@ use App\Models\Community;
 use App\Models\User;
 use App\Notifications\CommunityJoinApproved;
 use App\Notifications\PromotedToMonitor;
+use App\Support\SafeNotifier;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -25,7 +26,9 @@ new class extends Component {
 
         $requester = User::find($userId);
         $requester?->awardBridgeScore('community_joined', $this->community);
-        $requester?->notify(new CommunityJoinApproved($this->community));
+        if ($requester) {
+            SafeNotifier::send($requester, new CommunityJoinApproved($this->community));
+        }
 
         $this->dispatch('community-membership-changed');
     }
@@ -48,7 +51,9 @@ new class extends Component {
 
         $promoted = User::find($userId);
         $promoted?->awardBridgeScore('promoted_to_monitor', $this->community);
-        $promoted?->notify(new PromotedToMonitor($this->community));
+        if ($promoted) {
+            SafeNotifier::send($promoted, new PromotedToMonitor($this->community));
+        }
 
         $this->dispatch('community-membership-changed');
     }

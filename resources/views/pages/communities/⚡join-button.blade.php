@@ -2,8 +2,8 @@
 
 use App\Models\Community;
 use App\Notifications\CommunityJoinRequested;
+use App\Support\SafeNotifier;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Notification;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
@@ -37,7 +37,7 @@ new class extends Component {
             $user->awardBridgeScore('community_joined', $this->community);
         } else {
             $moderators = $this->community->activeMembers()->wherePivotIn('role', ['owner', 'monitor'])->get();
-            Notification::send($moderators, new CommunityJoinRequested($this->community, $user));
+            SafeNotifier::send($moderators, new CommunityJoinRequested($this->community, $user));
         }
 
         unset($this->membership, $this->joinable);

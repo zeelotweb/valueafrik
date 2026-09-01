@@ -165,3 +165,21 @@ test('inbox lists conversations with the other participant and unread state', fu
 
     expect($a->fresh()->unreadConversationsCount())->toBe(1);
 });
+
+test('the live message listener uses the exact dot prefixed event name Echo requires', function () {
+    $a = User::factory()->create();
+    $b = User::factory()->create();
+    $conversation = Conversation::between($a, $b);
+
+    // Without the leading dot, Echo namespaces the event to "App.Events.MessageSent",
+    // which never matches what MessageSent::broadcastAs() actually sends on the
+    // wire — the listener would silently never fire. Caught this live in the
+    // browser once; guarding it here so it can't regress silently again.
+    $listeners = Livewire::actingAs($a)
+        ->test('pages::messages.show', ['conversation' => $conversation])
+        ->instance()
+        ->getListeners();
+
+    expect(array_keys($listeners))
+        ->toContain("echo-private:conversation.{$conversation->id},.MessageSent");
+});
