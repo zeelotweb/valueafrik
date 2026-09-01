@@ -2,6 +2,7 @@
 
 use App\Events\MessageSent;
 use App\Models\Conversation;
+use App\Models\LiveSession;
 use App\Models\Message;
 use App\Models\User;
 use App\Notifications\NewMessageReceived;
@@ -101,6 +102,15 @@ new #[Title('Messages')] class extends Component {
         $this->reset(['body', 'photo']);
     }
 
+    public function startCall()
+    {
+        abort_unless($this->otherParticipant, 404);
+
+        $session = LiveSession::startCallWith(Auth::user(), $this->otherParticipant);
+
+        return $this->redirect(route('live.show', $session), navigate: true);
+    }
+
     public function getListeners(): array
     {
         return [
@@ -130,9 +140,13 @@ new #[Title('Messages')] class extends Component {
             @endif
         </div>
 
-        <flux:link :href="route('profile.show', $otherParticipant)" wire:navigate class="font-medium text-zinc-900 dark:text-white">
+        <flux:link :href="route('profile.show', $otherParticipant)" wire:navigate class="min-w-0 flex-1 truncate font-medium text-zinc-900 dark:text-white">
             {{ $otherParticipant?->name ?? __('Unknown') }}
         </flux:link>
+
+        <flux:button wire:click="startCall" wire:loading.attr="disabled" size="sm" variant="ghost" icon="video-camera" data-test="start-call-button">
+            {{ __('Call') }}
+        </flux:button>
     </div>
 
     <div

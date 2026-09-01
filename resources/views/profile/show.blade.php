@@ -30,6 +30,7 @@ $countryFlag = \App\Support\Countries::flag($profile?->country);
                         <flux:button size="sm" variant="ghost">{{ __('Edit profile') }}</flux:button>
                     </a>
                 @else
+                    <livewire:pages::profile.start-call-button :user="$user" :key="'call-'.$user->id" />
                     <livewire:pages::profile.message-button :user="$user" :key="'message-'.$user->id" />
                     <livewire:pages::profile.follow-button :user="$user" :key="'follow-'.$user->id" />
                 @endif

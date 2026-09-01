@@ -2,8 +2,11 @@
 
 namespace App\Models;
 
+use App\Notifications\LiveCallStarted;
+use App\Support\SafeNotifier;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Str;
 
 class LiveSession extends Model
 {
@@ -54,5 +57,39 @@ class LiveSession extends Model
         }
 
         return true;
+    }
+
+    /**
+     * Start a 1:1 call and let the other person know it's waiting for them —
+     * the only way they'd otherwise find out is by happening to visit the
+     * room URL directly.
+     */
+    public static function startCallWith(User $host, User $invitee): self
+    {
+        abort_if($host->id === $invitee->id, 403);
+
+        $session = self::create([
+            'host_id' => $host->id,
+            'room_name' => (string) Str::uuid(),
+            'type' => self::TYPE_CALL,
+            'status' => self::STATUS_LIVE,
+            'started_at' => now(),
+        ]);
+
+        SafeNotifier::send($invitee, new LiveCallStarted($session));
+
+        return $session;
+    }
+
+    public static function startStream(User $host, ?string $title = null): self
+    {
+        return self::create([
+            'host_id' => $host->id,
+            'room_name' => (string) Str::uuid(),
+            'title' => $title,
+            'type' => self::TYPE_STREAM,
+            'status' => self::STATUS_LIVE,
+            'started_at' => now(),
+        ]);
     }
 }

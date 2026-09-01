@@ -5,9 +5,13 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
 ?>
 <x-layouts::app :title="__('Dashboard')">
     <div class="mx-auto w-full max-w-5xl">
-        <flux:heading size="xl">
-            {{ __('Welcome back, :name', ['name' => Str::before($user->name, ' ')]) }}
-        </flux:heading>
+        <div class="flex items-center justify-between">
+            <flux:heading size="xl">
+                {{ __('Welcome back, :name', ['name' => Str::before($user->name, ' ')]) }}
+            </flux:heading>
+
+            <livewire:pages::dashboard.start-stream :key="'start-stream-'.$user->id" />
+        </div>
 
         @if ($rootsIncomplete)
             <div class="mt-4 flex items-center justify-between rounded-lg border border-dashed border-zinc-300 p-4 dark:border-zinc-700">

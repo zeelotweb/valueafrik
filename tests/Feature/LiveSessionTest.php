@@ -2,14 +2,19 @@
 
 use App\Models\LiveSession;
 use App\Models\User;
+use App\Notifications\LiveCallStarted;
 use App\Services\LiveKitToken;
+use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
 
-test('starting a call creates a live session and redirects to it', function () {
+test('starting a call from a profile creates a live session, redirects, and notifies the other person', function () {
+    Notification::fake();
+
     $host = User::factory()->create();
+    $invitee = User::factory()->create();
 
     Livewire::actingAs($host)
-        ->test('pages::live.index')
+        ->test('pages::profile.start-call-button', ['user' => $invitee])
         ->call('startCall')
         ->assertRedirect();
 
@@ -19,14 +24,82 @@ test('starting a call creates a live session and redirects to it', function () {
     expect($session->type)->toBe(LiveSession::TYPE_CALL);
     expect($session->status)->toBe(LiveSession::STATUS_LIVE);
     expect($session->room_name)->not->toBeEmpty();
+
+    Notification::assertSentTo($invitee, LiveCallStarted::class);
 });
 
-test('starting a stream creates a live session of type stream', function () {
+test('a user cannot start a call with themselves', function () {
+    $user = User::factory()->create();
+
+    Livewire::actingAs($user)
+        ->test('pages::profile.start-call-button', ['user' => $user])
+        ->call('startCall')
+        ->assertForbidden();
+
+    expect(LiveSession::count())->toBe(0);
+});
+
+test('starting a call from a conversation notifies the other participant', function () {
+    Notification::fake();
+
+    $a = User::factory()->create();
+    $b = User::factory()->create();
+    $conversation = App\Models\Conversation::between($a, $b);
+
+    Livewire::actingAs($a)
+        ->test('pages::messages.show', ['conversation' => $conversation])
+        ->call('startCall')
+        ->assertRedirect();
+
+    Notification::assertSentTo($b, LiveCallStarted::class);
+});
+
+test('starting a stream from the dashboard creates a live session of type stream', function () {
     $host = User::factory()->create();
 
-    Livewire::actingAs($host)->test('pages::live.index')->call('startStream');
+    Livewire::actingAs($host)
+        ->test('pages::dashboard.start-stream')
+        ->call('startStream')
+        ->assertRedirect();
 
     expect(LiveSession::first()->type)->toBe(LiveSession::TYPE_STREAM);
+});
+
+test('the live discovery page only lists currently live streams, not calls or ended sessions', function () {
+    $streamHost = User::factory()->create(['name' => 'Streaming Host']);
+    $callHost = User::factory()->create(['name' => 'Calling Host']);
+    $endedHost = User::factory()->create(['name' => 'Ended Host']);
+
+    LiveSession::create([
+        'host_id' => $streamHost->id,
+        'room_name' => 'live-stream',
+        'type' => LiveSession::TYPE_STREAM,
+        'status' => LiveSession::STATUS_LIVE,
+        'started_at' => now(),
+    ]);
+    LiveSession::create([
+        'host_id' => $callHost->id,
+        'room_name' => 'live-call',
+        'type' => LiveSession::TYPE_CALL,
+        'status' => LiveSession::STATUS_LIVE,
+        'started_at' => now(),
+    ]);
+    LiveSession::create([
+        'host_id' => $endedHost->id,
+        'room_name' => 'ended-stream',
+        'type' => LiveSession::TYPE_STREAM,
+        'status' => LiveSession::STATUS_ENDED,
+        'started_at' => now(),
+        'ended_at' => now(),
+    ]);
+
+    $viewer = User::factory()->create();
+
+    Livewire::actingAs($viewer)
+        ->test('pages::live.index')
+        ->assertSee('Streaming Host')
+        ->assertDontSee('Calling Host')
+        ->assertDontSee('Ended Host');
 });
 
 test('anyone can publish in a call but only the host can publish in a stream', function () {
@@ -82,7 +155,7 @@ test('only the host can end a session', function () {
 });
 
 test('the room page shows a not configured message when livekit credentials are missing', function () {
-    config(['services.livekit.api_key' => null, 'services.livekit.api_secret' => null, 'services.livekit.host' => null]);
+    config(['services.livekit.api_key' => null, 'services.livekit.api_secret' => null, 'services.livekit.url' => null]);
 
     $host = User::factory()->create();
     $session = LiveSession::create([
@@ -102,7 +175,7 @@ test('a join token generates successfully once livekit credentials are present',
     config([
         'services.livekit.api_key' => 'test-key',
         'services.livekit.api_secret' => base64_encode(random_bytes(64)),
-        'services.livekit.host' => 'wss://example.livekit.cloud',
+        'services.livekit.url' => 'wss://example.livekit.cloud',
     ]);
 
     $host = User::factory()->create();

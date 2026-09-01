@@ -23,6 +23,10 @@ function createLiveRoom({ wsUrl, token, canPublish }) {
     return {
         room,
 
+        // A rejected camera/mic permission is not a failed connection — the
+        // room join can succeed even when the local device grants can't.
+        // Callers get both back separately so they can show "connected, but
+        // your camera is blocked" instead of a blanket connection error.
         async connect(gridEl) {
             room.on(RoomEvent.TrackSubscribed, (track, _publication, participant) => {
                 attach(track, participant.identity, gridEl);
@@ -40,10 +44,18 @@ function createLiveRoom({ wsUrl, token, canPublish }) {
 
             await room.connect(wsUrl, token);
 
+            let mediaError = null;
+
             if (canPublish) {
-                await room.localParticipant.setCameraEnabled(true);
-                await room.localParticipant.setMicrophoneEnabled(true);
+                try {
+                    await room.localParticipant.setCameraEnabled(true);
+                    await room.localParticipant.setMicrophoneEnabled(true);
+                } catch (e) {
+                    mediaError = e.message;
+                }
             }
+
+            return { mediaError };
         },
 
         async setCameraEnabled(enabled) {
