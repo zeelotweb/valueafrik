@@ -9,6 +9,7 @@ use Livewire\Component;
 
 new class extends Component {
     public Community $community;
+    public bool $overlay = false;
 
     #[Computed]
     public function membership(): ?object
@@ -53,22 +54,23 @@ new class extends Component {
     }
 }; ?>
 
+<?php $pill = $overlay ? '!bg-white/90 !text-stone-900 shadow-sm backdrop-blur hover:!bg-white dark:!bg-stone-900/80 dark:!text-white dark:hover:!bg-stone-900' : ''; ?>
 <div>
     @unless (Auth::id() === $community->owner_id)
         @if ($this->membership !== null)
             @if ($this->membership->status === 'pending')
-                <flux:button size="sm" variant="ghost" disabled data-test="pending-request">{{ __('Request pending') }}</flux:button>
+                <flux:button size="sm" variant="ghost" class="{{ $pill }}" disabled data-test="pending-request">{{ __('Request pending') }}</flux:button>
             @else
-                <flux:button wire:click="leave" size="sm" variant="ghost" wire:loading.attr="disabled">{{ __('Leave') }}</flux:button>
+                <flux:button wire:click="leave" size="sm" variant="ghost" class="{{ $pill }}" wire:loading.attr="disabled">{{ __('Leave') }}</flux:button>
             @endif
         @elseif ($community->isFull())
-            <flux:button size="sm" variant="ghost" disabled>{{ __('Community full') }}</flux:button>
+            <flux:button size="sm" variant="ghost" class="{{ $pill }}" disabled>{{ __('Community full') }}</flux:button>
         @elseif ($this->joinable)
             <flux:button wire:click="join" size="sm" variant="primary" class="!bg-cyan-600 hover:!bg-cyan-500" wire:loading.attr="disabled">
                 {{ __('Join') }}
             </flux:button>
         @else
-            <flux:text size="sm" class="text-zinc-500 dark:text-zinc-400">{{ __('Only followers of the owner can join') }}</flux:text>
+            <flux:text size="sm" class="{{ $overlay ? '!bg-white/90 !text-stone-700 rounded-md px-2 py-1 shadow-sm backdrop-blur dark:!bg-stone-900/80 dark:!text-stone-300' : 'text-stone-500 dark:text-stone-400' }}">{{ __('Only followers of the owner can join') }}</flux:text>
         @endif
     @endunless
 </div>

@@ -96,27 +96,27 @@ new class extends Component {
                 <span class="text-sm font-medium text-cyan-700 dark:text-cyan-300">{{ __('Bridge Post') }} — {{ $post->theme }}</span>
             </div>
 
-            <div class="grid divide-y divide-zinc-200 sm:grid-cols-2 sm:divide-x sm:divide-y-0 dark:divide-zinc-700">
+            <div class="grid divide-y divide-stone-200 sm:grid-cols-2 sm:divide-x sm:divide-y-0 dark:divide-stone-800">
                 @foreach ([
                     ['user' => $post->initiator, 'body' => $post->initiator_body, 'media' => $initiatorMedia, 'side' => 'initiator'],
                     ['user' => $post->partner, 'body' => $post->partner_body, 'media' => $partnerMedia, 'side' => 'partner'],
                 ] as $column)
                     <div class="p-4">
                         <div class="flex items-center gap-2">
-                            <div class="size-8 shrink-0 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-700">
+                            <div class="size-8 shrink-0 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
                                 @if ($column['user']->profile?->avatarUrl())
                                     <img src="{{ $column['user']->profile->avatarUrl() }}" class="size-full object-cover">
                                 @else
-                                    <div class="flex size-full items-center justify-center text-zinc-500">
+                                    <div class="flex size-full items-center justify-center text-stone-500">
                                         <flux:icon.user class="size-4" />
                                     </div>
                                 @endif
                             </div>
-                            <span class="text-sm font-medium text-zinc-900 dark:text-white">{{ $column['user']->name }}</span>
+                            <span class="text-sm font-medium text-stone-900 dark:text-white">{{ $column['user']->name }}</span>
                         </div>
 
                         @if ($column['body'])
-                            <p class="mt-3 whitespace-pre-line text-sm text-zinc-700 dark:text-zinc-300">{{ $column['body'] }}</p>
+                            <p class="mt-3 whitespace-pre-line text-sm text-stone-700 dark:text-stone-300">{{ $column['body'] }}</p>
 
                             @if ($column['media']->isNotEmpty())
                                 <div class="mt-3 grid grid-cols-2 gap-2">
@@ -160,7 +160,7 @@ new class extends Component {
                                 </flux:button>
                             @endif
                         @else
-                            <p class="mt-3 text-sm italic text-zinc-400 dark:text-zinc-500">
+                            <p class="mt-3 text-sm italic text-stone-400 dark:text-stone-500">
                                 {{ __('Waiting for :name to add their side.', ['name' => $column['user']->name]) }}
                             </p>
                         @endif

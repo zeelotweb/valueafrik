@@ -7,6 +7,7 @@ use Livewire\Component;
 
 new class extends Component {
     public User $user;
+    public bool $overlay = false;
 
     public function startConversation()
     {
@@ -29,7 +30,9 @@ new class extends Component {
     wire:loading.attr="disabled"
     size="sm"
     variant="ghost"
+    icon="chat-bubble-left-right"
+    class="{{ $overlay ? '!bg-white/90 !text-stone-900 shadow-sm backdrop-blur hover:!bg-white dark:!bg-stone-900/80 dark:!text-white dark:hover:!bg-stone-900' : '' }}"
     data-test="message-button"
 >
-    {{ __('Message') }}
+    <span class="hidden sm:inline">{{ __('Message') }}</span>
 </flux:button>

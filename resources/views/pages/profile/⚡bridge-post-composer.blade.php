@@ -73,7 +73,7 @@ new class extends Component {
             {{ __('Start a Bridge Post') }}
         </flux:button>
     @else
-        <div class="rounded-xl border border-zinc-200 p-4 dark:border-zinc-700">
+        <div class="rounded-xl border border-stone-200 p-4 dark:border-stone-800">
             <flux:subheading>{{ __('Invite someone to compare a shared tradition, side by side.') }}</flux:subheading>
 
             <flux:input wire:model="theme" :label="__('Theme')" placeholder="{{ __('e.g. Weddings, New Year, Sunday dinner') }}" class="mt-4" />
@@ -82,7 +82,7 @@ new class extends Component {
                 <flux:label>{{ __('Who are you inviting?') }}</flux:label>
 
                 @if ($partnerId)
-                    <div class="mt-2 flex items-center justify-between rounded-lg border border-zinc-200 p-2 dark:border-zinc-700">
+                    <div class="mt-2 flex items-center justify-between rounded-lg border border-stone-200 p-2 dark:border-stone-800">
                         <span class="text-sm font-medium">{{ $partnerName }}</span>
                         <flux:button size="sm" variant="ghost" wire:click="clearPartner">{{ __('Change') }}</flux:button>
                     </div>
@@ -90,12 +90,12 @@ new class extends Component {
                     <flux:input wire:model.live.debounce.300ms="partnerSearch" icon="magnifying-glass" placeholder="{{ __('Search by name…') }}" class="mt-2" />
 
                     @if ($this->results->isNotEmpty())
-                        <div class="mt-2 space-y-1 rounded-lg border border-zinc-200 p-2 dark:border-zinc-700">
+                        <div class="mt-2 space-y-1 rounded-lg border border-stone-200 p-2 dark:border-stone-800">
                             @foreach ($this->results as $candidate)
                                 <button
                                     type="button"
                                     wire:click="pickPartner({{ $candidate->id }}, '{{ addslashes($candidate->name) }}')"
-                                    class="block w-full rounded-md px-2 py-1.5 text-start text-sm hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                                    class="block w-full rounded-md px-2 py-1.5 text-start text-sm hover:bg-stone-100 dark:hover:bg-stone-800"
                                 >
                                     {{ $candidate->name }}
                                 </button>

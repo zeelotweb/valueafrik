@@ -8,31 +8,33 @@ $countryFlag = \App\Support\Countries::flag($profile?->country);
     <div class="mx-auto w-full max-w-3xl">
         <div class="relative">
             <div
-                class="h-48 w-full overflow-hidden rounded-xl border border-zinc-200 bg-zinc-100 bg-cover bg-center dark:border-zinc-700 dark:bg-zinc-800"
+                class="h-40 w-full overflow-hidden rounded-xl border border-stone-200 bg-stone-100 bg-cover bg-center sm:h-48 dark:border-stone-800 dark:bg-stone-800"
                 @if ($profile?->coverUrl()) style="background-image: url('{{ $profile->coverUrl() }}')" @endif
             ></div>
 
-            <div class="absolute -bottom-10 start-6">
-                <div class="size-24 overflow-hidden rounded-full border-4 border-white bg-zinc-200 shadow-sm dark:border-zinc-950 dark:bg-zinc-700">
+            <div class="absolute -bottom-10 start-4 sm:start-6">
+                <div class="size-20 overflow-hidden rounded-full border-4 border-white bg-stone-200 shadow-sm sm:size-24 dark:border-stone-950 dark:bg-stone-700">
                     @if ($profile?->avatarUrl())
                         <img src="{{ $profile->avatarUrl() }}" alt="{{ $user->name }}" class="size-full object-cover">
                     @else
-                        <div class="flex size-full items-center justify-center text-zinc-500">
-                            <flux:icon.user class="size-10" />
+                        <div class="flex size-full items-center justify-center text-stone-500">
+                            <flux:icon.user class="size-8 sm:size-10" />
                         </div>
                     @endif
                 </div>
             </div>
 
-            <div class="absolute top-4 end-4 flex items-center gap-2">
+            <div class="absolute top-3 end-3 flex items-center gap-1.5 sm:top-4 sm:end-4 sm:gap-2">
                 @if ($isOwnProfile)
                     <a href="{{ route('profile.edit') }}" wire:navigate>
-                        <flux:button size="sm" variant="ghost">{{ __('Edit profile') }}</flux:button>
+                        <flux:button size="sm" variant="ghost" icon="pencil" class="!bg-white/90 !text-stone-900 shadow-sm backdrop-blur hover:!bg-white dark:!bg-stone-900/80 dark:!text-white dark:hover:!bg-stone-900">
+                            <span class="hidden sm:inline">{{ __('Edit profile') }}</span>
+                        </flux:button>
                     </a>
                 @else
-                    <livewire:pages::profile.start-call-button :user="$user" :key="'call-'.$user->id" />
-                    <livewire:pages::profile.message-button :user="$user" :key="'message-'.$user->id" />
-                    <livewire:pages::profile.follow-button :user="$user" :key="'follow-'.$user->id" />
+                    <livewire:pages::profile.start-call-button :user="$user" :key="'call-'.$user->id" :overlay="true" />
+                    <livewire:pages::profile.message-button :user="$user" :key="'message-'.$user->id" :overlay="true" />
+                    <livewire:pages::profile.follow-button :user="$user" :key="'follow-'.$user->id" :overlay="true" />
                 @endif
             </div>
         </div>
@@ -41,7 +43,7 @@ $countryFlag = \App\Support\Countries::flag($profile?->country);
             <flux:heading size="xl">{{ $user->name }}</flux:heading>
 
             @if ($countryName)
-                <div class="mt-1 flex items-center gap-1.5 text-sm text-zinc-500 dark:text-zinc-400">
+                <div class="mt-1 flex items-center gap-1.5 text-sm text-stone-500 dark:text-stone-400">
                     <span>{{ $countryFlag }}</span>
                     <span>{{ $countryName }}</span>
                 </div>
@@ -70,7 +72,7 @@ $countryFlag = \App\Support\Countries::flag($profile?->country);
                     class="mt-4 max-w-xl"
                 >
                     <p
-                        class="text-zinc-700 dark:text-zinc-300"
+                        class="text-stone-700 dark:text-stone-300"
                         x-bind:class="isLong && ! expanded ? 'line-clamp-3' : ''"
                     >{{ $profile->bio }}</p>
 
@@ -120,7 +122,7 @@ $countryFlag = \App\Support\Countries::flag($profile?->country);
             @endif
 
             @if (! $profile?->bio && $user->languages->isEmpty() && $user->heritages->isEmpty() && $user->interests->isEmpty())
-                <div class="mt-8 rounded-lg border border-dashed border-zinc-300 p-6 text-center dark:border-zinc-700">
+                <div class="mt-8 rounded-lg border border-dashed border-stone-300 p-6 text-center dark:border-stone-700">
                     <flux:text>
                         @if ($isOwnProfile)
                             {{ __("You haven't filled in your Roots yet.") }}
@@ -132,12 +134,12 @@ $countryFlag = \App\Support\Countries::flag($profile?->country);
                 </div>
             @endif
 
-            <div x-data="{ tab: 'wall' }" class="mt-10 border-t border-zinc-200 pt-8 dark:border-zinc-700">
-                <div class="flex items-center gap-6 border-b border-zinc-200 dark:border-zinc-700">
+            <div x-data="{ tab: 'wall' }" class="mt-10 border-t border-stone-200 pt-8 dark:border-stone-800">
+                <div class="flex items-center gap-6 border-b border-stone-200 dark:border-stone-800">
                     <button
                         type="button"
                         x-on:click="tab = 'wall'"
-                        x-bind:class="tab === 'wall' ? 'border-cyan-600 text-cyan-600' : 'border-transparent text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'"
+                        x-bind:class="tab === 'wall' ? 'border-cyan-600 text-cyan-600' : 'border-transparent text-stone-500 hover:text-stone-700 dark:hover:text-stone-300'"
                         class="border-b-2 pb-3 text-sm font-medium"
                     >
                         {{ __('Wall') }}
@@ -145,7 +147,7 @@ $countryFlag = \App\Support\Countries::flag($profile?->country);
                     <button
                         type="button"
                         x-on:click="tab = 'communities'"
-                        x-bind:class="tab === 'communities' ? 'border-cyan-600 text-cyan-600' : 'border-transparent text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'"
+                        x-bind:class="tab === 'communities' ? 'border-cyan-600 text-cyan-600' : 'border-transparent text-stone-500 hover:text-stone-700 dark:hover:text-stone-300'"
                         class="border-b-2 pb-3 text-sm font-medium"
                     >
                         {{ __('Communities') }}

@@ -30,13 +30,13 @@ new class extends Component {
         <a
             href="{{ route('communities.show', $community) }}"
             wire:navigate
-            class="flex items-center gap-3 rounded-xl border border-zinc-200 p-3 hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800"
+            class="flex items-center gap-3 rounded-xl border border-stone-200 p-3 hover:bg-stone-50 dark:border-stone-800 dark:hover:bg-stone-800"
         >
-            <div class="size-11 shrink-0 overflow-hidden rounded-xl bg-zinc-200 dark:bg-zinc-700">
+            <div class="size-11 shrink-0 overflow-hidden rounded-xl bg-stone-200 dark:bg-stone-700">
                 @if ($community->avatarUrl())
                     <img src="{{ $community->avatarUrl() }}" class="size-full object-cover">
                 @else
-                    <div class="flex size-full items-center justify-center text-zinc-500">
+                    <div class="flex size-full items-center justify-center text-stone-500">
                         <flux:icon.user-group class="size-5" />
                     </div>
                 @endif
@@ -44,7 +44,7 @@ new class extends Component {
 
             <div class="min-w-0 flex-1">
                 <div class="flex items-center gap-2">
-                    <span class="truncate font-medium text-zinc-900 dark:text-white">{{ $community->name }}</span>
+                    <span class="truncate font-medium text-stone-900 dark:text-white">{{ $community->name }}</span>
 
                     @if ($community->pivot->role !== 'member')
                         <flux:badge size="sm" color="cyan">{{ ucfirst($community->pivot->role) }}</flux:badge>
@@ -56,13 +56,13 @@ new class extends Component {
                         </flux:badge>
                     @endif
                 </div>
-                <p class="mt-0.5 truncate text-sm text-zinc-500 dark:text-zinc-400">
+                <p class="mt-0.5 truncate text-sm text-stone-500 dark:text-stone-400">
                     {{ trans_choice('1 member|:count members', $community->active_members_count) }}
                 </p>
             </div>
         </a>
     @empty
-        <div class="rounded-lg border border-dashed border-zinc-300 p-6 text-center dark:border-zinc-700">
+        <div class="rounded-lg border border-dashed border-stone-300 p-6 text-center dark:border-stone-800">
             <flux:text>
                 @if ($isOwnProfile)
                     {{ __("You haven't joined any communities yet.") }}

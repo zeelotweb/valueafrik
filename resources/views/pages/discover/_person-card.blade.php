@@ -16,5 +16,5 @@
         </div>
     </a>
 
-    <livewire:pages::profile.follow-button :user="$user" :key="'discover-follow-'.$user->id" />
+    <livewire:pages::profile.follow-button :user="$user" :key="'discover-follow-'.$user->id" :icon-only="true" />
 </div>

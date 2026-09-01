@@ -127,25 +127,25 @@ new #[Title('Messages')] class extends Component {
 }; ?>
 
 <div class="mx-auto flex h-[calc(100vh-8rem)] w-full max-w-2xl flex-col">
-    <div class="flex items-center gap-3 border-b border-zinc-200 pb-4 dark:border-zinc-700">
+    <div class="flex items-center gap-3 border-b border-stone-200 pb-4 dark:border-stone-800">
         <flux:button :href="route('messages.index')" wire:navigate size="sm" variant="ghost" icon="arrow-left" />
 
-        <div class="size-9 shrink-0 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-700">
+        <div class="size-9 shrink-0 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
             @if ($otherParticipant?->profile?->avatarUrl())
                 <img src="{{ $otherParticipant->profile->avatarUrl() }}" class="size-full object-cover">
             @else
-                <div class="flex size-full items-center justify-center text-zinc-500">
+                <div class="flex size-full items-center justify-center text-stone-500">
                     <flux:icon.user class="size-4" />
                 </div>
             @endif
         </div>
 
-        <flux:link :href="route('profile.show', $otherParticipant)" wire:navigate class="min-w-0 flex-1 truncate font-medium text-zinc-900 dark:text-white">
+        <flux:link :href="route('profile.show', $otherParticipant)" wire:navigate class="min-w-0 flex-1 truncate font-medium text-stone-900 dark:text-white">
             {{ $otherParticipant?->name ?? __('Unknown') }}
         </flux:link>
 
         <flux:button wire:click="startCall" wire:loading.attr="disabled" size="sm" variant="ghost" icon="video-camera" data-test="start-call-button">
-            {{ __('Call') }}
+            <span class="hidden sm:inline">{{ __('Call') }}</span>
         </flux:button>
     </div>
 
@@ -158,7 +158,7 @@ new #[Title('Messages')] class extends Component {
             @php $isMine = $message['user_id'] === Auth::id(); @endphp
 
             <div class="flex {{ $isMine ? 'justify-end' : 'justify-start' }}" wire:key="message-{{ $message['id'] }}">
-                <div class="max-w-[75%] rounded-2xl px-4 py-2 {{ $isMine ? 'bg-cyan-600 text-white' : 'bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100' }}">
+                <div class="max-w-[75%] rounded-2xl px-4 py-2 {{ $isMine ? 'bg-cyan-600 text-white' : 'bg-stone-100 text-stone-900 dark:bg-stone-800 dark:text-stone-100' }}">
                     @if (! empty($message['media']))
                         <div class="mb-1 grid gap-1 {{ count($message['media']) > 1 ? 'grid-cols-2' : '' }}">
                             @foreach ($message['media'] as $media)
@@ -175,7 +175,7 @@ new #[Title('Messages')] class extends Component {
         @endforeach
     </div>
 
-    <form wire:submit="send" class="border-t border-zinc-200 pt-4 dark:border-zinc-700">
+    <form wire:submit="send" class="border-t border-stone-200 pt-4 dark:border-stone-800">
         @if ($photo)
             <div class="mb-2">
                 <img src="{{ $photo->temporaryUrl() }}" class="size-20 rounded-lg object-cover">
@@ -183,7 +183,7 @@ new #[Title('Messages')] class extends Component {
         @endif
 
         <div class="flex items-end gap-2">
-            <label class="cursor-pointer p-2 text-zinc-500 hover:text-cyan-600 dark:text-zinc-400">
+            <label class="cursor-pointer p-2 text-stone-500 hover:text-cyan-600 dark:text-stone-400">
                 <input type="file" wire:model="photo" accept="image/*" class="hidden">
                 <flux:icon.photo class="size-5" />
             </label>

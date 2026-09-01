@@ -10,6 +10,7 @@ new #[Title('Messages')] class extends Component {
         $userId = Auth::id();
 
         $conversations = Auth::user()->conversations()
+            ->whereHas('messages')
             ->with([
                 'latestMessage.media',
                 'participants' => fn ($query) => $query->where('users.id', '!=', $userId)->with('profile'),
@@ -40,13 +41,13 @@ new #[Title('Messages')] class extends Component {
             <a
                 href="{{ route('messages.show', $conversation) }}"
                 wire:navigate
-                class="flex items-center gap-3 rounded-xl border border-zinc-200 p-3 hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800"
+                class="flex items-center gap-3 rounded-xl border border-stone-200 p-3 hover:bg-stone-50 dark:border-stone-800 dark:hover:bg-stone-800"
             >
-                <div class="size-11 shrink-0 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-700">
+                <div class="size-11 shrink-0 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
                     @if ($other?->profile?->avatarUrl())
                         <img src="{{ $other->profile->avatarUrl() }}" class="size-full object-cover">
                     @else
-                        <div class="flex size-full items-center justify-center text-zinc-500">
+                        <div class="flex size-full items-center justify-center text-stone-500">
                             <flux:icon.user class="size-5" />
                         </div>
                     @endif
@@ -54,16 +55,16 @@ new #[Title('Messages')] class extends Component {
 
                 <div class="min-w-0 flex-1">
                     <div class="flex items-center justify-between gap-2">
-                        <span class="truncate font-medium {{ $isUnread ? 'text-zinc-900 dark:text-white' : 'text-zinc-700 dark:text-zinc-300' }}">
+                        <span class="truncate font-medium {{ $isUnread ? 'text-stone-900 dark:text-white' : 'text-stone-700 dark:text-stone-300' }}">
                             {{ $other?->name ?? __('Unknown') }}
                         </span>
                         @if ($last)
-                            <span class="shrink-0 text-xs text-zinc-500 dark:text-zinc-400">
+                            <span class="shrink-0 text-xs text-stone-500 dark:text-stone-400">
                                 {{ $last->created_at->diffForHumans(null, true) }}
                             </span>
                         @endif
                     </div>
-                    <p class="truncate text-sm {{ $isUnread ? 'font-medium text-zinc-900 dark:text-white' : 'text-zinc-500 dark:text-zinc-400' }}">
+                    <p class="truncate text-sm {{ $isUnread ? 'font-medium text-stone-900 dark:text-white' : 'text-stone-500 dark:text-stone-400' }}">
                         {{ $preview }}
                     </p>
                 </div>
@@ -73,7 +74,7 @@ new #[Title('Messages')] class extends Component {
                 @endif
             </a>
         @empty
-            <div class="rounded-lg border border-dashed border-zinc-300 p-6 text-center dark:border-zinc-700">
+            <div class="rounded-lg border border-dashed border-stone-300 p-6 text-center dark:border-stone-800">
                 <flux:text>{{ __("You don't have any messages yet.") }}</flux:text>
             </div>
         @endforelse
