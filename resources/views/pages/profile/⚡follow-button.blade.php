@@ -58,13 +58,26 @@ new class extends Component {
     }
 }; ?>
 
+<?php
+    if ($iconOnly) {
+        $variant = 'ghost';
+        $class = $this->isFollowing
+            ? '!text-stone-400 hover:!text-stone-600 hover:!bg-stone-100 dark:!text-stone-500 dark:hover:!text-stone-300 dark:hover:!bg-stone-800'
+            : '!text-cyan-600 hover:!text-cyan-500 hover:!bg-cyan-50 dark:!text-cyan-400 dark:hover:!bg-cyan-950';
+    } else {
+        $variant = $this->isFollowing ? 'ghost' : 'primary';
+        $class = $this->isFollowing
+            ? ($overlay ? '!bg-white/90 !text-stone-900 shadow-sm backdrop-blur hover:!bg-white dark:!bg-stone-900/80 dark:!text-white dark:hover:!bg-stone-900' : '')
+            : '!bg-cyan-600 hover:!bg-cyan-500';
+    }
+?>
 <flux:button
     wire:click="toggle"
     wire:loading.attr="disabled"
     size="sm"
-    variant="{{ $this->isFollowing ? 'ghost' : 'primary' }}"
+    variant="{{ $variant }}"
     icon="{{ $this->isFollowing ? 'check' : 'user-plus' }}"
-    class="{{ $this->isFollowing ? ($overlay ? '!bg-white/90 !text-stone-900 shadow-sm backdrop-blur hover:!bg-white dark:!bg-stone-900/80 dark:!text-white dark:hover:!bg-stone-900' : '') : '!bg-cyan-600 hover:!bg-cyan-500' }}"
+    class="{{ $class }}"
     :tooltip="$iconOnly ? ($this->isFollowing ? __('Following') : __('Follow')) : null"
     aria-label="{{ $this->isFollowing ? __('Following') : __('Follow') }}"
     data-test="follow-button"
