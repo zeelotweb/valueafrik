@@ -1,191 +1,122 @@
 <?php
-$pillars = [
-    [
-        'id' => 'identity',
-        'number' => '01',
-        'title' => 'Identity & Profiles',
-        'summary' => 'Your way of life as your profile — languages, heritage, traditions — not just a bio and a follower count.',
-        'phase' => 'Phase 1',
-    ],
-    [
-        'id' => 'content',
-        'number' => '02',
-        'title' => 'Cultural Spotlights & Bridge Posts',
-        'summary' => 'Share the moments that carry culture — a wedding, a recipe, a festival — and co-create posts comparing the same tradition across two cultures.',
-        'phase' => 'Phase 1',
-    ],
-    [
-        'id' => 'circles',
-        'number' => '03',
-        'title' => 'Culture Circles',
-        'summary' => 'Small communities built around curiosity, not virality — Afro-diaspora food, cross-cultural entrepreneurship, music fusion.',
-        'phase' => 'Phase 2',
-    ],
-    [
-        'id' => 'bridge-score',
-        'number' => '04',
-        'title' => 'Bridge Score & Badges',
-        'summary' => 'Recognition for sparking exchange, not just posting — a visible measure of how many bridges you\'ve built.',
-        'phase' => 'Phase 2',
-    ],
-    [
-        'id' => 'discovery',
-        'number' => '05',
-        'title' => 'Discovery & Matchmaking',
-        'summary' => 'Find people through shared curiosity, not follower overlap — a geo-cultural map and curiosity-based recommendations.',
-        'phase' => 'Phase 3',
-    ],
-    [
-        'id' => 'live',
-        'number' => '06',
-        'title' => 'Live & Video',
-        'summary' => 'Real-time conversation and broadcast — mentorship sessions, cultural events, dialogue rooms — built on a proper SFU from day one.',
-        'phase' => 'Cross-phase',
-    ],
-];
-
-$recentMembers = \App\Models\User::with('profile')->latest()->take(5)->get();
+$showcaseItems = \App\Support\WelcomeShowcase::items();
+$heroItem = $showcaseItems[array_rand($showcaseItems)] ?? null;
 ?>
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         @include('partials.head')
     </head>
-    <body class="min-h-screen bg-stone-50 text-stone-900 antialiased dark:bg-stone-950 dark:text-stone-100">
-
-        <header class="sticky top-0 z-20 border-b border-stone-200/80 bg-stone-50/90 backdrop-blur dark:border-stone-800/80 dark:bg-stone-950/90">
-            <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-                <a href="{{ route('home') }}" class="flex items-center gap-2 font-semibold tracking-tight" wire:navigate>
-                    <img src="{{ asset('apple-touch-icon-180x180.png') }}" alt="valueAFRIK" class="size-8 dark:invert">
-                    <span><span class="text-cyan-600">value</span><span class="text-stone-900 dark:text-white">AFRIK</span></span>
-                </a>
-
-                <nav class="hidden items-center gap-6 text-sm text-stone-600 lg:flex dark:text-stone-400">
-                    <a href="#platform" class="hover:text-stone-900 dark:hover:text-white">The Platform</a>
-                </nav>
-
-                <div class="flex items-center gap-3 text-sm">
-                    @auth
-                        <a href="{{ url('/dashboard') }}" class="rounded-md bg-stone-900 px-4 py-2 font-medium text-white hover:bg-stone-700 dark:bg-white dark:text-stone-900 dark:hover:bg-stone-200">
-                            Dashboard
-                        </a>
-                    @else
-                        <a href="{{ route('login') }}" class="text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white">
-                            Log in
-                        </a>
-                        <a href="{{ route('register') }}" class="rounded-md bg-cyan-600 px-4 py-2 font-medium text-white hover:bg-cyan-500">
-                            Join Free
-                        </a>
-                    @endauth
-                </div>
-            </div>
-        </header>
+    <body
+        x-data="{ modalOpen: false, active: 0, total: {{ count($showcaseItems) }} }"
+        x-on:keydown.escape.window="modalOpen = false"
+        class="min-h-screen bg-stone-50 text-stone-900 antialiased dark:bg-stone-950 dark:text-stone-100"
+    >
+        @include('partials.marketing-header')
 
         <main>
-            <section class="mx-auto max-w-4xl px-6 pt-20 pb-16 text-center">
-                <p class="mb-4 text-sm font-medium tracking-widest text-cyan-600 uppercase dark:text-cyan-400">
-                    valueAFRIK
-                </p>
-                <h1 class="text-4xl font-bold tracking-tight text-balance sm:text-5xl">
-                    Building Bridges Across Cultures
-                </h1>
-                <p class="mx-auto mt-6 max-w-2xl text-lg text-stone-600 dark:text-stone-400">
-                    A social platform where identity comes first and curiosity is the reason to connect —
-                    not another feed built for virality. Share who you are, discover others, and build
-                    culture together.
-                </p>
-                <div class="mt-8 flex items-center justify-center gap-4">
-                    @guest
-                        <a href="{{ route('register') }}" class="rounded-md bg-cyan-600 px-6 py-3 font-medium text-white hover:bg-cyan-500">
-                            Join Free
-                        </a>
-                        <a href="{{ route('login') }}" class="rounded-md border border-stone-300 px-6 py-3 font-medium text-stone-700 hover:border-stone-400 dark:border-stone-700 dark:text-stone-300 dark:hover:border-stone-600">
-                            Log In
-                        </a>
-                    @else
-                        <a href="{{ url('/dashboard') }}" class="rounded-md bg-cyan-600 px-6 py-3 font-medium text-white hover:bg-cyan-500">
-                            Go to Dashboard
-                        </a>
-                    @endguest
-                </div>
-            </section>
-
-            <section id="platform" class="border-t border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900">
-                <div class="mx-auto max-w-6xl px-6 py-20">
-                    <div class="mb-12 max-w-2xl">
-                        <h2 class="text-sm font-medium tracking-widest text-cyan-600 uppercase dark:text-cyan-400">
-                            The Platform
-                        </h2>
-                        <p class="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
-                            Six pillars, built in order.
+            <section class="mx-auto max-w-6xl px-6 pt-16 pb-20">
+                <div class="grid items-center gap-12 lg:grid-cols-2">
+                    <div class="text-center lg:text-start">
+                        <p class="mb-4 text-sm font-medium tracking-widest text-cyan-600 uppercase dark:text-cyan-400">
+                            valueAFRIK
                         </p>
-                        <p class="mt-3 text-stone-600 dark:text-stone-400">
-                            This is the map we're building against — identity and content first, then
-                            community and recognition, then discovery. Each section below will link to
-                            the real thing as it ships.
+                        <h1 class="text-4xl font-bold tracking-tight text-balance sm:text-5xl">
+                            Building Bridges Across Cultures
+                        </h1>
+                        <p class="mx-auto mt-6 max-w-xl text-lg text-stone-600 lg:mx-0 dark:text-stone-400">
+                            A social platform where identity comes first and curiosity is the reason to connect —
+                            not another feed built for virality. Share who you are, discover others, and build
+                            culture together.
                         </p>
-                    </div>
-
-                    <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                        @foreach ($pillars as $pillar)
-                            <div id="{{ $pillar['id'] }}" class="scroll-mt-24 rounded-xl border border-stone-200 p-6 dark:border-stone-800">
-                                <div class="flex items-center justify-between">
-                                    <span class="font-mono text-sm text-stone-400 dark:text-stone-600">{{ $pillar['number'] }}</span>
-                                    <span class="rounded-full bg-stone-100 px-2.5 py-1 text-xs font-medium text-stone-600 dark:bg-stone-800 dark:text-stone-400">
-                                        {{ $pillar['phase'] }}
-                                    </span>
-                                </div>
-                                <h3 class="mt-4 font-semibold">{{ $pillar['title'] }}</h3>
-                                <p class="mt-2 text-sm text-stone-600 dark:text-stone-400">{{ $pillar['summary'] }}</p>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            </section>
-
-            @if ($recentMembers->isNotEmpty())
-                <section class="border-t border-stone-200 dark:border-stone-800">
-                    <div class="mx-auto max-w-6xl px-6 py-16">
-                        <h2 class="text-sm font-medium tracking-widest text-cyan-600 uppercase dark:text-cyan-400">
-                            Members
-                        </h2>
-                        <p class="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
-                            Sneak Peek: Our Community
-                        </p>
-                        <p class="mt-3 text-stone-600 dark:text-stone-400">
-                            Temporary jump-off point to real profiles while proper discovery is still being built.
-                        </p>
-
-                        <div class="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-                            @foreach ($recentMembers as $member)
-                                <a
-                                    href="{{ route('profile.show', $member) }}"
-                                    class="flex flex-col items-center gap-3 rounded-xl border border-stone-200 p-5 text-center hover:border-cyan-600 dark:border-stone-800 dark:hover:border-cyan-500"
-                                >
-                                    <div class="size-14 overflow-hidden rounded-full bg-stone-100 dark:bg-stone-800">
-                                        @if ($member->profile?->avatarUrl())
-                                            <img src="{{ $member->profile->avatarUrl() }}" class="size-full object-cover" alt="">
-                                        @else
-                                            <div class="flex size-full items-center justify-center text-stone-400">
-                                                <flux:icon.user class="size-6" />
-                                            </div>
-                                        @endif
-                                    </div>
-                                    <span class="truncate text-sm font-medium">{{ $member->name }}</span>
+                        <div class="mt-8 flex flex-wrap items-center justify-center gap-4 lg:justify-start">
+                            @guest
+                                <a href="{{ route('register') }}" class="rounded-md bg-cyan-600 px-6 py-3 font-medium text-white hover:bg-cyan-500">
+                                    Join Free
                                 </a>
-                            @endforeach
+                                <a href="{{ route('login') }}" class="rounded-md border border-stone-300 px-6 py-3 font-medium text-stone-700 hover:border-stone-400 dark:border-stone-700 dark:text-stone-300 dark:hover:border-stone-600">
+                                    Log In
+                                </a>
+                            @else
+                                <a href="{{ url('/dashboard') }}" class="rounded-md bg-cyan-600 px-6 py-3 font-medium text-white hover:bg-cyan-500">
+                                    Go to Dashboard
+                                </a>
+                            @endguest
                         </div>
                     </div>
-                </section>
-            @endif
+
+                    @if ($heroItem)
+                        <div>
+                            @include('partials.welcome-illustration', ['item' => $heroItem])
+
+                            <button
+                                type="button"
+                                x-on:click="active = 0; modalOpen = true"
+                                class="mt-4 flex w-full items-center justify-center gap-2 text-sm font-medium text-cyan-600 hover:text-cyan-500 dark:text-cyan-400"
+                            >
+                                See how it works
+                                <flux:icon.arrow-right class="size-4" />
+                            </button>
+                        </div>
+                    @endif
+                </div>
+            </section>
         </main>
 
-        <footer class="border-t border-stone-200 dark:border-stone-800">
-            <div class="mx-auto flex max-w-6xl flex-col items-center gap-3 px-6 py-10 text-sm text-stone-500 sm:flex-row sm:justify-between dark:text-stone-500">
-                <span>valueAFRIK</span>
-                <span>🚧 Beta: This platform is under active development. Expect changes as we build together.</span>
+        @include('partials.marketing-footer')
+
+        @if (count($showcaseItems) > 0)
+            <div
+                x-show="modalOpen"
+                x-transition.opacity
+                style="display: none;"
+                class="fixed inset-0 z-50 flex items-center justify-center bg-stone-950/70 p-4"
+                x-on:click.self="modalOpen = false"
+            >
+                <div class="relative w-full max-w-lg">
+                    <button
+                        type="button"
+                        x-on:click="modalOpen = false"
+                        class="absolute -top-10 right-0 text-stone-300 hover:text-white"
+                    >
+                        <flux:icon.x-mark class="size-6" />
+                    </button>
+
+                    @foreach ($showcaseItems as $index => $item)
+                        <div x-show="active === {{ $index }}">
+                            @include('partials.welcome-illustration', ['item' => $item])
+                        </div>
+                    @endforeach
+
+                    <div class="mt-4 flex items-center justify-between">
+                        <button
+                            type="button"
+                            x-on:click="active = (active - 1 + total) % total"
+                            class="rounded-md border border-stone-700 px-4 py-2 text-sm font-medium text-stone-200 hover:border-stone-500"
+                        >
+                            Back
+                        </button>
+
+                        <div class="flex items-center gap-1.5">
+                            @foreach ($showcaseItems as $index => $item)
+                                <span
+                                    class="size-1.5 rounded-full"
+                                    x-bind:class="active === {{ $index }} ? 'bg-cyan-500' : 'bg-stone-600'"
+                                ></span>
+                            @endforeach
+                        </div>
+
+                        <button
+                            type="button"
+                            x-on:click="active = (active + 1) % total"
+                            class="rounded-md bg-cyan-600 px-4 py-2 text-sm font-medium text-white hover:bg-cyan-500"
+                        >
+                            Next
+                        </button>
+                    </div>
+                </div>
             </div>
-        </footer>
+        @endif
 
         @fluxScripts
     </body>

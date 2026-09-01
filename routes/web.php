@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
+Route::view('guide', 'guide')->name('guide');
+Route::view('legal/privacy', 'legal.privacy')->name('legal.privacy');
+Route::view('legal/terms', 'legal.terms')->name('legal.terms');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
