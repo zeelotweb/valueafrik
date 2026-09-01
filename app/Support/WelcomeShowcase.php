@@ -36,18 +36,27 @@ class WelcomeShowcase
     /**
      * Distinct country codes actually represented on the platform right
      * now, for the "already here" strip — real signal, not a vanity counter.
+     * A random-sized random subset, so both which countries show and how
+     * many do varies per load instead of just reshuffling the same set.
      *
      * @return array<int, string>
      */
     public static function countries(): array
     {
-        return Profile::query()
+        $countries = Profile::query()
             ->whereNotNull('country')
             ->where('country', '!=', '')
             ->distinct()
-            ->pluck('country')
-            ->shuffle()
-            ->all();
+            ->pluck('country');
+
+        if ($countries->isEmpty()) {
+            return [];
+        }
+
+        $min = min(2, $countries->count());
+        $max = min(8, $countries->count());
+
+        return $countries->random(random_int($min, $max))->all();
     }
 
     private static function identity(): ?array
