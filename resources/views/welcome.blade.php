@@ -1,6 +1,6 @@
 <?php
 $showcaseItems = \App\Support\WelcomeShowcase::items();
-$heroItem = $showcaseItems[array_rand($showcaseItems)] ?? null;
+$heroItem = count($showcaseItems) > 0 ? $showcaseItems[array_rand($showcaseItems)] : null;
 ?>
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
