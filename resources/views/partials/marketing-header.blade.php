@@ -11,8 +11,8 @@
 
         <div class="flex items-center gap-3 text-sm">
             @auth
-                <a href="{{ url('/dashboard') }}" class="rounded-md bg-stone-900 px-4 py-2 font-medium text-white hover:bg-stone-700 dark:bg-white dark:text-stone-900 dark:hover:bg-stone-200">
-                    Dashboard
+                <a href="{{ url('/dashboard') }}" title="Dashboard" class="flex size-9 items-center justify-center rounded-md bg-stone-900 text-white hover:bg-stone-700 dark:bg-white dark:text-stone-900 dark:hover:bg-stone-200">
+                    <flux:icon.home class="size-5" />
                 </a>
             @else
                 <a href="{{ route('login') }}" class="text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white">

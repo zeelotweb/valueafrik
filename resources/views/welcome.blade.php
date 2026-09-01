@@ -1,6 +1,16 @@
 <?php
 $showcaseItems = \App\Support\WelcomeShowcase::items();
 $heroItem = count($showcaseItems) > 0 ? $showcaseItems[array_rand($showcaseItems)] : null;
+$countries = \App\Support\WelcomeShowcase::countries();
+
+$pillars = [
+    ['type' => 'identity', 'icon' => 'user', 'title' => 'Identity & Profiles', 'blurb' => 'Your way of life as your profile — languages, heritage, traditions, not just a bio.'],
+    ['type' => 'bridge_post', 'icon' => 'chat-bubble-left-right', 'title' => 'Bridge Posts', 'blurb' => 'Co-create posts with someone from another culture, comparing the same tradition side by side.'],
+    ['type' => 'community', 'icon' => 'user-group', 'title' => 'Culture Circles', 'blurb' => 'Small communities built around curiosity, not virality.'],
+    ['type' => 'bridge_score', 'icon' => 'trophy', 'title' => 'Bridge Score & Badges', 'blurb' => 'Recognition for sparking exchange, not just posting.'],
+    ['type' => 'discovery', 'icon' => 'magnifying-glass', 'title' => 'Discovery', 'blurb' => 'Find people through shared curiosity, not follower overlap.'],
+    ['type' => 'live', 'icon' => 'video-camera', 'title' => 'Live & Video', 'blurb' => 'Real-time conversation and broadcast, calls to cultural events.'],
+];
 ?>
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -15,12 +25,18 @@ $heroItem = count($showcaseItems) > 0 ? $showcaseItems[array_rand($showcaseItems
         @include('partials.marketing-header')
 
         <main>
-            <section class="mx-auto max-w-6xl px-6 pt-16 pb-20">
+            {{-- Hero --}}
+            <section class="mx-auto max-w-6xl px-6 pt-16 pb-16">
                 <div class="grid items-center gap-12 lg:grid-cols-2">
                     <div class="text-center lg:text-start">
-                        <p class="mb-4 text-sm font-medium tracking-widest text-cyan-600 uppercase dark:text-cyan-400">
-                            valueAFRIK
-                        </p>
+                        <div class="mb-4 flex items-center justify-center gap-3 lg:justify-start">
+                            <span class="text-sm font-medium tracking-widest text-cyan-600 uppercase dark:text-cyan-400">
+                                valueAFRIK
+                            </span>
+                            <span class="rounded-full border border-cyan-600/30 bg-cyan-50 px-2 py-0.5 text-xs font-medium text-cyan-700 dark:bg-cyan-950 dark:text-cyan-400">
+                                Beta
+                            </span>
+                        </div>
                         <h1 class="text-4xl font-bold tracking-tight text-balance sm:text-5xl">
                             Building Bridges Across Cultures
                         </h1>
@@ -59,6 +75,131 @@ $heroItem = count($showcaseItems) > 0 ? $showcaseItems[array_rand($showcaseItems
                             </button>
                         </div>
                     @endif
+                </div>
+            </section>
+
+            {{-- Cultures already here --}}
+            @if (count($countries) > 0)
+                <section class="border-y border-stone-200 bg-white py-8 dark:border-stone-800 dark:bg-stone-900/40">
+                    <div class="mx-auto flex max-w-6xl flex-col items-center gap-3 px-6 text-center">
+                        <p class="text-xs font-medium tracking-widest text-stone-400 uppercase dark:text-stone-600">
+                            Already on valueAFRIK
+                        </p>
+                        <div class="flex flex-wrap items-center justify-center gap-3">
+                            @foreach ($countries as $code)
+                                <span
+                                    title="{{ \App\Support\Countries::name($code) }}"
+                                    class="flex items-center gap-1.5 rounded-full border border-stone-200 bg-stone-50 px-3 py-1 text-sm dark:border-stone-800 dark:bg-stone-900"
+                                >
+                                    <span>{{ \App\Support\Countries::flag($code) }}</span>
+                                    <span class="text-stone-600 dark:text-stone-400">{{ \App\Support\Countries::name($code) }}</span>
+                                </span>
+                            @endforeach
+                            <span class="text-sm text-stone-400 dark:text-stone-600">and growing every day</span>
+                        </div>
+                    </div>
+                </section>
+            @endif
+
+            {{-- Pillars --}}
+            <section class="mx-auto max-w-6xl px-6 py-20">
+                <div class="mx-auto max-w-2xl text-center">
+                    <p class="text-sm font-medium tracking-widest text-cyan-600 uppercase dark:text-cyan-400">
+                        What you can do here
+                    </p>
+                    <h2 class="mt-2 text-3xl font-bold tracking-tight text-balance">
+                        Six pillars, one story
+                    </h2>
+                    <p class="mt-4 text-stone-600 dark:text-stone-400">
+                        Everything on valueAFRIK is built to turn curiosity into a real exchange — click any
+                        piece to see it in action.
+                    </p>
+                </div>
+
+                <div class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                    @foreach ($pillars as $index => $pillar)
+                        @php $available = $index < count($showcaseItems); @endphp
+                        <button
+                            type="button"
+                            @if ($available) x-on:click="active = {{ $index }}; modalOpen = true" @endif
+                            class="group flex flex-col items-start rounded-2xl border border-stone-200 bg-white p-6 text-start transition hover:border-cyan-600/40 hover:shadow-sm disabled:opacity-60 dark:border-stone-800 dark:bg-stone-900"
+                            @if (! $available) disabled @endif
+                        >
+                            <span class="flex size-10 items-center justify-center rounded-lg bg-cyan-50 text-cyan-700 dark:bg-cyan-950 dark:text-cyan-400">
+                                <flux:icon :icon="$pillar['icon']" class="size-5" />
+                            </span>
+                            <h3 class="mt-4 font-semibold">{{ $pillar['title'] }}</h3>
+                            <p class="mt-1.5 text-sm text-stone-500 dark:text-stone-400">{{ $pillar['blurb'] }}</p>
+                            @if ($available)
+                                <span class="mt-4 flex items-center gap-1 text-sm font-medium text-cyan-600 group-hover:gap-1.5 dark:text-cyan-400">
+                                    See a real example
+                                    <flux:icon.arrow-right class="size-3.5 transition-all" />
+                                </span>
+                            @endif
+                        </button>
+                    @endforeach
+                </div>
+            </section>
+
+            {{-- Why it's different --}}
+            <section class="border-t border-stone-200 bg-white py-20 dark:border-stone-800 dark:bg-stone-900/40">
+                <div class="mx-auto max-w-6xl px-6">
+                    <div class="mx-auto max-w-2xl text-center">
+                        <p class="text-sm font-medium tracking-widest text-cyan-600 uppercase dark:text-cyan-400">
+                            Why it's different
+                        </p>
+                        <h2 class="mt-2 text-3xl font-bold tracking-tight text-balance">
+                            Built for exchange, not attention
+                        </h2>
+                    </div>
+
+                    <div class="mt-12 grid gap-8 sm:grid-cols-3">
+                        <div class="text-center sm:text-start">
+                            <flux:icon.identification class="mx-auto size-6 text-cyan-600 sm:mx-0 dark:text-cyan-400" />
+                            <h3 class="mt-3 font-semibold">Identity first</h3>
+                            <p class="mt-1.5 text-sm text-stone-500 dark:text-stone-400">
+                                Your heritage, languages, and traditions are the profile — not an afterthought
+                                buried under a follower count.
+                            </p>
+                        </div>
+                        <div class="text-center sm:text-start">
+                            <flux:icon.globe-europe-africa class="mx-auto size-6 text-cyan-600 sm:mx-0 dark:text-cyan-400" />
+                            <h3 class="mt-3 font-semibold">Curiosity over virality</h3>
+                            <p class="mt-1.5 text-sm text-stone-500 dark:text-stone-400">
+                                Discovery surfaces people by shared interests and cross-cultural curiosity, not
+                                by who's trending.
+                            </p>
+                        </div>
+                        <div class="text-center sm:text-start">
+                            <flux:icon.trophy class="mx-auto size-6 text-cyan-600 sm:mx-0 dark:text-cyan-400" />
+                            <h3 class="mt-3 font-semibold">Recognition that means something</h3>
+                            <p class="mt-1.5 text-sm text-stone-500 dark:text-stone-400">
+                                Bridge Score rewards follows, conversations, and community — engagement with
+                                people, not just posts.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {{-- Final CTA --}}
+            <section class="mx-auto max-w-6xl px-6 py-20">
+                <div class="flex flex-col items-center gap-6 rounded-3xl border border-stone-200 bg-white px-8 py-14 text-center dark:border-stone-800 dark:bg-stone-900">
+                    <h2 class="text-3xl font-bold tracking-tight text-balance">
+                        Come build a bridge.
+                    </h2>
+                    <p class="max-w-md text-stone-600 dark:text-stone-400">
+                        It's free, it's early, and every profile added makes the map a little bigger.
+                    </p>
+                    @guest
+                        <a href="{{ route('register') }}" class="rounded-md bg-cyan-600 px-6 py-3 font-medium text-white hover:bg-cyan-500">
+                            Join Free
+                        </a>
+                    @else
+                        <a href="{{ url('/dashboard') }}" class="rounded-md bg-cyan-600 px-6 py-3 font-medium text-white hover:bg-cyan-500">
+                            Go to Dashboard
+                        </a>
+                    @endguest
                 </div>
             </section>
         </main>

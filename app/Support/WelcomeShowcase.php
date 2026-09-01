@@ -6,6 +6,7 @@ use App\Models\BridgePost;
 use App\Models\Community;
 use App\Models\Interest;
 use App\Models\LiveSession;
+use App\Models\Profile;
 use App\Models\User;
 
 /**
@@ -30,6 +31,23 @@ class WelcomeShowcase
             self::discovery(),
             self::live(),
         ])->filter()->values()->all();
+    }
+
+    /**
+     * Distinct country codes actually represented on the platform right
+     * now, for the "already here" strip — real signal, not a vanity counter.
+     *
+     * @return array<int, string>
+     */
+    public static function countries(): array
+    {
+        return Profile::query()
+            ->whereNotNull('country')
+            ->where('country', '!=', '')
+            ->distinct()
+            ->pluck('country')
+            ->shuffle()
+            ->all();
     }
 
     private static function identity(): ?array
