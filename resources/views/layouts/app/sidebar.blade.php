@@ -3,10 +3,15 @@
     <head>
         @include('partials.head')
     </head>
-    <body class="min-h-screen bg-white dark:bg-zinc-800">
-        <flux:sidebar sticky collapsible="mobile" class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
-            <flux:sidebar.header>
-                <x-app-logo :sidebar="true" href="/" wire:navigate />
+    <body class="min-h-screen bg-stone-50 dark:bg-stone-900">
+        <flux:sidebar
+            sticky
+            collapsible="mobile"
+            style="--color-accent: var(--color-cyan-500); --color-accent-content: var(--color-cyan-500); --color-accent-foreground: var(--color-stone-950);"
+            class="border-e border-stone-200 bg-stone-50 dark:border-stone-800 dark:bg-stone-950"
+        >
+            <flux:sidebar.header class="border-b border-stone-200 pb-4 dark:border-stone-800">
+                <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
                 <flux:sidebar.collapse class="lg:hidden" />
             </flux:sidebar.header>
 
@@ -42,11 +47,14 @@
 
             <flux:spacer />
 
-            <x-desktop-user-menu class="hidden lg:block" :name="auth()->user()->name" />
+            <x-desktop-user-menu class="hidden border-t border-stone-200 pt-4 lg:block dark:border-stone-800" :name="auth()->user()->name" />
         </flux:sidebar>
 
         <!-- Mobile Header -->
-        <flux:header class="lg:hidden">
+        <flux:header
+            style="--color-accent: var(--color-cyan-500); --color-accent-content: var(--color-cyan-500); --color-accent-foreground: var(--color-stone-950);"
+            class="lg:hidden border-b border-stone-200 bg-stone-50/90 backdrop-blur dark:border-stone-800 dark:bg-stone-950/90"
+        >
             <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
 
             <x-app-logo href="{{ route('dashboard') }}" wire:navigate />
