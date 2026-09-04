@@ -76,7 +76,6 @@ new class extends Component {
     wire:loading.attr="disabled"
     size="sm"
     variant="{{ $variant }}"
-    @if (! $iconOnly && ! $this->isFollowing) color="cyan" @endif
     icon="{{ $this->isFollowing ? 'check' : 'user-plus' }}"
     class="{{ $class }}"
     :tooltip="$iconOnly ? ($this->isFollowing ? __('Following') : __('Follow')) : null"
