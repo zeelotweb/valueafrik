@@ -9,7 +9,7 @@
                 <a href="{{ route('home') }}" class="flex flex-col items-center gap-2 font-medium" wire:navigate>
                     <img src="{{ asset('apple-touch-icon-180x180.png') }}" alt="valueAFRIK" class="mb-1 size-9 dark:invert">
                     <span class="text-lg font-semibold tracking-tight">
-                        <span class="text-cyan-600">value</span><span class="text-stone-900 dark:text-white">AFRIK</span>
+                        <span class="text-green-600">value</span><span class="text-stone-900 dark:text-white">AFRIK</span>
                     </span>
                 </a>
                 <div class="flex flex-col gap-6">

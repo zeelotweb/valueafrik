@@ -26,7 +26,7 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
                 wire:navigate
                 class="rounded-xl border border-stone-200 p-5 hover:bg-stone-50 dark:border-stone-800 dark:hover:bg-stone-800"
             >
-                <div class="flex items-center gap-2 text-cyan-600 dark:text-cyan-400">
+                <div class="flex items-center gap-2 text-green-600 dark:text-green-400">
                     <flux:icon.sparkles class="size-5" />
                     <span class="text-sm font-medium">{{ __('Bridge Score') }}</span>
                 </div>
@@ -41,7 +41,7 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
                 wire:navigate
                 class="rounded-xl border border-stone-200 p-5 hover:bg-stone-50 dark:border-stone-800 dark:hover:bg-stone-800"
             >
-                <div class="flex items-center gap-2 text-cyan-600 dark:text-cyan-400">
+                <div class="flex items-center gap-2 text-green-600 dark:text-green-400">
                     <flux:icon.user-group class="size-5" />
                     <span class="text-sm font-medium">{{ __('Communities') }}</span>
                 </div>
@@ -56,7 +56,7 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
                 wire:navigate
                 class="rounded-xl border border-stone-200 p-5 hover:bg-stone-50 dark:border-stone-800 dark:hover:bg-stone-800"
             >
-                <div class="flex items-center gap-2 text-cyan-600 dark:text-cyan-400">
+                <div class="flex items-center gap-2 text-green-600 dark:text-green-400">
                     <flux:icon.chat-bubble-left-right class="size-5" />
                     <span class="text-sm font-medium">{{ __('Messages') }}</span>
                 </div>
@@ -89,7 +89,7 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
             <div>
                 <div class="flex items-center justify-between">
                     <flux:heading size="lg">{{ __('Your communities') }}</flux:heading>
-                    <a href="{{ route('communities.create') }}" wire:navigate class="text-sm font-medium text-cyan-600 hover:text-cyan-500 dark:text-cyan-400">
+                    <a href="{{ route('communities.create') }}" wire:navigate class="text-sm font-medium text-green-600 hover:text-green-500 dark:text-green-400">
                         {{ __('New community') }}
                     </a>
                 </div>

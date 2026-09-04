@@ -269,3 +269,23 @@ test('a community can carry a photo attachment on a post', function () {
     expect($post->media)->toHaveCount(1);
     Storage::disk('public')->assertExists($post->media->first()->path);
 });
+
+test('a staged photo can be removed before posting to a community', function () {
+    $owner = User::factory()->create();
+    $community = createCommunity($owner);
+
+    $component = Livewire::actingAs($owner)
+        ->test('pages::communities.composer', ['community' => $community])
+        ->set('photos', [
+            UploadedFile::fake()->image('first.jpg'),
+            UploadedFile::fake()->image('second.jpg'),
+        ])
+        ->call('removePhoto', 0);
+
+    expect($component->get('photos'))->toHaveCount(1);
+    expect($component->get('photos')[0]->getClientOriginalName())->toBe('second.jpg');
+
+    $component->call('post')->assertHasNoErrors();
+
+    expect($community->posts()->first()->media)->toHaveCount(1);
+});

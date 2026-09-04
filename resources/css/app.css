@@ -23,15 +23,15 @@
     --color-zinc-900: #171717;
     --color-zinc-950: #0a0a0a;
 
-    --color-accent: var(--color-cyan-600);
-    --color-accent-content: var(--color-cyan-600);
+    --color-accent: var(--color-green-600);
+    --color-accent-content: var(--color-green-600);
     --color-accent-foreground: var(--color-white);
 }
 
 @layer theme {
     .dark {
-        --color-accent: var(--color-cyan-500);
-        --color-accent-content: var(--color-cyan-400);
+        --color-accent: var(--color-green-500);
+        --color-accent-content: var(--color-green-400);
         --color-accent-foreground: var(--color-white);
     }
 }
@@ -59,6 +59,21 @@ input:focus[data-flux-control],
 textarea:focus[data-flux-control],
 select:focus[data-flux-control] {
     @apply outline-hidden ring-2 ring-accent ring-offset-2 ring-offset-white dark:ring-offset-stone-900;
+}
+
+/**
+ * Bold, flat, square identity: sharp corners and no soft shadows on
+ * buttons and form controls, distinct from Flux's default rounded/soft
+ * look. Avatars and pill badges stay round on purpose — this is about
+ * actionable UI, not every rounded shape in the app.
+ */
+[data-flux-button] {
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+[data-flux-control] {
+    border-radius: 0 !important;
 }
 
 /* \[:where(&)\]:size-4 {

@@ -206,3 +206,31 @@ test('a side can carry a photo attachment', function () {
     expect($media->first()->user_id)->toBe($initiator->id);
     Storage::disk('public')->assertExists($media->first()->path);
 });
+
+test('a staged side photo can be removed before submitting', function () {
+    $initiator = User::factory()->create();
+    $partner = User::factory()->create();
+    $bridgePost = BridgePost::create([
+        'theme' => 'Weddings',
+        'initiator_id' => $initiator->id,
+        'partner_id' => $partner->id,
+        'status' => BridgePost::STATUS_ACTIVE,
+    ]);
+
+    $component = Livewire::actingAs($initiator)
+        ->test('pages::profile.bridge-posts', ['user' => $initiator])
+        ->call('startSide', $bridgePost->id)
+        ->set('sideBody', 'Here is how we do weddings...')
+        ->set('sidePhotos', [
+            UploadedFile::fake()->image('first.jpg'),
+            UploadedFile::fake()->image('second.jpg'),
+        ])
+        ->call('removeSidePhoto', 0);
+
+    expect($component->get('sidePhotos'))->toHaveCount(1);
+    expect($component->get('sidePhotos')[0]->getClientOriginalName())->toBe('second.jpg');
+
+    $component->call('submitSide');
+
+    expect($bridgePost->fresh()->media)->toHaveCount(1);
+});

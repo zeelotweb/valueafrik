@@ -122,6 +122,25 @@ test('a message can carry a photo attachment', function () {
     Storage::disk('public')->assertExists($message->media->first()->path);
 });
 
+test('a staged message photo can be removed before sending', function () {
+    $a = User::factory()->create();
+    $b = User::factory()->create();
+    $conversation = Conversation::between($a, $b);
+
+    Livewire::actingAs($a)
+        ->test('pages::messages.show', ['conversation' => $conversation])
+        ->set('body', 'Never mind the photo')
+        ->set('photo', UploadedFile::fake()->image('photo.jpg'))
+        ->call('removePhoto')
+        ->assertSet('photo', null)
+        ->call('send')
+        ->assertHasNoErrors();
+
+    $message = $conversation->messages()->first();
+
+    expect($message->media)->toHaveCount(0);
+});
+
 test('a message requires a body or a photo', function () {
     $a = User::factory()->create();
     $b = User::factory()->create();

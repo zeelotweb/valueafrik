@@ -66,7 +66,7 @@ new class extends Component {
         @elseif ($community->isFull())
             <flux:button size="sm" variant="ghost" class="{{ $pill }}" disabled>{{ __('Community full') }}</flux:button>
         @elseif ($this->joinable)
-            <flux:button wire:click="join" size="sm" variant="primary" color="cyan" wire:loading.attr="disabled">
+            <flux:button wire:click="join" size="sm" variant="primary" color="green" wire:loading.attr="disabled">
                 {{ __('Join') }}
             </flux:button>
         @else

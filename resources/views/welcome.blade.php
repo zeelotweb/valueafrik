@@ -30,10 +30,10 @@ $pillars = [
                 <div class="grid items-center gap-12 lg:grid-cols-2">
                     <div class="text-center lg:text-start">
                         <div class="mb-4 flex items-center justify-center gap-3 lg:justify-start">
-                            <span class="text-sm font-medium tracking-widest text-cyan-600 uppercase dark:text-cyan-400">
+                            <span class="text-sm font-medium tracking-widest text-green-600 uppercase dark:text-green-400">
                                 valueAFRIK
                             </span>
-                            <span class="rounded-full border border-cyan-600/30 bg-cyan-50 px-2 py-0.5 text-xs font-medium text-cyan-700 dark:bg-cyan-950 dark:text-cyan-400">
+                            <span class="rounded-full border border-green-600/30 bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 dark:bg-green-950 dark:text-green-400">
                                 Beta
                             </span>
                         </div>
@@ -47,14 +47,14 @@ $pillars = [
                         </p>
                         <div class="mt-8 flex flex-wrap items-center justify-center gap-4 lg:justify-start">
                             @guest
-                                <a href="{{ route('register') }}" class="rounded-md bg-cyan-600 px-6 py-3 font-medium text-white hover:bg-cyan-500">
+                                <a href="{{ route('register') }}" class="rounded-md bg-green-600 px-6 py-3 font-medium text-white hover:bg-green-500">
                                     Join Free
                                 </a>
                                 <a href="{{ route('login') }}" class="rounded-md border border-stone-300 px-6 py-3 font-medium text-stone-700 hover:border-stone-400 dark:border-stone-700 dark:text-stone-300 dark:hover:border-stone-600">
                                     Log In
                                 </a>
                             @else
-                                <a href="{{ url('/dashboard') }}" class="rounded-md bg-cyan-600 px-6 py-3 font-medium text-white hover:bg-cyan-500">
+                                <a href="{{ url('/dashboard') }}" class="rounded-md bg-green-600 px-6 py-3 font-medium text-white hover:bg-green-500">
                                     Go to Dashboard
                                 </a>
                             @endguest
@@ -68,7 +68,7 @@ $pillars = [
                             <button
                                 type="button"
                                 x-on:click="active = 0; modalOpen = true"
-                                class="mt-4 flex w-full items-center justify-center gap-2 text-sm font-medium text-cyan-600 hover:text-cyan-500 dark:text-cyan-400"
+                                class="mt-4 flex w-full items-center justify-center gap-2 text-sm font-medium text-green-600 hover:text-green-500 dark:text-green-400"
                             >
                                 See how it works
                                 <flux:icon.arrow-right class="size-4" />
@@ -104,7 +104,7 @@ $pillars = [
             {{-- Pillars --}}
             <section class="mx-auto max-w-6xl px-6 py-20">
                 <div class="mx-auto max-w-2xl text-center">
-                    <p class="text-sm font-medium tracking-widest text-cyan-600 uppercase dark:text-cyan-400">
+                    <p class="text-sm font-medium tracking-widest text-green-600 uppercase dark:text-green-400">
                         What you can do here
                     </p>
                     <h2 class="mt-2 text-3xl font-bold tracking-tight text-balance">
@@ -122,16 +122,16 @@ $pillars = [
                         <button
                             type="button"
                             @if ($available) x-on:click="active = {{ $index }}; modalOpen = true" @endif
-                            class="group flex flex-col items-start rounded-2xl border border-stone-200 bg-white p-6 text-start transition hover:border-cyan-600/40 hover:shadow-sm disabled:opacity-60 dark:border-stone-800 dark:bg-stone-900"
+                            class="group flex flex-col items-start rounded-2xl border border-stone-200 bg-white p-6 text-start transition hover:border-green-600/40 hover:shadow-sm disabled:opacity-60 dark:border-stone-800 dark:bg-stone-900"
                             @if (! $available) disabled @endif
                         >
-                            <span class="flex size-10 items-center justify-center rounded-lg bg-cyan-50 text-cyan-700 dark:bg-cyan-950 dark:text-cyan-400">
+                            <span class="flex size-10 items-center justify-center rounded-lg bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-400">
                                 <flux:icon :icon="$pillar['icon']" class="size-5" />
                             </span>
                             <h3 class="mt-4 font-semibold">{{ $pillar['title'] }}</h3>
                             <p class="mt-1.5 text-sm text-stone-500 dark:text-stone-400">{{ $pillar['blurb'] }}</p>
                             @if ($available)
-                                <span class="mt-4 flex items-center gap-1 text-sm font-medium text-cyan-600 group-hover:gap-1.5 dark:text-cyan-400">
+                                <span class="mt-4 flex items-center gap-1 text-sm font-medium text-green-600 group-hover:gap-1.5 dark:text-green-400">
                                     See a real example
                                     <flux:icon.arrow-right class="size-3.5 transition-all" />
                                 </span>
@@ -145,7 +145,7 @@ $pillars = [
             <section class="border-t border-stone-200 bg-white py-20 dark:border-stone-800 dark:bg-stone-900/40">
                 <div class="mx-auto max-w-6xl px-6">
                     <div class="mx-auto max-w-2xl text-center">
-                        <p class="text-sm font-medium tracking-widest text-cyan-600 uppercase dark:text-cyan-400">
+                        <p class="text-sm font-medium tracking-widest text-green-600 uppercase dark:text-green-400">
                             Why it's different
                         </p>
                         <h2 class="mt-2 text-3xl font-bold tracking-tight text-balance">
@@ -155,7 +155,7 @@ $pillars = [
 
                     <div class="mt-12 grid gap-8 sm:grid-cols-3">
                         <div class="text-center sm:text-start">
-                            <flux:icon.identification class="mx-auto size-6 text-cyan-600 sm:mx-0 dark:text-cyan-400" />
+                            <flux:icon.identification class="mx-auto size-6 text-green-600 sm:mx-0 dark:text-green-400" />
                             <h3 class="mt-3 font-semibold">Identity first</h3>
                             <p class="mt-1.5 text-sm text-stone-500 dark:text-stone-400">
                                 Your heritage, languages, and traditions are the profile — not an afterthought
@@ -163,7 +163,7 @@ $pillars = [
                             </p>
                         </div>
                         <div class="text-center sm:text-start">
-                            <flux:icon.globe-europe-africa class="mx-auto size-6 text-cyan-600 sm:mx-0 dark:text-cyan-400" />
+                            <flux:icon.globe-europe-africa class="mx-auto size-6 text-green-600 sm:mx-0 dark:text-green-400" />
                             <h3 class="mt-3 font-semibold">Curiosity over virality</h3>
                             <p class="mt-1.5 text-sm text-stone-500 dark:text-stone-400">
                                 Discovery surfaces people by shared interests and cross-cultural curiosity, not
@@ -171,7 +171,7 @@ $pillars = [
                             </p>
                         </div>
                         <div class="text-center sm:text-start">
-                            <flux:icon.trophy class="mx-auto size-6 text-cyan-600 sm:mx-0 dark:text-cyan-400" />
+                            <flux:icon.trophy class="mx-auto size-6 text-green-600 sm:mx-0 dark:text-green-400" />
                             <h3 class="mt-3 font-semibold">Recognition that means something</h3>
                             <p class="mt-1.5 text-sm text-stone-500 dark:text-stone-400">
                                 Bridge Score rewards follows, conversations, and community — engagement with
@@ -192,11 +192,11 @@ $pillars = [
                         It's free, it's early, and every profile added makes the map a little bigger.
                     </p>
                     @guest
-                        <a href="{{ route('register') }}" class="rounded-md bg-cyan-600 px-6 py-3 font-medium text-white hover:bg-cyan-500">
+                        <a href="{{ route('register') }}" class="rounded-md bg-green-600 px-6 py-3 font-medium text-white hover:bg-green-500">
                             Join Free
                         </a>
                     @else
-                        <a href="{{ url('/dashboard') }}" class="rounded-md bg-cyan-600 px-6 py-3 font-medium text-white hover:bg-cyan-500">
+                        <a href="{{ url('/dashboard') }}" class="rounded-md bg-green-600 px-6 py-3 font-medium text-white hover:bg-green-500">
                             Go to Dashboard
                         </a>
                     @endguest
@@ -242,7 +242,7 @@ $pillars = [
                             @foreach ($showcaseItems as $index => $item)
                                 <span
                                     class="size-1.5 rounded-full"
-                                    x-bind:class="active === {{ $index }} ? 'bg-cyan-500' : 'bg-stone-600'"
+                                    x-bind:class="active === {{ $index }} ? 'bg-green-500' : 'bg-stone-600'"
                                 ></span>
                             @endforeach
                         </div>
@@ -250,7 +250,7 @@ $pillars = [
                         <button
                             type="button"
                             x-on:click="active = (active + 1) % total"
-                            class="rounded-md bg-cyan-600 px-4 py-2 text-sm font-medium text-white hover:bg-cyan-500"
+                            class="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-500"
                         >
                             Next
                         </button>

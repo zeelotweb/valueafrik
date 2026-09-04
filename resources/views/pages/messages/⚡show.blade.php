@@ -54,6 +54,11 @@ new #[Title('Messages')] class extends Component {
         ];
     }
 
+    public function removePhoto(): void
+    {
+        $this->reset('photo');
+    }
+
     public function send(): void
     {
         $this->validate([
@@ -158,7 +163,7 @@ new #[Title('Messages')] class extends Component {
             @php $isMine = $message['user_id'] === Auth::id(); @endphp
 
             <div class="flex {{ $isMine ? 'justify-end' : 'justify-start' }}" wire:key="message-{{ $message['id'] }}">
-                <div class="max-w-[75%] rounded-2xl px-4 py-2 {{ $isMine ? 'bg-cyan-600 text-white' : 'bg-stone-100 text-stone-900 dark:bg-stone-800 dark:text-stone-100' }}">
+                <div class="max-w-[75%] rounded-2xl px-4 py-2 {{ $isMine ? 'bg-green-600 text-white' : 'bg-stone-100 text-stone-900 dark:bg-stone-800 dark:text-stone-100' }}">
                     @if (! empty($message['media']))
                         <div class="mb-1 grid gap-1 {{ count($message['media']) > 1 ? 'grid-cols-2' : '' }}">
                             @foreach ($message['media'] as $media)
@@ -175,15 +180,37 @@ new #[Title('Messages')] class extends Component {
         @endforeach
     </div>
 
-    <form wire:submit="send" class="border-t border-stone-200 pt-4 dark:border-stone-800">
+    <form
+        wire:submit="send"
+        class="border-t border-stone-200 pt-4 dark:border-stone-800"
+        x-data="{ uploading: false, progress: 0 }"
+        x-on:livewire-upload-start="uploading = true; progress = 0"
+        x-on:livewire-upload-finish="uploading = false"
+        x-on:livewire-upload-cancel="uploading = false"
+        x-on:livewire-upload-error="uploading = false"
+        x-on:livewire-upload-progress="progress = $event.detail.progress"
+    >
         @if ($photo)
-            <div class="mb-2">
-                <img src="{{ $photo->temporaryUrl() }}" class="size-20 rounded-lg object-cover">
+            <div class="mb-2 flex items-center gap-2">
+                <div class="relative size-16 shrink-0 overflow-hidden rounded-lg bg-stone-100 dark:bg-stone-800">
+                    <img src="{{ $photo->temporaryUrl() }}" class="size-full object-cover">
+                    <button
+                        type="button"
+                        wire:click="removePhoto"
+                        class="absolute top-0.5 end-0.5 flex size-4 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"
+                    >
+                        <flux:icon.x-mark class="size-2.5" />
+                    </button>
+                </div>
+                <span x-show="uploading" style="display: none;" class="flex items-center gap-1.5 text-sm text-green-600 dark:text-green-400">
+                    <flux:icon.loading variant="micro" class="size-3.5" />
+                    <span x-text="{{ Js::from(__('Uploading…')) }} + ' ' + progress + '%'"></span>
+                </span>
             </div>
         @endif
 
         <div class="flex items-end gap-2">
-            <label class="cursor-pointer p-2 text-stone-500 hover:text-cyan-600 dark:text-stone-400">
+            <label class="cursor-pointer rounded-md p-2 text-stone-500 hover:bg-stone-100 hover:text-green-600 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-green-400">
                 <input type="file" wire:model="photo" accept="image/*" class="hidden">
                 <flux:icon.photo class="size-5" />
             </label>
@@ -195,7 +222,7 @@ new #[Title('Messages')] class extends Component {
                 class="flex-1"
             />
 
-            <flux:button type="submit" variant="primary" color="cyan" wire:loading.attr="disabled">
+            <flux:button type="submit" variant="primary" color="green" wire:loading.attr="disabled" wire:target="send">
                 {{ __('Send') }}
             </flux:button>
         </div>

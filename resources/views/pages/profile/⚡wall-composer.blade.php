@@ -12,6 +12,13 @@ new class extends Component {
     /** @var \Livewire\Features\SupportFileUploads\TemporaryUploadedFile[] */
     public array $photos = [];
 
+    public function removePhoto(int $index): void
+    {
+        unset($this->photos[$index]);
+
+        $this->photos = array_values($this->photos);
+    }
+
     public function post(): void
     {
         $this->validate([
@@ -57,27 +64,14 @@ new class extends Component {
             rows="3"
         />
 
-        @if ($photos)
-            <div class="mt-3 grid grid-cols-4 gap-2">
-                @foreach ($photos as $photo)
-                    <img src="{{ $photo->temporaryUrl() }}" class="aspect-square w-full rounded-lg object-cover">
-                @endforeach
-            </div>
-        @endif
+        @include('partials.photo-picker', ['photos' => $photos, 'property' => 'photos', 'removeMethod' => 'removePhoto', 'max' => 4])
 
-        <div class="mt-3 flex items-center justify-between">
-            <label class="cursor-pointer text-sm font-medium text-cyan-600 hover:text-cyan-500 dark:text-cyan-400">
-                <input type="file" wire:model="photos" multiple accept="image/*" class="hidden">
-                {{ __('Add photos') }}
-            </label>
-
-            <flux:button type="submit" variant="primary" color="cyan" wire:loading.attr="disabled">
+        <div class="mt-3 flex items-center justify-end">
+            <flux:button type="submit" variant="primary" color="green" wire:loading.attr="disabled" wire:target="post">
                 {{ __('Post') }}
             </flux:button>
         </div>
 
         @error('body') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
-        @error('photos') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
-        @error('photos.*') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
     </form>
 </div>

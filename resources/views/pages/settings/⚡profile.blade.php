@@ -107,8 +107,12 @@ new #[Title('Profile settings')] class extends Component {
                         "
                     />
 
-                    <div x-show="coverUploading" class="absolute inset-0 flex items-center justify-center rounded-lg bg-black/40">
-                        <span class="text-sm font-medium text-white" x-text="coverProgress + '%'"></span>
+                    <div x-show="coverUploading" style="display: none;" class="absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-lg bg-black/50">
+                        <flux:icon.loading variant="mini" class="size-5 text-white" />
+                        <div class="h-1.5 w-32 overflow-hidden rounded-full bg-white/25">
+                            <div class="h-full rounded-full bg-white transition-all" x-bind:style="`width: ${coverProgress}%`"></div>
+                        </div>
+                        <span class="text-xs font-medium text-white" x-text="coverProgress + '%'"></span>
                     </div>
                 </div>
 
@@ -126,8 +130,9 @@ new #[Title('Profile settings')] class extends Component {
                         <div class="absolute inset-0 flex items-center justify-center bg-black/0 text-transparent transition group-hover:bg-black/40 group-hover:text-white">
                             <flux:icon.camera class="size-5" />
                         </div>
-                        <div x-show="avatarUploading" class="absolute inset-0 flex items-center justify-center bg-black/50">
-                            <span class="text-xs font-medium text-white" x-text="avatarProgress + '%'"></span>
+                        <div x-show="avatarUploading" style="display: none;" class="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/60">
+                            <flux:icon.loading variant="micro" class="size-4 text-white" />
+                            <span class="text-[10px] font-medium text-white" x-text="avatarProgress + '%'"></span>
                         </div>
                     </button>
 
@@ -165,7 +170,7 @@ new #[Title('Profile settings')] class extends Component {
 
             <div class="flex items-center gap-4">
                 <div class="flex items-center justify-end">
-                    <flux:button variant="primary" color="cyan" type="submit" class="w-full" data-test="update-profile-button">
+                    <flux:button variant="primary" color="green" type="submit" class="w-full" data-test="update-profile-button">
                         {{ __('Save') }}
                     </flux:button>
                 </div>

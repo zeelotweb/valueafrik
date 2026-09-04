@@ -7,7 +7,7 @@
         <flux:sidebar
             sticky
             collapsible="mobile"
-            style="--color-accent: var(--color-cyan-500); --color-accent-content: var(--color-cyan-500); --color-accent-foreground: var(--color-stone-950);"
+            style="--color-accent: var(--color-green-500); --color-accent-content: var(--color-green-500); --color-accent-foreground: var(--color-stone-950);"
             class="border-e border-stone-200 bg-stone-50 dark:border-stone-800 dark:bg-stone-950"
         >
             <flux:sidebar.header class="border-b border-stone-200 pb-4 dark:border-stone-800">
@@ -52,7 +52,7 @@
 
         <!-- Mobile Header -->
         <flux:header
-            style="--color-accent: var(--color-cyan-500); --color-accent-content: var(--color-cyan-500); --color-accent-foreground: var(--color-stone-950);"
+            style="--color-accent: var(--color-green-500); --color-accent-content: var(--color-green-500); --color-accent-foreground: var(--color-stone-950);"
             class="lg:hidden border-b border-stone-200 bg-stone-50/90 backdrop-blur dark:border-stone-800 dark:bg-stone-950/90"
         >
             <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />

@@ -38,6 +38,26 @@ test('user can attach photos to a wall post', function () {
     Storage::disk('public')->assertExists($post->media->first()->path);
 });
 
+test('user can remove a staged photo before posting', function () {
+    $user = User::factory()->create();
+
+    $component = Livewire::actingAs($user)
+        ->test('pages::profile.wall-composer')
+        ->set('body', 'With two photos, then one.')
+        ->set('photos', [
+            UploadedFile::fake()->image('first.jpg'),
+            UploadedFile::fake()->image('second.jpg'),
+        ])
+        ->call('removePhoto', 0);
+
+    expect($component->get('photos'))->toHaveCount(1);
+    expect($component->get('photos')[0]->getClientOriginalName())->toBe('second.jpg');
+
+    $component->call('post')->assertHasNoErrors();
+
+    expect($user->wallPosts()->first()->media)->toHaveCount(1);
+});
+
 test('a wall post requires a body or a photo', function () {
     $user = User::factory()->create();
 

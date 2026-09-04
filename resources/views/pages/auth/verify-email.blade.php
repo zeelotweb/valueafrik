@@ -12,7 +12,7 @@
         <div class="flex flex-col items-center justify-between gap-4">
             <form method="POST" action="{{ route('verification.send') }}" class="w-full">
                 @csrf
-                <flux:button variant="primary" color="cyan" type="submit" class="w-full">
+                <flux:button variant="primary" color="green" type="submit" class="w-full">
                     {{ __('Resend verification email') }}
                 </flux:button>
             </form>

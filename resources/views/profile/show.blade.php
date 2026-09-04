@@ -57,7 +57,7 @@ $countryFlag = \App\Support\Countries::flag($profile?->country);
             @endphp
 
             <div class="mt-3 flex flex-wrap items-center gap-2">
-                <flux:badge variant="pill" color="cyan" icon="sparkles">
+                <flux:badge variant="pill" color="green" icon="sparkles">
                     {{ trans_choice('1 bridge point|:count bridge points', $bridgeScore) }}
                 </flux:badge>
 
@@ -80,7 +80,7 @@ $countryFlag = \App\Support\Countries::flag($profile?->country);
                         type="button"
                         x-show="isLong"
                         x-on:click="expanded = ! expanded"
-                        class="mt-1 text-sm font-medium text-cyan-600 hover:text-cyan-500 dark:text-cyan-400"
+                        class="mt-1 text-sm font-medium text-green-600 hover:text-green-500 dark:text-green-400"
                     >
                         <span x-show="! expanded">{{ __('Show more') }}</span>
                         <span x-show="expanded">{{ __('Show less') }}</span>
@@ -104,7 +104,7 @@ $countryFlag = \App\Support\Countries::flag($profile?->country);
                     <flux:subheading>{{ __('Heritage') }}</flux:subheading>
                     <div class="mt-2 flex flex-wrap gap-2">
                         @foreach ($user->heritages as $heritage)
-                            <flux:badge variant="pill" color="cyan">{{ $heritage->name }}</flux:badge>
+                            <flux:badge variant="pill" color="green">{{ $heritage->name }}</flux:badge>
                         @endforeach
                     </div>
                 </div>
@@ -139,7 +139,7 @@ $countryFlag = \App\Support\Countries::flag($profile?->country);
                     <button
                         type="button"
                         x-on:click="tab = 'wall'"
-                        x-bind:class="tab === 'wall' ? 'border-cyan-600 text-cyan-600' : 'border-transparent text-stone-500 hover:text-stone-700 dark:hover:text-stone-300'"
+                        x-bind:class="tab === 'wall' ? 'border-green-600 text-green-600' : 'border-transparent text-stone-500 hover:text-stone-700 dark:hover:text-stone-300'"
                         class="border-b-2 pb-3 text-sm font-medium"
                     >
                         {{ __('Wall') }}
@@ -147,7 +147,7 @@ $countryFlag = \App\Support\Countries::flag($profile?->country);
                     <button
                         type="button"
                         x-on:click="tab = 'communities'"
-                        x-bind:class="tab === 'communities' ? 'border-cyan-600 text-cyan-600' : 'border-transparent text-stone-500 hover:text-stone-700 dark:hover:text-stone-300'"
+                        x-bind:class="tab === 'communities' ? 'border-green-600 text-green-600' : 'border-transparent text-stone-500 hover:text-stone-700 dark:hover:text-stone-300'"
                         class="border-b-2 pb-3 text-sm font-medium"
                     >
                         {{ __('Communities') }}

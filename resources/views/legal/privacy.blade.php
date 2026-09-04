@@ -9,7 +9,7 @@
 
         <main>
             <section class="mx-auto max-w-3xl px-6 py-16">
-                <p class="text-sm font-medium tracking-widest text-cyan-600 uppercase dark:text-cyan-400">Legal</p>
+                <p class="text-sm font-medium tracking-widest text-green-600 uppercase dark:text-green-400">Legal</p>
                 <h1 class="mt-2 text-3xl font-bold tracking-tight">Privacy Policy</h1>
 
                 <div class="mt-6 rounded-xl border border-dashed border-stone-300 p-6 text-sm text-stone-600 dark:border-stone-700 dark:text-stone-400">
