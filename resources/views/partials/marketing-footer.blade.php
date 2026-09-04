@@ -4,7 +4,7 @@
             <div class="lg:col-span-2">
                 <a href="{{ route('home') }}" class="flex items-center gap-2 font-semibold tracking-tight" wire:navigate>
                     <img src="{{ asset('apple-touch-icon-180x180.png') }}" alt="valueAFRIK" class="size-8 dark:invert">
-                    <span><span class="text-green-600">value</span><span class="text-stone-900 dark:text-white">AFRIK</span></span>
+                    <span><span class="text-cyan-600">value</span><span class="text-stone-900 dark:text-white">AFRIK</span></span>
                 </a>
                 <p class="mt-4 max-w-xs text-sm text-stone-500 dark:text-stone-400">
                     Building Bridges Across Cultures — a social platform where identity comes first and

@@ -163,7 +163,7 @@ new #[Title('Messages')] class extends Component {
             @php $isMine = $message['user_id'] === Auth::id(); @endphp
 
             <div class="flex {{ $isMine ? 'justify-end' : 'justify-start' }}" wire:key="message-{{ $message['id'] }}">
-                <div class="max-w-[75%] rounded-2xl px-4 py-2 {{ $isMine ? 'bg-green-600 text-white' : 'bg-stone-100 text-stone-900 dark:bg-stone-800 dark:text-stone-100' }}">
+                <div class="max-w-[75%] rounded-2xl px-4 py-2 {{ $isMine ? 'bg-cyan-600 text-white' : 'bg-stone-100 text-stone-900 dark:bg-stone-800 dark:text-stone-100' }}">
                     @if (! empty($message['media']))
                         <div class="mb-1 grid gap-1 {{ count($message['media']) > 1 ? 'grid-cols-2' : '' }}">
                             @foreach ($message['media'] as $media)
@@ -202,7 +202,7 @@ new #[Title('Messages')] class extends Component {
                         <flux:icon.x-mark class="size-2.5" />
                     </button>
                 </div>
-                <span x-show="uploading" style="display: none;" class="flex items-center gap-1.5 text-sm text-green-600 dark:text-green-400">
+                <span x-show="uploading" style="display: none;" class="flex items-center gap-1.5 text-sm text-cyan-600 dark:text-cyan-400">
                     <flux:icon.loading variant="micro" class="size-3.5" />
                     <span x-text="{{ Js::from(__('Uploading…')) }} + ' ' + progress + '%'"></span>
                 </span>
@@ -210,7 +210,7 @@ new #[Title('Messages')] class extends Component {
         @endif
 
         <div class="flex items-end gap-2">
-            <label class="cursor-pointer rounded-md p-2 text-stone-500 hover:bg-stone-100 hover:text-green-600 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-green-400">
+            <label class="cursor-pointer rounded-md p-2 text-stone-500 hover:bg-stone-100 hover:text-cyan-600 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-cyan-400">
                 <input type="file" wire:model="photo" accept="image/*" class="hidden">
                 <flux:icon.photo class="size-5" />
             </label>
@@ -222,7 +222,7 @@ new #[Title('Messages')] class extends Component {
                 class="flex-1"
             />
 
-            <flux:button type="submit" variant="primary" color="green" wire:loading.attr="disabled" wire:target="send">
+            <flux:button type="submit" variant="primary" color="cyan" wire:loading.attr="disabled" wire:target="send">
                 {{ __('Send') }}
             </flux:button>
         </div>

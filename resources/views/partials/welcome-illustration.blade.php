@@ -5,7 +5,7 @@
 <div class="flex h-full flex-col rounded-2xl border border-stone-200 bg-white p-6 shadow-sm dark:border-stone-800 dark:bg-stone-900">
     <div class="flex items-center justify-between">
         <span class="font-mono text-xs text-stone-400 dark:text-stone-600">{{ $item['number'] }}</span>
-        <span class="rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700 dark:bg-green-950 dark:text-green-400">
+        <span class="rounded-full bg-cyan-50 px-2.5 py-1 text-xs font-medium text-cyan-700 dark:bg-cyan-950 dark:text-cyan-400">
             {{ $item['title'] }}
         </span>
     </div>
@@ -97,10 +97,10 @@
                     </div>
                     <div class="min-w-0">
                         <p class="truncate font-semibold">{{ $item['user']->name }}</p>
-                        <p class="text-sm text-green-600 dark:text-green-400">{{ $badge['name'] ?? '' }}</p>
+                        <p class="text-sm text-cyan-600 dark:text-cyan-400">{{ $badge['name'] ?? '' }}</p>
                     </div>
                 </div>
-                <p class="mt-4 text-4xl font-bold tracking-tight text-green-600 dark:text-green-400">
+                <p class="mt-4 text-4xl font-bold tracking-tight text-cyan-600 dark:text-cyan-400">
                     {{ $item['user']->bridgeScore() }}
                 </p>
                 <p class="mt-1 text-sm text-stone-500 dark:text-stone-400">bridge points earned through real exchange</p>
@@ -119,7 +119,7 @@
                             @endif
                         </div>
                         @if ($person->is($item['first']))
-                            <flux:icon.arrows-right-left class="size-5 shrink-0 text-green-600 dark:text-green-400" />
+                            <flux:icon.arrows-right-left class="size-5 shrink-0 text-cyan-600 dark:text-cyan-400" />
                         @endif
                     @endforeach
                 </div>
@@ -128,7 +128,7 @@
                     <span class="font-medium">{{ $item['second']->name }}</span>
                 </p>
                 <p class="mt-1 text-center text-sm text-stone-500 dark:text-stone-400">
-                    both curious about <span class="font-medium text-green-600 dark:text-green-400">{{ $item['interest']->name }}</span>
+                    both curious about <span class="font-medium text-cyan-600 dark:text-cyan-400">{{ $item['interest']->name }}</span>
                 </p>
             @break
 

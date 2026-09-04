@@ -127,7 +127,7 @@ new #[Title('Edit community')] class extends Component {
                 <button
                     type="button"
                     x-on:click="$refs.avatarInput.click()"
-                    class="group relative block size-20 overflow-hidden rounded-2xl border-4 border-white bg-stone-200 dark:border-stone-950 dark:bg-stone-700"
+                    class="group relative block size-20 overflow-hidden rounded-2xl bg-stone-200 shadow-lg dark:bg-stone-700"
                 >
                     <img x-show="avatarUrl" x-bind:src="avatarUrl" class="size-full object-cover" alt="">
                     <div x-show="!avatarUrl" class="flex size-full items-center justify-center text-stone-500">
@@ -183,7 +183,7 @@ new #[Title('Edit community')] class extends Component {
         </flux:radio.group>
 
         <div class="flex items-center gap-3">
-            <flux:button type="submit" variant="primary" color="green" wire:loading.attr="disabled">
+            <flux:button type="submit" variant="primary" color="cyan" wire:loading.attr="disabled">
                 {{ __('Save') }}
             </flux:button>
 

@@ -97,10 +97,10 @@ new class extends Component {
             $partnerMedia = $post->media->where('user_id', $post->partner_id);
         @endphp
 
-        <div class="overflow-hidden rounded-xl border border-green-200 dark:border-green-900" wire:key="bridge-post-{{ $post->id }}">
-            <div class="flex items-center gap-2 bg-green-50 px-4 py-2 dark:bg-green-950/40">
-                <flux:icon.arrows-right-left class="size-4 text-green-600 dark:text-green-400" />
-                <span class="text-sm font-medium text-green-700 dark:text-green-300">{{ __('Bridge Post') }} — {{ $post->theme }}</span>
+        <div class="overflow-hidden rounded-xl border border-cyan-200 dark:border-cyan-900" wire:key="bridge-post-{{ $post->id }}">
+            <div class="flex items-center gap-2 bg-cyan-50 px-4 py-2 dark:bg-cyan-950/40">
+                <flux:icon.arrows-right-left class="size-4 text-cyan-600 dark:text-cyan-400" />
+                <span class="text-sm font-medium text-cyan-700 dark:text-cyan-300">{{ __('Bridge Post') }} — {{ $post->theme }}</span>
             </div>
 
             <div class="grid divide-y divide-stone-200 sm:grid-cols-2 sm:divide-x sm:divide-y-0 dark:divide-stone-800">
@@ -141,7 +141,7 @@ new class extends Component {
 
                                     <div class="flex items-center justify-end gap-2">
                                         <flux:button size="sm" variant="ghost" wire:click="cancelSide">{{ __('Cancel') }}</flux:button>
-                                        <flux:button size="sm" variant="primary" color="green" wire:click="submitSide" wire:loading.attr="disabled" wire:target="submitSide">
+                                        <flux:button size="sm" variant="primary" color="cyan" wire:click="submitSide" wire:loading.attr="disabled" wire:target="submitSide">
                                             {{ __('Post my side') }}
                                         </flux:button>
                                     </div>

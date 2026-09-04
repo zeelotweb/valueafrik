@@ -63,7 +63,7 @@ new class extends Component {
         $variant = 'ghost';
         $class = $this->isFollowing
             ? '!text-stone-400 hover:!text-stone-600 hover:!bg-stone-100 dark:!text-stone-500 dark:hover:!text-stone-300 dark:hover:!bg-stone-800'
-            : '!text-green-600 hover:!text-green-500 hover:!bg-green-50 dark:!text-green-400 dark:hover:!bg-green-950';
+            : '!text-cyan-600 hover:!text-cyan-500 hover:!bg-cyan-50 dark:!text-cyan-400 dark:hover:!bg-cyan-950';
     } else {
         $variant = $this->isFollowing ? 'ghost' : 'primary';
         $class = $this->isFollowing

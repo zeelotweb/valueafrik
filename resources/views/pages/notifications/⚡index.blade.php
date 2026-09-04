@@ -50,7 +50,7 @@ new #[Title('Notifications')] class extends Component {
                 class="flex w-full items-start gap-3 rounded-xl border border-stone-200 p-4 text-start hover:bg-stone-50 dark:border-stone-800 dark:hover:bg-stone-800"
             >
                 @if (! $notification->read_at)
-                    <span class="mt-1.5 size-2 shrink-0 rounded-full bg-green-600"></span>
+                    <span class="mt-1.5 size-2 shrink-0 rounded-full bg-cyan-600"></span>
                 @else
                     <span class="mt-1.5 size-2 shrink-0"></span>
                 @endif

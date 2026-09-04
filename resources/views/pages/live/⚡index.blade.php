@@ -46,7 +46,7 @@ new #[Title('Live')] class extends Component {
                     <p class="mt-0.5 truncate text-sm text-stone-500 dark:text-stone-400">{{ $stream->host->name }}</p>
                 </div>
 
-                <flux:badge size="sm" color="green">{{ __('Live') }}</flux:badge>
+                <flux:badge size="sm" color="cyan">{{ __('Live') }}</flux:badge>
             </a>
         @empty
             <div class="col-span-2 rounded-lg border border-dashed border-stone-300 p-6 text-center dark:border-stone-800">

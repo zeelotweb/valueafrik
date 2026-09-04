@@ -120,7 +120,7 @@ new #[Title('Profile settings')] class extends Component {
                     <button
                         type="button"
                         x-on:click="$refs.avatarInput.click()"
-                        class="group relative block size-20 overflow-hidden rounded-full border-4 border-white bg-stone-200 dark:border-stone-950 dark:bg-stone-700"
+                        class="group relative block size-20 overflow-hidden rounded-full bg-stone-200 shadow-lg dark:bg-stone-700"
                         data-test="change-avatar-button"
                     >
                         <img x-show="avatarUrl" x-bind:src="avatarUrl" class="size-full object-cover" alt="">
@@ -170,7 +170,7 @@ new #[Title('Profile settings')] class extends Component {
 
             <div class="flex items-center gap-4">
                 <div class="flex items-center justify-end">
-                    <flux:button variant="primary" color="green" type="submit" class="w-full" data-test="update-profile-button">
+                    <flux:button variant="primary" color="cyan" type="submit" class="w-full" data-test="update-profile-button">
                         {{ __('Save') }}
                     </flux:button>
                 </div>

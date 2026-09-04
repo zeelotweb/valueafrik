@@ -32,7 +32,7 @@
     <div class="mt-3 flex flex-wrap items-center gap-3">
         <label
             @class([
-                'inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-dashed border-stone-300 px-3 py-1.5 text-sm font-medium text-stone-600 transition hover:border-green-600 hover:text-green-600 dark:border-stone-700 dark:text-stone-400 dark:hover:border-green-500 dark:hover:text-green-400',
+                'inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-dashed border-stone-300 px-3 py-1.5 text-sm font-medium text-stone-600 transition hover:border-cyan-600 hover:text-cyan-600 dark:border-stone-700 dark:text-stone-400 dark:hover:border-cyan-500 dark:hover:text-cyan-400',
                 'pointer-events-none opacity-50' => $atLimit,
             ])
         >
@@ -48,7 +48,7 @@
             >
         </label>
 
-        <span x-show="uploading" style="display: none;" class="flex items-center gap-1.5 text-sm text-green-600 dark:text-green-400">
+        <span x-show="uploading" style="display: none;" class="flex items-center gap-1.5 text-sm text-cyan-600 dark:text-cyan-400">
             <flux:icon.loading variant="micro" class="size-3.5" />
             <span x-text="{{ Js::from(__('Uploading…')) }} + ' ' + progress + '%'"></span>
         </span>

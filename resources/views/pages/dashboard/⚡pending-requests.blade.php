@@ -57,7 +57,7 @@ new class extends Component {
                     <div class="flex items-center justify-between" wire:key="pending-{{ $community->id }}-{{ $requester->id }}">
                         <span class="text-sm text-stone-700 dark:text-stone-300">{{ $requester->name }}</span>
                         <div class="flex gap-2">
-                            <flux:button size="sm" variant="primary" color="green" wire:click="approve({{ $community->id }}, {{ $requester->id }})">
+                            <flux:button size="sm" variant="primary" color="cyan" wire:click="approve({{ $community->id }}, {{ $requester->id }})">
                                 {{ __('Approve') }}
                             </flux:button>
                             <flux:button size="sm" variant="ghost" wire:click="reject({{ $community->id }}, {{ $requester->id }})">

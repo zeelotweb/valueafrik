@@ -38,7 +38,7 @@ new #[Title('Community')] class extends Component {
         ></div>
 
         <div class="absolute -bottom-8 start-4 sm:start-6">
-            <div class="size-16 overflow-hidden rounded-2xl border-4 border-white bg-stone-200 shadow-sm sm:size-20 dark:border-stone-950 dark:bg-stone-700">
+            <div class="size-16 overflow-hidden rounded-2xl bg-stone-200 shadow-lg sm:size-20 dark:bg-stone-700">
                 @if ($community->avatarUrl())
                     <img src="{{ $community->avatarUrl() }}" class="size-full object-cover">
                 @else

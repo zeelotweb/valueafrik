@@ -47,7 +47,7 @@ new class extends Component {
                     <span class="truncate font-medium text-stone-900 dark:text-white">{{ $community->name }}</span>
 
                     @if ($community->pivot->role !== 'member')
-                        <flux:badge size="sm" color="green">{{ ucfirst($community->pivot->role) }}</flux:badge>
+                        <flux:badge size="sm" color="cyan">{{ ucfirst($community->pivot->role) }}</flux:badge>
                     @endif
 
                     @if ($community->visibility !== 'public')

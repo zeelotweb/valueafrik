@@ -70,7 +70,7 @@ new #[Title('Messages')] class extends Component {
                 </div>
 
                 @if ($isUnread)
-                    <span class="size-2.5 shrink-0 rounded-full bg-green-600"></span>
+                    <span class="size-2.5 shrink-0 rounded-full bg-cyan-600"></span>
                 @endif
             </a>
         @empty

@@ -81,7 +81,7 @@ new class extends Component {
                 @include('partials.photo-picker', ['photos' => $photos, 'property' => 'photos', 'removeMethod' => 'removePhoto', 'max' => 4])
 
                 <div class="mt-3 flex items-center justify-end">
-                    <flux:button type="submit" variant="primary" color="green" wire:loading.attr="disabled" wire:target="post">
+                    <flux:button type="submit" variant="primary" color="cyan" wire:loading.attr="disabled" wire:target="post">
                         {{ __('Post') }}
                     </flux:button>
                 </div>

@@ -56,7 +56,7 @@ new class extends Component {
     }
 }; ?>
 
-<div class="mb-6 rounded-xl border border-stone-200 p-4 dark:border-stone-800">
+<div id="wall-composer" class="mb-6 scroll-mt-20 rounded-xl border border-stone-200 p-4 dark:border-stone-800">
     <form wire:submit="post">
         <flux:textarea
             wire:model="body"
@@ -67,7 +67,7 @@ new class extends Component {
         @include('partials.photo-picker', ['photos' => $photos, 'property' => 'photos', 'removeMethod' => 'removePhoto', 'max' => 4])
 
         <div class="mt-3 flex items-center justify-end">
-            <flux:button type="submit" variant="primary" color="green" wire:loading.attr="disabled" wire:target="post">
+            <flux:button type="submit" variant="primary" color="cyan" wire:loading.attr="disabled" wire:target="post">
                 {{ __('Post') }}
             </flux:button>
         </div>

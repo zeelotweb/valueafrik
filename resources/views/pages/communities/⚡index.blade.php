@@ -28,7 +28,7 @@ new #[Title('Communities')] class extends Component {
         <flux:heading size="xl">{{ __('Communities') }}</flux:heading>
 
         <a href="{{ route('communities.create') }}" wire:navigate>
-            <flux:button variant="primary" color="green">{{ __('Create community') }}</flux:button>
+            <flux:button variant="primary" color="cyan">{{ __('Create community') }}</flux:button>
         </a>
     </div>
 

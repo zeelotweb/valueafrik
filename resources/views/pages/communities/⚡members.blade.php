@@ -110,7 +110,7 @@ new class extends Component {
                         <div class="flex items-center justify-between rounded-lg border border-stone-200 p-3 dark:border-stone-800">
                             <span class="text-sm font-medium text-stone-900 dark:text-white">{{ $requester->name }}</span>
                             <div class="flex gap-2">
-                                <flux:button size="sm" variant="primary" color="green" wire:click="approve({{ $requester->id }})">
+                                <flux:button size="sm" variant="primary" color="cyan" wire:click="approve({{ $requester->id }})">
                                     {{ __('Approve') }}
                                 </flux:button>
                                 <flux:button size="sm" variant="ghost" wire:click="reject({{ $requester->id }})">
@@ -136,7 +136,7 @@ new class extends Component {
                             <div class="flex items-center gap-2">
                                 <span class="text-sm font-medium text-stone-900 dark:text-white">{{ $member->name }}</span>
                                 @if ($member->pivot->role === 'monitor')
-                                    <flux:badge size="sm" color="green">{{ __('Monitor') }}</flux:badge>
+                                    <flux:badge size="sm" color="cyan">{{ __('Monitor') }}</flux:badge>
                                 @endif
                             </div>
 

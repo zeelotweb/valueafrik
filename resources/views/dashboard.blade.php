@@ -5,16 +5,38 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
 ?>
 <x-layouts::app :title="__('Dashboard')">
     <div class="mx-auto w-full max-w-5xl">
-        <div class="flex items-center justify-between">
-            <flux:heading size="l">
-                {{ __(' :name', ['name' => Str::before($user->name, ' ')]) }}
-            </flux:heading>
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+                <flux:heading size="l">
+                    {{ __(':name', ['name' => Str::before($user->name, ' ')]) }}
+                </flux:heading>
+                <flux:subheading>{{ __("Here's what's going on across valueAFRIK.") }}</flux:subheading>
+            </div>
+        </div>
 
+        {{-- Quick actions --}}
+        <div class="mt-4 flex flex-wrap gap-2">
             <livewire:pages::dashboard.start-stream :key="'start-stream-'.$user->id" />
+
+            <a href="{{ route('profile.show', $user) }}#wall-composer" wire:navigate>
+                <flux:button size="sm" variant="ghost" icon="pencil-square">{{ __('Post to Wall') }}</flux:button>
+            </a>
+
+            <a href="{{ route('profile.show', $user) }}#wall-composer" wire:navigate>
+                <flux:button size="sm" variant="ghost" icon="arrows-right-left">{{ __('Start a Bridge Post') }}</flux:button>
+            </a>
+
+            <a href="{{ route('communities.create') }}" wire:navigate>
+                <flux:button size="sm" variant="ghost" icon="plus">{{ __('Create Community') }}</flux:button>
+            </a>
+
+            <a href="{{ route('roots.edit') }}" wire:navigate>
+                <flux:button size="sm" variant="ghost" icon="identification">{{ __('Edit Roots') }}</flux:button>
+            </a>
         </div>
 
         @if ($rootsIncomplete)
-            <div class="mt-4 flex items-center justify-between rounded-lg border border-dashed border-stone-300 p-4 dark:border-stone-700">
+            <div class="mt-4 flex flex-col gap-2 rounded-lg border border-dashed border-stone-300 p-4 sm:flex-row sm:items-center sm:justify-between dark:border-stone-700">
                 <flux:text>{{ __("You haven't finished your Roots yet — it's how people find common ground with you.") }}</flux:text>
                 <flux:link :href="route('roots.edit')" wire:navigate class="shrink-0">{{ __('Finish it') }}</flux:link>
             </div>
@@ -26,7 +48,7 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
                 wire:navigate
                 class="rounded-xl border border-stone-200 p-5 hover:bg-stone-50 dark:border-stone-800 dark:hover:bg-stone-800"
             >
-                <div class="flex items-center gap-2 text-green-600 dark:text-green-400">
+                <div class="flex items-center gap-2 text-cyan-600 dark:text-cyan-400">
                     <flux:icon.sparkles class="size-5" />
                     <span class="text-sm font-medium">{{ __('Bridge Score') }}</span>
                 </div>
@@ -41,7 +63,7 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
                 wire:navigate
                 class="rounded-xl border border-stone-200 p-5 hover:bg-stone-50 dark:border-stone-800 dark:hover:bg-stone-800"
             >
-                <div class="flex items-center gap-2 text-green-600 dark:text-green-400">
+                <div class="flex items-center gap-2 text-cyan-600 dark:text-cyan-400">
                     <flux:icon.user-group class="size-5" />
                     <span class="text-sm font-medium">{{ __('Communities') }}</span>
                 </div>
@@ -56,7 +78,7 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
                 wire:navigate
                 class="rounded-xl border border-stone-200 p-5 hover:bg-stone-50 dark:border-stone-800 dark:hover:bg-stone-800"
             >
-                <div class="flex items-center gap-2 text-green-600 dark:text-green-400">
+                <div class="flex items-center gap-2 text-cyan-600 dark:text-cyan-400">
                     <flux:icon.chat-bubble-left-right class="size-5" />
                     <span class="text-sm font-medium">{{ __('Messages') }}</span>
                 </div>
@@ -67,9 +89,7 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
 
         <div class="mt-10 grid gap-8 lg:grid-cols-2">
             <div>
-                <div class="flex items-center justify-between">
-                    <flux:heading size="lg">{{ __('Needs your attention') }}</flux:heading>
-                </div>
+                <flux:heading size="lg">{{ __('Needs your attention') }}</flux:heading>
 
                 <div class="mt-3">
                     <flux:subheading>{{ __('Bridge Post invites') }}</flux:subheading>
@@ -84,18 +104,43 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
                         <livewire:pages::dashboard.pending-requests />
                     </div>
                 </div>
+
+                <div class="mt-5">
+                    <flux:subheading>{{ __('Live right now') }}</flux:subheading>
+                    <div class="mt-2">
+                        <livewire:pages::dashboard.live-now :key="'dashboard-live-now-'.$user->id" />
+                    </div>
+                </div>
             </div>
 
             <div>
                 <div class="flex items-center justify-between">
                     <flux:heading size="lg">{{ __('Your communities') }}</flux:heading>
-                    <a href="{{ route('communities.create') }}" wire:navigate class="text-sm font-medium text-green-600 hover:text-green-500 dark:text-green-400">
+                    <a href="{{ route('communities.create') }}" wire:navigate class="text-sm font-medium text-cyan-600 hover:text-cyan-500 dark:text-cyan-400">
                         {{ __('New community') }}
                     </a>
                 </div>
                 <div class="mt-3">
-                    <livewire:pages::profile.communities-list :user="$user" :key="'dashboard-communities-'.$user->id" />
+                    <livewire:pages::dashboard.communities-widget :user="$user" :key="'dashboard-communities-'.$user->id" />
                 </div>
+
+                <div class="mt-6 flex items-center justify-between">
+                    <flux:heading size="lg">{{ __('People to discover') }}</flux:heading>
+                    <a href="{{ route('discover.index') }}" wire:navigate class="text-sm font-medium text-cyan-600 hover:text-cyan-500 dark:text-cyan-400">
+                        {{ __('See all') }}
+                    </a>
+                </div>
+                <div class="mt-3">
+                    <livewire:pages::dashboard.people-widget :key="'dashboard-people-'.$user->id" />
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-10">
+            <flux:heading size="lg">{{ __('Fresh Bridge Posts') }}</flux:heading>
+            <flux:subheading>{{ __('Real exchange happening across the platform right now.') }}</flux:subheading>
+            <div class="mt-3">
+                <livewire:pages::dashboard.activity :key="'dashboard-activity-'.$user->id" />
             </div>
         </div>
     </div>
