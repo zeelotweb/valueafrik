@@ -68,7 +68,7 @@ new class extends Component {
         $variant = $this->isFollowing ? 'ghost' : 'primary';
         $class = $this->isFollowing
             ? ($overlay ? '!bg-white/90 !text-stone-900 shadow-sm backdrop-blur hover:!bg-white dark:!bg-stone-900/80 dark:!text-white dark:hover:!bg-stone-900' : '')
-            : '!bg-cyan-600 hover:!bg-cyan-500';
+            : '';
     }
 ?>
 <flux:button
@@ -76,6 +76,7 @@ new class extends Component {
     wire:loading.attr="disabled"
     size="sm"
     variant="{{ $variant }}"
+    @if (! $iconOnly && ! $this->isFollowing) color="cyan" @endif
     icon="{{ $this->isFollowing ? 'check' : 'user-plus' }}"
     class="{{ $class }}"
     :tooltip="$iconOnly ? ($this->isFollowing ? __('Following') : __('Follow')) : null"

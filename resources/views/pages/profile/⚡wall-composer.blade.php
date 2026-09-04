@@ -71,7 +71,7 @@ new class extends Component {
                 {{ __('Add photos') }}
             </label>
 
-            <flux:button type="submit" variant="primary" class="!bg-cyan-600 hover:!bg-cyan-500" wire:loading.attr="disabled">
+            <flux:button type="submit" variant="primary" color="cyan" wire:loading.attr="disabled">
                 {{ __('Post') }}
             </flux:button>
         </div>

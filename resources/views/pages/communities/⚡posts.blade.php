@@ -85,21 +85,21 @@ new class extends Component {
     @forelse ($posts as $post)
         @php $isMine = $post->user_id === Auth::id(); @endphp
 
-        <div class="rounded-xl border border-zinc-200 p-4 dark:border-zinc-700" wire:key="community-post-{{ $post->id }}">
+        <div class="rounded-xl border border-stone-200 p-4 dark:border-stone-800" wire:key="community-post-{{ $post->id }}">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <div class="size-10 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-700">
+                    <div class="size-10 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
                         @if ($post->user->profile?->avatarUrl())
                             <img src="{{ $post->user->profile->avatarUrl() }}" class="size-full object-cover">
                         @else
-                            <div class="flex size-full items-center justify-center text-zinc-500">
+                            <div class="flex size-full items-center justify-center text-stone-500">
                                 <flux:icon.user class="size-5" />
                             </div>
                         @endif
                     </div>
                     <div>
-                        <div class="font-medium text-zinc-900 dark:text-white">{{ $post->user->name }}</div>
-                        <div class="text-xs text-zinc-500 dark:text-zinc-400">{{ $post->created_at->diffForHumans() }}</div>
+                        <div class="font-medium text-stone-900 dark:text-white">{{ $post->user->name }}</div>
+                        <div class="text-xs text-stone-500 dark:text-stone-400">{{ $post->created_at->diffForHumans() }}</div>
                     </div>
                 </div>
 
@@ -124,7 +124,7 @@ new class extends Component {
             </div>
 
             @if ($post->body)
-                <p class="mt-3 whitespace-pre-line text-zinc-700 dark:text-zinc-300">{{ $post->body }}</p>
+                <p class="mt-3 whitespace-pre-line text-stone-700 dark:text-stone-300">{{ $post->body }}</p>
             @endif
 
             @if ($post->media->isNotEmpty())
@@ -136,7 +136,7 @@ new class extends Component {
             @endif
 
             @if ($reportingPostId === $post->id)
-                <div class="mt-3 rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
+                <div class="mt-3 rounded-lg border border-stone-200 p-3 dark:border-stone-800">
                     <flux:textarea wire:model="reportReason" :label="__('Why are you reporting this?')" rows="2" />
                     <div class="mt-2 flex justify-end gap-2">
                         <flux:button size="sm" variant="ghost" wire:click="cancelReport">{{ __('Cancel') }}</flux:button>
@@ -147,7 +147,7 @@ new class extends Component {
             @endif
         </div>
     @empty
-        <div class="rounded-lg border border-dashed border-zinc-300 p-6 text-center dark:border-zinc-700">
+        <div class="rounded-lg border border-dashed border-stone-300 p-6 text-center dark:border-stone-800">
             <flux:text>{{ __('No posts yet.') }}</flux:text>
         </div>
     @endforelse

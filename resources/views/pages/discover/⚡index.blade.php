@@ -73,7 +73,7 @@ new #[Title('Discover')] class extends Component {
     <flux:subheading>{{ __('People worth connecting with — through curiosity, not follower counts.') }}</flux:subheading>
 
     @if ($sharedInterests->isEmpty() && $crossHeritage->isEmpty() && $newHere->isEmpty())
-        <div class="mt-6 rounded-lg border border-dashed border-zinc-300 p-6 text-center dark:border-zinc-700">
+        <div class="mt-6 rounded-lg border border-dashed border-stone-300 p-6 text-center dark:border-stone-800">
             <flux:text>{{ __('No one else here yet.') }}</flux:text>
         </div>
     @endif

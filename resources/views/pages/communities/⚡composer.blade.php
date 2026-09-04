@@ -63,7 +63,7 @@ new class extends Component {
 
 <div>
     @if ($community->canPost(Auth::user()))
-        <div class="mb-6 rounded-xl border border-zinc-200 p-4 dark:border-zinc-700">
+        <div class="mb-6 rounded-xl border border-stone-200 p-4 dark:border-stone-800">
             <form wire:submit="post">
                 <flux:textarea
                     wire:model="body"
@@ -85,7 +85,7 @@ new class extends Component {
                         {{ __('Add photos') }}
                     </label>
 
-                    <flux:button type="submit" variant="primary" class="!bg-cyan-600 hover:!bg-cyan-500" wire:loading.attr="disabled">
+                    <flux:button type="submit" variant="primary" color="cyan" wire:loading.attr="disabled">
                         {{ __('Post') }}
                     </flux:button>
                 </div>

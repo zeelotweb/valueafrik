@@ -87,7 +87,7 @@ new #[Title('Edit community')] class extends Component {
     >
         <div class="relative">
             <div
-                class="h-40 w-full rounded-lg border border-zinc-200 bg-zinc-100 bg-cover bg-center dark:border-zinc-700 dark:bg-zinc-800"
+                class="h-40 w-full rounded-lg border border-stone-200 bg-stone-100 bg-cover bg-center dark:border-stone-800 dark:bg-stone-800"
                 x-bind:style="coverUrl ? `background-image: url('${coverUrl}')` : ''"
             >
                 <button
@@ -123,10 +123,10 @@ new #[Title('Edit community')] class extends Component {
                 <button
                     type="button"
                     x-on:click="$refs.avatarInput.click()"
-                    class="group relative block size-20 overflow-hidden rounded-2xl border-4 border-white bg-zinc-200 dark:border-zinc-900 dark:bg-zinc-700"
+                    class="group relative block size-20 overflow-hidden rounded-2xl border-4 border-white bg-stone-200 dark:border-stone-950 dark:bg-stone-700"
                 >
                     <img x-show="avatarUrl" x-bind:src="avatarUrl" class="size-full object-cover" alt="">
-                    <div x-show="!avatarUrl" class="flex size-full items-center justify-center text-zinc-500">
+                    <div x-show="!avatarUrl" class="flex size-full items-center justify-center text-stone-500">
                         <flux:icon.user-group class="size-8" />
                     </div>
                     <div class="absolute inset-0 flex items-center justify-center bg-black/0 text-transparent transition group-hover:bg-black/40 group-hover:text-white">
@@ -178,7 +178,7 @@ new #[Title('Edit community')] class extends Component {
         </flux:radio.group>
 
         <div class="flex items-center gap-3">
-            <flux:button type="submit" variant="primary" class="!bg-cyan-600 hover:!bg-cyan-500" wire:loading.attr="disabled">
+            <flux:button type="submit" variant="primary" color="cyan" wire:loading.attr="disabled">
                 {{ __('Save') }}
             </flux:button>
 

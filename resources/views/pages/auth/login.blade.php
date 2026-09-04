@@ -33,7 +33,7 @@
             </flux:button>
         @endif
 
-        <div class="flex items-center gap-3 text-sm text-zinc-400">
+        <div class="flex items-center gap-3 text-sm text-stone-400">
             <flux:separator class="flex-1" />
             {{ __('or') }}
             <flux:separator class="flex-1" />
@@ -79,7 +79,7 @@
             <flux:checkbox name="remember" :label="__('Remember me')" :checked="old('remember')" />
 
             <div class="flex items-center justify-end">
-                <flux:button variant="primary" type="submit" class="w-full" data-test="login-button">
+                <flux:button variant="primary" color="cyan" type="submit" class="w-full" data-test="login-button">
                     {{ __('Log in') }}
                 </flux:button>
             </div>

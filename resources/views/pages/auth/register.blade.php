@@ -17,7 +17,7 @@
             </flux:button>
         </a>
 
-        <div class="flex items-center gap-3 text-sm text-zinc-400">
+        <div class="flex items-center gap-3 text-sm text-stone-400">
             <flux:separator class="flex-1" />
             {{ __('or') }}
             <flux:separator class="flex-1" />
@@ -76,14 +76,14 @@
             />
 
             <div class="flex items-center justify-end">
-                <flux:button variant="primary" type="submit" class="w-full" data-test="register-button">
+                <flux:button variant="primary" color="cyan" type="submit" class="w-full" data-test="register-button">
                     {{ __('Create account') }}
                 </flux:button>
             </div>
         </form>
 
         @if (Route::has('login'))
-            <div class="text-center text-sm text-zinc-600 dark:text-zinc-400">
+            <div class="text-center text-sm text-stone-600 dark:text-stone-400">
                 {{ __('Already have an account?') }}
                 <flux:link :href="route('login')" wire:navigate>{{ __('Log in') }}</flux:link>
             </div>

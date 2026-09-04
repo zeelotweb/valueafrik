@@ -195,7 +195,7 @@ new #[Title('Messages')] class extends Component {
                 class="flex-1"
             />
 
-            <flux:button type="submit" variant="primary" class="!bg-cyan-600 hover:!bg-cyan-500" wire:loading.attr="disabled">
+            <flux:button type="submit" variant="primary" color="cyan" wire:loading.attr="disabled">
                 {{ __('Send') }}
             </flux:button>
         </div>

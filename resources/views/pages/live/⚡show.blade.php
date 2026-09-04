@@ -52,11 +52,11 @@ new #[Title('Live')] class extends Component {
     </div>
 
     @if (! $session->isLive())
-        <div class="mt-6 rounded-lg border border-dashed border-zinc-300 p-6 text-center dark:border-zinc-700">
+        <div class="mt-6 rounded-lg border border-dashed border-stone-300 p-6 text-center dark:border-stone-800">
             <flux:text>{{ __('This session has ended.') }}</flux:text>
         </div>
     @elseif (! $configured)
-        <div class="mt-6 rounded-lg border border-dashed border-zinc-300 p-6 text-center dark:border-zinc-700">
+        <div class="mt-6 rounded-lg border border-dashed border-stone-300 p-6 text-center dark:border-stone-800">
             <flux:text>{{ __("Live video isn't configured yet — set LIVEKIT_URL, LIVEKIT_API_KEY, and LIVEKIT_API_SECRET to enable it.") }}</flux:text>
         </div>
     @else
@@ -85,7 +85,7 @@ new #[Title('Live')] class extends Component {
                 </div>
             </template>
 
-            <p class="text-sm text-zinc-500 dark:text-zinc-400" x-show="!connected && !error">{{ __('Connecting…') }}</p>
+            <p class="text-sm text-stone-500 dark:text-stone-400" x-show="!connected && !error">{{ __('Connecting…') }}</p>
 
             <div x-ref="grid" class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2"></div>
         </div>

@@ -33,17 +33,17 @@ new #[Title('Community')] class extends Component {
 <div class="mx-auto w-full max-w-3xl">
     <div class="relative">
         <div
-            class="h-40 w-full overflow-hidden rounded-xl border border-zinc-200 bg-zinc-100 bg-cover bg-center dark:border-zinc-700 dark:bg-zinc-800"
+            class="h-40 w-full overflow-hidden rounded-xl border border-stone-200 bg-stone-100 bg-cover bg-center dark:border-stone-800 dark:bg-stone-800"
             @if ($community->coverUrl()) style="background-image: url('{{ $community->coverUrl() }}')" @endif
         ></div>
 
-        <div class="absolute -bottom-8 start-6">
-            <div class="size-20 overflow-hidden rounded-2xl border-4 border-white bg-zinc-200 shadow-sm dark:border-zinc-950 dark:bg-zinc-700">
+        <div class="absolute -bottom-8 start-4 sm:start-6">
+            <div class="size-16 overflow-hidden rounded-2xl border-4 border-white bg-stone-200 shadow-sm sm:size-20 dark:border-stone-950 dark:bg-stone-700">
                 @if ($community->avatarUrl())
                     <img src="{{ $community->avatarUrl() }}" class="size-full object-cover">
                 @else
-                    <div class="flex size-full items-center justify-center text-zinc-500">
-                        <flux:icon.user-group class="size-8" />
+                    <div class="flex size-full items-center justify-center text-stone-500">
+                        <flux:icon.user-group class="size-6 sm:size-8" />
                     </div>
                 @endif
             </div>
@@ -78,10 +78,10 @@ new #[Title('Community')] class extends Component {
         </div>
 
         @if ($community->description)
-            <p class="mt-2 max-w-xl text-zinc-700 dark:text-zinc-300">{{ $community->description }}</p>
+            <p class="mt-2 max-w-xl text-stone-700 dark:text-stone-300">{{ $community->description }}</p>
         @endif
 
-        <p class="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+        <p class="mt-2 text-sm text-stone-500 dark:text-stone-400">
             {{ trans_choice('1 member|:count members', $community->active_members_count) }}
             &middot;
             {{ __('owned by') }} {{ $community->owner->name }}

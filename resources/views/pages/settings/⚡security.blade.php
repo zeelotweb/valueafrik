@@ -135,7 +135,7 @@ new #[Title('Security settings')] class extends Component {
             />
 
             <div class="flex items-center gap-4">
-                <flux:button variant="primary" type="submit" data-test="update-password-button">
+                <flux:button variant="primary" color="cyan" type="submit" data-test="update-password-button">
                     {{ __('Save') }}
                 </flux:button>
             </div>
@@ -155,7 +155,7 @@ new #[Title('Security settings')] class extends Component {
                         <flux:text>
                             {{ __('Store these recovery codes in a secure password manager. They can be used to recover access to your account if your two-factor authentication device is lost.') }}
                         </flux:text>
-                        <div class="grid gap-1 rounded-lg bg-zinc-100 p-4 font-mono text-sm dark:bg-zinc-800">
+                        <div class="grid gap-1 rounded-lg bg-stone-100 p-4 font-mono text-sm dark:bg-stone-800">
                             @foreach (Auth::user()->recoveryCodes() as $code)
                                 <div>{{ $code }}</div>
                             @endforeach
@@ -191,7 +191,7 @@ new #[Title('Security settings')] class extends Component {
                         required
                         data-test="two-factor-code-input"
                     />
-                    <flux:button variant="primary" type="submit" data-test="confirm-two-factor-button">
+                    <flux:button variant="primary" color="cyan" type="submit" data-test="confirm-two-factor-button">
                         {{ __('Confirm') }}
                     </flux:button>
                 </form>
@@ -200,7 +200,7 @@ new #[Title('Security settings')] class extends Component {
                     {{ __('Two-factor authentication is not enabled yet. Enable it to require a code from your authenticator app when logging in.') }}
                 </flux:text>
 
-                <flux:button wire:click="enableTwoFactorAuthentication" variant="primary" data-test="enable-two-factor-button">
+                <flux:button wire:click="enableTwoFactorAuthentication" variant="primary" color="cyan" data-test="enable-two-factor-button">
                     {{ __('Enable two-factor authentication') }}
                 </flux:button>
             @endif
@@ -217,9 +217,9 @@ new #[Title('Security settings')] class extends Component {
                 class="mt-6 space-y-6"
             >
                 @forelse (Auth::user()->passkeys as $passkey)
-                    <div class="flex items-center justify-between rounded-lg border border-zinc-200 px-4 py-3 dark:border-zinc-700">
+                    <div class="flex items-center justify-between rounded-lg border border-stone-200 px-4 py-3 dark:border-stone-800">
                         <div>
-                            <flux:text class="font-medium text-zinc-900 dark:text-white">{{ $passkey->name }}</flux:text>
+                            <flux:text class="font-medium text-stone-900 dark:text-white">{{ $passkey->name }}</flux:text>
                             <flux:text class="text-sm">
                                 {{ __('Added :date', ['date' => $passkey->created_at->diffForHumans()]) }}
                                 @if ($passkey->last_used_at)
@@ -261,7 +261,7 @@ new #[Title('Security settings')] class extends Component {
                         required
                         placeholder="{{ __('e.g. MacBook Touch ID') }}"
                     />
-                    <flux:button type="submit" variant="primary" x-bind:disabled="busy" data-test="add-passkey-button">
+                    <flux:button type="submit" variant="primary" color="cyan" x-bind:disabled="busy" data-test="add-passkey-button">
                         {{ __('Add passkey') }}
                     </flux:button>
                 </form>

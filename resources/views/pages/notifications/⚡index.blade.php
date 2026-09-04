@@ -47,7 +47,7 @@ new #[Title('Notifications')] class extends Component {
                 type="button"
                 wire:click="open('{{ $notification->id }}')"
                 wire:key="notification-{{ $notification->id }}"
-                class="flex w-full items-start gap-3 rounded-xl border border-zinc-200 p-4 text-start hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800"
+                class="flex w-full items-start gap-3 rounded-xl border border-stone-200 p-4 text-start hover:bg-stone-50 dark:border-stone-800 dark:hover:bg-stone-800"
             >
                 @if (! $notification->read_at)
                     <span class="mt-1.5 size-2 shrink-0 rounded-full bg-cyan-600"></span>
@@ -56,14 +56,14 @@ new #[Title('Notifications')] class extends Component {
                 @endif
 
                 <div class="min-w-0 flex-1">
-                    <p class="text-sm {{ $notification->read_at ? 'text-zinc-600 dark:text-zinc-400' : 'font-medium text-zinc-900 dark:text-white' }}">
+                    <p class="text-sm {{ $notification->read_at ? 'text-stone-600 dark:text-stone-400' : 'font-medium text-stone-900 dark:text-white' }}">
                         {{ $notification->data['message'] ?? '' }}
                     </p>
-                    <p class="mt-1 text-xs text-zinc-400">{{ $notification->created_at->diffForHumans() }}</p>
+                    <p class="mt-1 text-xs text-stone-400">{{ $notification->created_at->diffForHumans() }}</p>
                 </div>
             </button>
         @empty
-            <div class="rounded-lg border border-dashed border-zinc-300 p-6 text-center dark:border-zinc-700">
+            <div class="rounded-lg border border-dashed border-stone-300 p-6 text-center dark:border-stone-800">
                 <flux:text>{{ __("Nothing yet — we'll let you know when something happens.") }}</flux:text>
             </div>
         @endforelse

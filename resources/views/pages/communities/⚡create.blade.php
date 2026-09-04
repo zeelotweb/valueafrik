@@ -58,7 +58,7 @@ new #[Title('Create a community')] class extends Component {
     </flux:subheading>
 
     @if ($used >= $limit)
-        <div class="mt-6 rounded-lg border border-dashed border-zinc-300 p-6 text-center dark:border-zinc-700">
+        <div class="mt-6 rounded-lg border border-dashed border-stone-300 p-6 text-center dark:border-stone-800">
             <flux:text>
                 {{ __('You\'ve used all your community slots. Grow your following to unlock more.') }}
             </flux:text>
@@ -80,7 +80,7 @@ new #[Title('Create a community')] class extends Component {
                 <flux:radio value="view_only" :label="__('View only')" description="{{ __('Only you and monitors can post; members can view.') }}" />
             </flux:radio.group>
 
-            <flux:button type="submit" variant="primary" class="!bg-cyan-600 hover:!bg-cyan-500" wire:loading.attr="disabled">
+            <flux:button type="submit" variant="primary" color="cyan" wire:loading.attr="disabled">
                 {{ __('Create community') }}
             </flux:button>
         </form>

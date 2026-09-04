@@ -6,15 +6,15 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
 <x-layouts::app :title="__('Dashboard')">
     <div class="mx-auto w-full max-w-5xl">
         <div class="flex items-center justify-between">
-            <flux:heading size="xl">
-                {{ __('Welcome back, :name', ['name' => Str::before($user->name, ' ')]) }}
+            <flux:heading size="l">
+                {{ __(' :name', ['name' => Str::before($user->name, ' ')]) }}
             </flux:heading>
 
             <livewire:pages::dashboard.start-stream :key="'start-stream-'.$user->id" />
         </div>
 
         @if ($rootsIncomplete)
-            <div class="mt-4 flex items-center justify-between rounded-lg border border-dashed border-zinc-300 p-4 dark:border-zinc-700">
+            <div class="mt-4 flex items-center justify-between rounded-lg border border-dashed border-stone-300 p-4 dark:border-stone-700">
                 <flux:text>{{ __("You haven't finished your Roots yet — it's how people find common ground with you.") }}</flux:text>
                 <flux:link :href="route('roots.edit')" wire:navigate class="shrink-0">{{ __('Finish it') }}</flux:link>
             </div>
@@ -24,14 +24,14 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
             <a
                 href="{{ route('profile.show', $user) }}"
                 wire:navigate
-                class="rounded-xl border border-zinc-200 p-5 hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800"
+                class="rounded-xl border border-stone-200 p-5 hover:bg-stone-50 dark:border-stone-800 dark:hover:bg-stone-800"
             >
                 <div class="flex items-center gap-2 text-cyan-600 dark:text-cyan-400">
                     <flux:icon.sparkles class="size-5" />
                     <span class="text-sm font-medium">{{ __('Bridge Score') }}</span>
                 </div>
-                <p class="mt-2 text-3xl font-semibold text-zinc-900 dark:text-white">{{ $user->bridgeScore() }}</p>
-                <p class="mt-1 truncate text-sm text-zinc-500 dark:text-zinc-400">
+                <p class="mt-2 text-3xl font-semibold text-stone-900 dark:text-white">{{ $user->bridgeScore() }}</p>
+                <p class="mt-1 truncate text-sm text-stone-500 dark:text-stone-400">
                     {{ $badge['name'] ?? __('Just getting started') }}
                 </p>
             </a>
@@ -39,29 +39,29 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
             <a
                 href="{{ route('communities.index') }}"
                 wire:navigate
-                class="rounded-xl border border-zinc-200 p-5 hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800"
+                class="rounded-xl border border-stone-200 p-5 hover:bg-stone-50 dark:border-stone-800 dark:hover:bg-stone-800"
             >
                 <div class="flex items-center gap-2 text-cyan-600 dark:text-cyan-400">
                     <flux:icon.user-group class="size-5" />
                     <span class="text-sm font-medium">{{ __('Communities') }}</span>
                 </div>
-                <p class="mt-2 text-3xl font-semibold text-zinc-900 dark:text-white">
+                <p class="mt-2 text-3xl font-semibold text-stone-900 dark:text-white">
                     {{ $user->communities()->wherePivot('status', 'active')->count() }}
                 </p>
-                <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{{ __('joined') }}</p>
+                <p class="mt-1 text-sm text-stone-500 dark:text-stone-400">{{ __('joined') }}</p>
             </a>
 
             <a
                 href="{{ route('messages.index') }}"
                 wire:navigate
-                class="rounded-xl border border-zinc-200 p-5 hover:bg-zinc-50 dark:border-zinc-700 dark:hover:bg-zinc-800"
+                class="rounded-xl border border-stone-200 p-5 hover:bg-stone-50 dark:border-stone-800 dark:hover:bg-stone-800"
             >
                 <div class="flex items-center gap-2 text-cyan-600 dark:text-cyan-400">
                     <flux:icon.chat-bubble-left-right class="size-5" />
                     <span class="text-sm font-medium">{{ __('Messages') }}</span>
                 </div>
-                <p class="mt-2 text-3xl font-semibold text-zinc-900 dark:text-white">{{ $user->unreadConversationsCount() }}</p>
-                <p class="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{{ __('unread') }}</p>
+                <p class="mt-2 text-3xl font-semibold text-stone-900 dark:text-white">{{ $user->unreadConversationsCount() }}</p>
+                <p class="mt-1 text-sm text-stone-500 dark:text-stone-400">{{ __('unread') }}</p>
             </a>
         </div>
 

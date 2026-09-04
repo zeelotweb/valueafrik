@@ -108,7 +108,7 @@ new class extends Component {
             </div>
 
             <div class="mt-4 flex gap-2">
-                <flux:button wire:click="send" variant="primary" class="!bg-cyan-600 hover:!bg-cyan-500" wire:loading.attr="disabled">
+                <flux:button wire:click="send" variant="primary" color="cyan" wire:loading.attr="disabled">
                     {{ __('Send invite') }}
                 </flux:button>
                 <flux:button wire:click="$set('open', false)" variant="ghost">

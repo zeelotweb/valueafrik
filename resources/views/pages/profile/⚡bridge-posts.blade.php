@@ -146,7 +146,7 @@ new class extends Component {
 
                                         <div class="flex gap-2">
                                             <flux:button size="sm" variant="ghost" wire:click="cancelSide">{{ __('Cancel') }}</flux:button>
-                                            <flux:button size="sm" variant="primary" class="!bg-cyan-600 hover:!bg-cyan-500" wire:click="submitSide">
+                                            <flux:button size="sm" variant="primary" color="cyan" wire:click="submitSide">
                                                 {{ __('Post my side') }}
                                             </flux:button>
                                         </div>
