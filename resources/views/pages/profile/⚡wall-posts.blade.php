@@ -86,6 +86,11 @@ new class extends Component {
                     @endforeach
                 </div>
             @endif
+
+            <div class="mt-3 flex items-start gap-1 border-t border-stone-200 pt-2 dark:border-stone-800">
+                <livewire:pages::shared.reactions :reactable="$post" :key="'wall-post-reactions-'.$post->id" />
+                <livewire:pages::shared.comments :commentable="$post" :key="'wall-post-comments-'.$post->id" />
+            </div>
         </div>
     @empty
         <div class="rounded-lg border border-dashed border-stone-300 p-6 text-center dark:border-stone-800">

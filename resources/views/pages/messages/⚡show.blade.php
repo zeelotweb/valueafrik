@@ -162,7 +162,7 @@ new #[Title('Messages')] class extends Component {
         @foreach ($messages as $message)
             @php $isMine = $message['user_id'] === Auth::id(); @endphp
 
-            <div class="flex {{ $isMine ? 'justify-end' : 'justify-start' }}" wire:key="message-{{ $message['id'] }}">
+            <div class="flex flex-col {{ $isMine ? 'items-end' : 'items-start' }}" wire:key="message-{{ $message['id'] }}">
                 <div class="max-w-[75%] rounded-2xl px-4 py-2 {{ $isMine ? 'bg-cyan-600 text-white' : 'bg-stone-100 text-stone-900 dark:bg-stone-800 dark:text-stone-100' }}">
                     @if (! empty($message['media']))
                         <div class="mb-1 grid gap-1 {{ count($message['media']) > 1 ? 'grid-cols-2' : '' }}">
@@ -176,6 +176,10 @@ new #[Title('Messages')] class extends Component {
                         <p class="whitespace-pre-line text-sm">{{ $message['body'] }}</p>
                     @endif
                 </div>
+
+                @if ($messageModel = \App\Models\Message::find($message['id']))
+                    <livewire:pages::shared.reactions :reactable="$messageModel" :key="'message-reactions-'.$message['id']" />
+                @endif
             </div>
         @endforeach
     </div>

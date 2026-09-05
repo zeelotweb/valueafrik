@@ -57,7 +57,7 @@ $countryFlag = \App\Support\Countries::flag($profile?->country);
             @endphp
 
             <div class="mt-3 flex flex-wrap items-center gap-2">
-                <flux:badge variant="pill" color="cyan" icon="sparkles">
+                <flux:badge variant="pill" color="rose" icon="sparkles">
                     {{ trans_choice('1 bridge point|:count bridge points', $bridgeScore) }}
                 </flux:badge>
 

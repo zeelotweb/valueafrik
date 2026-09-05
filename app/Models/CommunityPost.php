@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Concerns\HasComments;
+use App\Concerns\HasReactions;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
@@ -9,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CommunityPost extends Model
 {
-    use SoftDeletes;
+    use HasComments, HasReactions, SoftDeletes;
 
     protected $fillable = [
         'community_id',

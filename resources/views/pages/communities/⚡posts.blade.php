@@ -135,6 +135,11 @@ new class extends Component {
                 </div>
             @endif
 
+            <div class="mt-3 flex items-start gap-1 border-t border-stone-200 pt-2 dark:border-stone-800">
+                <livewire:pages::shared.reactions :reactable="$post" :key="'community-post-reactions-'.$post->id" />
+                <livewire:pages::shared.comments :commentable="$post" :key="'community-post-comments-'.$post->id" />
+            </div>
+
             @if ($reportingPostId === $post->id)
                 <div class="mt-3 rounded-lg bg-white border border-stone-200 p-3 dark:bg-stone-900 dark:border-stone-800">
                     <flux:textarea wire:model="reportReason" :label="__('Why are you reporting this?')" rows="2" />
