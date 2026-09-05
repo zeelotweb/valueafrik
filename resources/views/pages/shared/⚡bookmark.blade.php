@@ -34,6 +34,8 @@ new class extends Component {
         }
 
         unset($this->bookmarked);
+
+        $this->dispatch('bookmark-toggled');
     }
 }; ?>
 

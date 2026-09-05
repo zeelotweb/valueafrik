@@ -4,12 +4,19 @@ use App\Models\Bookmark;
 use App\Models\CommunityPost;
 use App\Models\WallPost;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
 
 new #[Title('Bookmarks')] class extends Component {
     use WithPagination;
+
+    #[On('bookmark-toggled')]
+    public function refresh(): void
+    {
+        //
+    }
 
     public function with(): array
     {

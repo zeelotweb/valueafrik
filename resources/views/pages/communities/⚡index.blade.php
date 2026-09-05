@@ -42,7 +42,7 @@ new #[Title('Communities')] class extends Component {
             <a
                 href="{{ route('communities.show', $community) }}"
                 wire:navigate
-                class="flex items-start gap-3 rounded-xl bg-white border border-stone-200 p-4 hover:bg-stone-50 dark:bg-stone-900 dark:border-stone-800 dark:hover:bg-stone-800"
+                class="flex min-w-0 items-start gap-3 rounded-xl bg-white border border-stone-200 p-4 hover:bg-stone-50 dark:bg-stone-900 dark:border-stone-800 dark:hover:bg-stone-800"
             >
                 <div class="size-12 shrink-0 overflow-hidden rounded-xl bg-stone-200 dark:bg-stone-700">
                     @if ($community->avatarUrl())
