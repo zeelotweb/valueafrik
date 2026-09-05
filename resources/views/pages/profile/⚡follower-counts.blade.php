@@ -24,12 +24,12 @@ new class extends Component {
 }; ?>
 
 <div class="mt-3 flex items-center gap-4 text-sm">
-    <span>
+    <a href="{{ route('profile.connections', ['user' => $user, 'tab' => 'following']) }}" wire:navigate class="hover:underline">
         <span class="font-semibold text-stone-900 dark:text-white">{{ $followingCount }}</span>
         <span class="text-stone-500 dark:text-stone-400">{{ __('Following') }}</span>
-    </span>
-    <span>
+    </a>
+    <a href="{{ route('profile.connections', ['user' => $user, 'tab' => 'followers']) }}" wire:navigate class="hover:underline">
         <span class="font-semibold text-stone-900 dark:text-white">{{ $followersCount }}</span>
         <span class="text-stone-500 dark:text-stone-400">{{ __('Followers') }}</span>
-    </span>
+    </a>
 </div>

@@ -65,20 +65,24 @@
 
             <flux:spacer />
 
+            <div class="flex items-center gap-1">
+                <livewire:pages::layout.quick-search :key="'quick-search-'.auth()->id()" />
+                <livewire:pages::layout.notifications-icon :key="'notifications-icon-'.auth()->id()" />
+                <livewire:pages::layout.messages-icon :key="'messages-icon-'.auth()->id()" />
+            </div>
+
             <flux:dropdown position="top" align="end">
-                <flux:profile
-                    :initials="auth()->user()->initials()"
-                    icon-trailing="chevron-down"
-                />
+                <flux:profile icon-trailing="chevron-down">
+                    <x-slot:avatar>
+                        <flux:avatar size="sm" circle :src="auth()->user()->profile?->avatarUrl()" />
+                    </x-slot:avatar>
+                </flux:profile>
 
                 <flux:menu>
                     <flux:menu.radio.group>
                         <div class="p-0 text-sm font-normal">
                             <div class="flex items-center gap-2 px-1 py-1.5 text-start text-sm">
-                                <flux:avatar
-                                    :name="auth()->user()->name"
-                                    :initials="auth()->user()->initials()"
-                                />
+                                <flux:avatar circle :src="auth()->user()->profile?->avatarUrl()" />
 
                                 <div class="grid flex-1 text-start text-sm leading-tight">
                                     <flux:heading class="truncate">{{ auth()->user()->name }}</flux:heading>
