@@ -56,7 +56,7 @@ new class extends Component {
     }
 }; ?>
 
-<div id="wall-composer" class="mb-6 scroll-mt-20 rounded-xl border border-stone-200 p-4 dark:border-stone-800">
+<div id="wall-composer" class="mb-6 scroll-mt-20 rounded-xl bg-white border border-stone-200 p-4 dark:bg-stone-900 dark:border-stone-800">
     <form wire:submit="post">
         <flux:textarea
             wire:model="body"

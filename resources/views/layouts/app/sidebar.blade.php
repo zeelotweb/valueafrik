@@ -3,12 +3,12 @@
     <head>
         @include('partials.head')
     </head>
-    <body class="min-h-screen bg-stone-50 dark:bg-stone-900">
+    <body class="min-h-screen bg-stone-50 dark:bg-stone-950">
         <flux:sidebar
             sticky
             collapsible="mobile"
             style="--color-accent: var(--color-cyan-500); --color-accent-content: var(--color-cyan-500); --color-accent-foreground: var(--color-stone-950);"
-            class="border-e border-stone-200 bg-stone-50 dark:border-stone-800 dark:bg-stone-950"
+            class="border-e border-stone-200 bg-stone-100 dark:border-stone-800 dark:bg-black"
         >
             <flux:sidebar.header class="pb-4">
                 <x-brand-mark href="/" />
@@ -53,7 +53,7 @@
         <!-- Mobile Header -->
         <flux:header
             style="--color-accent: var(--color-cyan-500); --color-accent-content: var(--color-cyan-500); --color-accent-foreground: var(--color-stone-950);"
-            class="lg:hidden border-b border-stone-200 bg-stone-50/90 backdrop-blur dark:border-stone-800 dark:bg-stone-950/90"
+            class="lg:hidden border-b border-stone-200 bg-stone-100/90 backdrop-blur dark:border-stone-800 dark:bg-black/90"
         >
             <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
 

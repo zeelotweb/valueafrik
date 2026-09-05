@@ -139,7 +139,7 @@ new #[Title('Roots')] class extends Component {
             <div x-data="{ search: '' }">
                 <flux:label>{{ __('Languages you speak') }}</flux:label>
                 <flux:input x-model="search" icon="magnifying-glass" :placeholder="__('Search languages…')" class="mt-2 mb-3" />
-                <div class="max-h-56 overflow-y-auto rounded-lg border border-stone-200 p-3 dark:border-stone-800">
+                <div class="max-h-56 overflow-y-auto rounded-lg bg-white border border-stone-200 p-3 dark:bg-stone-900 dark:border-stone-800">
                     <flux:checkbox.group wire:model="languageIds" variant="pills" class="flex-wrap">
                         @foreach ($this->languages as $language)
                             <flux:checkbox
@@ -155,7 +155,7 @@ new #[Title('Roots')] class extends Component {
             <div x-data="{ search: '' }">
                 <flux:label>{{ __('Heritage') }}</flux:label>
                 <flux:input x-model="search" icon="magnifying-glass" :placeholder="__('Search heritage…')" class="mt-2 mb-3" />
-                <div class="max-h-56 overflow-y-auto rounded-lg border border-stone-200 p-3 dark:border-stone-800">
+                <div class="max-h-56 overflow-y-auto rounded-lg bg-white border border-stone-200 p-3 dark:bg-stone-900 dark:border-stone-800">
                     <flux:checkbox.group wire:model="heritageIds" variant="pills" class="flex-wrap">
                         @foreach ($this->heritages as $heritage)
                             <flux:checkbox
@@ -183,7 +183,7 @@ new #[Title('Roots')] class extends Component {
             <div x-data="{ search: '' }">
                 <flux:label>{{ __('What are you curious about?') }}</flux:label>
                 <flux:input x-model="search" icon="magnifying-glass" :placeholder="__('Search topics…')" class="mt-2 mb-3" />
-                <div class="max-h-56 overflow-y-auto rounded-lg border border-stone-200 p-3 dark:border-stone-800">
+                <div class="max-h-56 overflow-y-auto rounded-lg bg-white border border-stone-200 p-3 dark:bg-stone-900 dark:border-stone-800">
                     <flux:checkbox.group wire:model="interestIds" variant="pills" class="flex-wrap">
                         @foreach ($this->interests as $interest)
                             <flux:checkbox

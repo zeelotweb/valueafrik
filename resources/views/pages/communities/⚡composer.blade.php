@@ -70,7 +70,7 @@ new class extends Component {
 
 <div>
     @if ($community->canPost(Auth::user()))
-        <div class="mb-6 rounded-xl border border-stone-200 p-4 dark:border-stone-800">
+        <div class="mb-6 rounded-xl bg-white border border-stone-200 p-4 dark:bg-stone-900 dark:border-stone-800">
             <form wire:submit="post">
                 <flux:textarea
                     wire:model="body"

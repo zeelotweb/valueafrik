@@ -85,7 +85,7 @@ new class extends Component {
     @forelse ($posts as $post)
         @php $isMine = $post->user_id === Auth::id(); @endphp
 
-        <div class="rounded-xl border border-stone-200 p-4 dark:border-stone-800" wire:key="community-post-{{ $post->id }}">
+        <div class="rounded-xl bg-white border border-stone-200 p-4 dark:bg-stone-900 dark:border-stone-800" wire:key="community-post-{{ $post->id }}">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <div class="size-10 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
@@ -136,7 +136,7 @@ new class extends Component {
             @endif
 
             @if ($reportingPostId === $post->id)
-                <div class="mt-3 rounded-lg border border-stone-200 p-3 dark:border-stone-800">
+                <div class="mt-3 rounded-lg bg-white border border-stone-200 p-3 dark:bg-stone-900 dark:border-stone-800">
                     <flux:textarea wire:model="reportReason" :label="__('Why are you reporting this?')" rows="2" />
                     <div class="mt-2 flex justify-end gap-2">
                         <flux:button size="sm" variant="ghost" wire:click="cancelReport">{{ __('Cancel') }}</flux:button>

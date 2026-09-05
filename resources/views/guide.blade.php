@@ -72,7 +72,7 @@ $pillars = [
                 <div class="mx-auto max-w-6xl px-6 py-16">
                     <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                         @foreach ($pillars as $pillar)
-                            <div id="{{ $pillar['id'] }}" class="scroll-mt-24 rounded-xl border border-stone-200 p-6 dark:border-stone-800">
+                            <div id="{{ $pillar['id'] }}" class="scroll-mt-24 rounded-xl bg-white border border-stone-200 p-6 dark:bg-stone-900 dark:border-stone-800">
                                 <div class="flex items-center justify-between">
                                     <span class="font-mono text-sm text-stone-400 dark:text-stone-600">{{ $pillar['number'] }}</span>
                                     <span class="rounded-full bg-cyan-50 px-2.5 py-1 text-xs font-medium text-cyan-700 dark:bg-cyan-950 dark:text-cyan-400">

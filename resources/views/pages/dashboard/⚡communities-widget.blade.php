@@ -48,7 +48,7 @@ new class extends Component {
             href="{{ route('communities.show', $community) }}"
             wire:navigate
             wire:key="joined-{{ $community->id }}"
-            class="flex items-center gap-3 rounded-xl border border-stone-200 p-3 hover:bg-stone-50 dark:border-stone-800 dark:hover:bg-stone-800"
+            class="flex items-center gap-3 rounded-xl bg-white border border-stone-200 p-3 hover:bg-stone-50 dark:bg-stone-900 dark:border-stone-800 dark:hover:bg-stone-800"
         >
             <div class="size-11 shrink-0 overflow-hidden rounded-xl bg-stone-200 dark:bg-stone-700">
                 @if ($community->avatarUrl())
@@ -78,7 +78,7 @@ new class extends Component {
         </flux:text>
 
         @forelse ($suggested as $community)
-            <div class="flex items-center gap-3 rounded-xl border border-stone-200 p-3 dark:border-stone-800" wire:key="suggested-{{ $community->id }}">
+            <div class="flex items-center gap-3 rounded-xl bg-white border border-stone-200 p-3 dark:bg-stone-900 dark:border-stone-800" wire:key="suggested-{{ $community->id }}">
                 <a href="{{ route('communities.show', $community) }}" wire:navigate class="flex min-w-0 flex-1 items-center gap-3">
                     <div class="size-11 shrink-0 overflow-hidden rounded-xl bg-stone-200 dark:bg-stone-700">
                         @if ($community->avatarUrl())

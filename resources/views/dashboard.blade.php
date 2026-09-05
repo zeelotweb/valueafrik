@@ -14,24 +14,28 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
             </div>
         </div>
 
+        @php
+            $quickActionClass = '!bg-stone-200 hover:!bg-cyan-100 dark:!bg-stone-800 dark:hover:!bg-cyan-950/40';
+        @endphp
+
         {{-- Quick actions --}}
         <div class="mt-4 flex flex-wrap gap-2">
-            <livewire:pages::dashboard.start-stream :key="'start-stream-'.$user->id" />
+            <livewire:pages::dashboard.start-stream :key="'start-stream-'.$user->id" class="{{ $quickActionClass }}" />
 
             <a href="{{ route('profile.show', $user) }}#wall-composer" wire:navigate>
-                <flux:button size="sm" variant="ghost" icon="pencil-square">{{ __('Post to Wall') }}</flux:button>
+                <flux:button size="sm" variant="ghost" icon="pencil-square" class="{{ $quickActionClass }}">{{ __('Post to Wall') }}</flux:button>
             </a>
 
             <a href="{{ route('profile.show', $user) }}#wall-composer" wire:navigate>
-                <flux:button size="sm" variant="ghost" icon="arrows-right-left">{{ __('Start a Bridge Post') }}</flux:button>
+                <flux:button size="sm" variant="ghost" icon="arrows-right-left" class="{{ $quickActionClass }}">{{ __('Start a Bridge Post') }}</flux:button>
             </a>
 
             <a href="{{ route('communities.create') }}" wire:navigate>
-                <flux:button size="sm" variant="ghost" icon="plus">{{ __('Create Community') }}</flux:button>
+                <flux:button size="sm" variant="ghost" icon="plus" class="{{ $quickActionClass }}">{{ __('Create Community') }}</flux:button>
             </a>
 
             <a href="{{ route('roots.edit') }}" wire:navigate>
-                <flux:button size="sm" variant="ghost" icon="identification">{{ __('Edit Roots') }}</flux:button>
+                <flux:button size="sm" variant="ghost" icon="identification" class="{{ $quickActionClass }}">{{ __('Edit Roots') }}</flux:button>
             </a>
         </div>
 
@@ -46,7 +50,7 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
             <a
                 href="{{ route('profile.show', $user) }}"
                 wire:navigate
-                class="rounded-xl border border-stone-200 p-5 hover:bg-stone-50 dark:border-stone-800 dark:hover:bg-stone-800"
+                class="rounded-xl bg-white border border-stone-200 p-5 hover:bg-stone-50 dark:bg-stone-900 dark:border-stone-800 dark:hover:bg-stone-800"
             >
                 <div class="flex items-center gap-2 text-cyan-600 dark:text-cyan-400">
                     <flux:icon.sparkles class="size-5" />
@@ -61,7 +65,7 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
             <a
                 href="{{ route('communities.index') }}"
                 wire:navigate
-                class="rounded-xl border border-stone-200 p-5 hover:bg-stone-50 dark:border-stone-800 dark:hover:bg-stone-800"
+                class="rounded-xl bg-white border border-stone-200 p-5 hover:bg-stone-50 dark:bg-stone-900 dark:border-stone-800 dark:hover:bg-stone-800"
             >
                 <div class="flex items-center gap-2 text-cyan-600 dark:text-cyan-400">
                     <flux:icon.user-group class="size-5" />
@@ -76,7 +80,7 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
             <a
                 href="{{ route('messages.index') }}"
                 wire:navigate
-                class="rounded-xl border border-stone-200 p-5 hover:bg-stone-50 dark:border-stone-800 dark:hover:bg-stone-800"
+                class="rounded-xl bg-white border border-stone-200 p-5 hover:bg-stone-50 dark:bg-stone-900 dark:border-stone-800 dark:hover:bg-stone-800"
             >
                 <div class="flex items-center gap-2 text-cyan-600 dark:text-cyan-400">
                     <flux:icon.chat-bubble-left-right class="size-5" />

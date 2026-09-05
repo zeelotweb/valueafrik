@@ -1,4 +1,4 @@
-<div class="flex items-center gap-3 rounded-xl border border-stone-200 p-4 dark:border-stone-800">
+<div class="flex items-center gap-3 rounded-xl bg-white border border-stone-200 p-4 dark:bg-stone-900 dark:border-stone-800">
     <a href="{{ route('profile.show', $user) }}" wire:navigate class="flex min-w-0 flex-1 items-center gap-3">
         <div class="size-12 shrink-0 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
             @if ($user->profile?->avatarUrl())

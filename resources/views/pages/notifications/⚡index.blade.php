@@ -47,7 +47,7 @@ new #[Title('Notifications')] class extends Component {
                 type="button"
                 wire:click="open('{{ $notification->id }}')"
                 wire:key="notification-{{ $notification->id }}"
-                class="flex w-full items-start gap-3 rounded-xl border border-stone-200 p-4 text-start hover:bg-stone-50 dark:border-stone-800 dark:hover:bg-stone-800"
+                class="flex w-full items-start gap-3 rounded-xl bg-white border border-stone-200 p-4 text-start hover:bg-stone-50 dark:bg-stone-900 dark:border-stone-800 dark:hover:bg-stone-800"
             >
                 @if (! $notification->read_at)
                     <span class="mt-1.5 size-2 shrink-0 rounded-full bg-cyan-600"></span>

@@ -67,7 +67,7 @@ new class extends Component {
 
 <div class="space-y-2" wire:key="dashboard-people">
     @forelse ($people as $entry)
-        <div class="flex items-center gap-3 rounded-xl border border-stone-200 p-3 dark:border-stone-800" wire:key="dashboard-person-{{ $entry['user']->id }}">
+        <div class="flex items-center gap-3 rounded-xl bg-white border border-stone-200 p-3 dark:bg-stone-900 dark:border-stone-800" wire:key="dashboard-person-{{ $entry['user']->id }}">
             <a href="{{ route('profile.show', $entry['user']) }}" wire:navigate class="flex min-w-0 flex-1 items-center gap-3">
                 <div class="size-11 shrink-0 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
                     @if ($entry['user']->profile?->avatarUrl())

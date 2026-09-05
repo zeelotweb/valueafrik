@@ -45,7 +45,7 @@ new class extends Component {
 
 <div class="space-y-4" wire:key="wall-posts-{{ $user->id }}">
     @forelse ($posts as $post)
-        <div class="rounded-xl border border-stone-200 p-4 dark:border-stone-800" wire:key="wall-post-{{ $post->id }}">
+        <div class="rounded-xl bg-white border border-stone-200 p-4 dark:bg-stone-900 dark:border-stone-800" wire:key="wall-post-{{ $post->id }}">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <div class="size-10 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">

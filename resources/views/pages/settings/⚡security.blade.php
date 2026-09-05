@@ -105,7 +105,10 @@ new #[Title('Security settings')] class extends Component {
 
     <flux:heading level="2" class="sr-only">{{ __('Security settings') }}</flux:heading>
 
-    <x-pages::settings.layout :heading="__('Update password')" :subheading="__('Ensure your account is using a long, random password to stay secure')">
+    <x-pages::settings.layout :heading="__('Security')" :subheading="__('Manage your password, two-factor authentication, and passkeys')">
+        <flux:heading size="lg">{{ __('Update password') }}</flux:heading>
+        <flux:subheading>{{ __('Ensure your account is using a long, random password to stay secure') }}</flux:subheading>
+
         <form method="POST" wire:submit="updatePassword" class="mt-6 space-y-6">
             <flux:input
                 wire:model="current_password"
@@ -140,12 +143,13 @@ new #[Title('Security settings')] class extends Component {
                 </flux:button>
             </div>
         </form>
-    </x-pages::settings.layout>
 
     @if (Features::enabled(Features::twoFactorAuthentication()))
         <flux:separator variant="subtle" class="my-10" />
 
-        <x-pages::settings.layout :heading="__('Two-factor authentication')" :subheading="__('Add an extra layer of security to your account using an authenticator app')">
+        <flux:heading size="lg">{{ __('Two-factor authentication') }}</flux:heading>
+        <flux:subheading>{{ __('Add an extra layer of security to your account using an authenticator app') }}</flux:subheading>
+
         <div class="mt-6 space-y-6">
             @if ($this->twoFactorEnabled && ! $showingQrCode)
                 <flux:callout variant="success" icon="shield-check" :heading="__('Two-factor authentication is enabled.')" />
@@ -205,19 +209,20 @@ new #[Title('Security settings')] class extends Component {
                 </flux:button>
             @endif
         </div>
-        </x-pages::settings.layout>
     @endif
 
     @if (Features::enabled(Features::passkeys()))
         <flux:separator variant="subtle" class="my-10" />
 
-        <x-pages::settings.layout :heading="__('Passkeys')" :subheading="__('Manage your passkeys for passwordless sign-in')">
-            <div
-                x-data="{ name: '', busy: false, error: null }"
-                class="mt-6 space-y-6"
-            >
+        <flux:heading size="lg">{{ __('Passkeys') }}</flux:heading>
+        <flux:subheading>{{ __('Manage your passkeys for passwordless sign-in') }}</flux:subheading>
+
+        <div
+            x-data="{ name: '', busy: false, error: null }"
+            class="mt-6 space-y-6"
+        >
                 @forelse (Auth::user()->passkeys as $passkey)
-                    <div class="flex items-center justify-between rounded-lg border border-stone-200 px-4 py-3 dark:border-stone-800">
+                    <div class="flex items-center justify-between rounded-lg bg-white border border-stone-200 px-4 py-3 dark:bg-stone-900 dark:border-stone-800">
                         <div>
                             <flux:text class="font-medium text-stone-900 dark:text-white">{{ $passkey->name }}</flux:text>
                             <flux:text class="text-sm">
@@ -266,6 +271,6 @@ new #[Title('Security settings')] class extends Component {
                     </flux:button>
                 </form>
             </div>
-        </x-pages::settings.layout>
     @endif
+    </x-pages::settings.layout>
 </section>

@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 new class extends Component {
+    public string $class = '';
+
     public function startStream()
     {
         $session = LiveSession::startStream(Auth::user());
@@ -13,6 +15,6 @@ new class extends Component {
     }
 }; ?>
 
-<flux:button wire:click="startStream" wire:loading.attr="disabled" variant="ghost" icon="video-camera" data-test="start-stream-button">
+<flux:button wire:click="startStream" wire:loading.attr="disabled" variant="ghost" icon="video-camera" class="{{ $class }}" data-test="start-stream-button">
     {{ __('Start a stream') }}
 </flux:button>

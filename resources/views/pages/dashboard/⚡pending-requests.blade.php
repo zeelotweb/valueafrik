@@ -47,7 +47,7 @@ new class extends Component {
 
 <div class="space-y-4" wire:key="dashboard-pending-requests">
     @forelse ($communities as $community)
-        <div class="rounded-xl border border-stone-200 p-4 dark:border-stone-800" wire:key="pending-community-{{ $community->id }}">
+        <div class="rounded-xl bg-white border border-stone-200 p-4 dark:bg-stone-900 dark:border-stone-800" wire:key="pending-community-{{ $community->id }}">
             <flux:link :href="route('communities.show', $community)" wire:navigate class="font-medium">
                 {{ $community->name }}
             </flux:link>

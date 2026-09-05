@@ -41,7 +41,7 @@ new #[Title('Messages')] class extends Component {
             <a
                 href="{{ route('messages.show', $conversation) }}"
                 wire:navigate
-                class="flex items-center gap-3 rounded-xl border border-stone-200 p-3 hover:bg-stone-50 dark:border-stone-800 dark:hover:bg-stone-800"
+                class="flex items-center gap-3 rounded-xl bg-white border border-stone-200 p-3 hover:bg-stone-50 dark:bg-stone-900 dark:border-stone-800 dark:hover:bg-stone-800"
             >
                 <div class="size-11 shrink-0 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
                     @if ($other?->profile?->avatarUrl())

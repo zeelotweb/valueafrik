@@ -1,4 +1,4 @@
-<header class="sticky top-0 z-20 border-b border-stone-200/80 bg-stone-50/90 backdrop-blur dark:border-stone-800/80 dark:bg-stone-950/90">
+<header class="sticky top-0 z-20 border-b border-stone-200/80 bg-stone-100/90 backdrop-blur dark:border-stone-800/80 dark:bg-black/90">
     <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
         <x-brand-mark />
 
