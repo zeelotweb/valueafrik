@@ -10,7 +10,7 @@ test('the welcome page no longer lists the six pillars but links to the guide', 
 test('the guide page lists all six pillars', function () {
     $this->get(route('guide'))
         ->assertOk()
-        ->assertSee('Six pillars, built in order.')
+        ->assertSee('Six pillars. One idea.')
         ->assertSee('Identity & Profiles')
         ->assertSee('Live & Video');
 });
