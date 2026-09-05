@@ -35,6 +35,10 @@
                         {{ __('Communities') }}
                     </flux:sidebar.item>
 
+                    <flux:sidebar.item icon="bookmark" :href="route('bookmarks.index')" :current="request()->routeIs('bookmarks.*')" wire:navigate>
+                        {{ __('Bookmarks') }}
+                    </flux:sidebar.item>
+
                     <flux:sidebar.item icon="magnifying-glass" :href="route('discover.index')" :current="request()->routeIs('discover.*')" wire:navigate>
                         {{ __('Discover') }}
                     </flux:sidebar.item>

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Concerns\HasBookmarks;
 use App\Concerns\HasComments;
 use App\Concerns\HasReactions;
 use Illuminate\Database\Eloquent\Model;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class WallPost extends Model
 {
-    use HasComments, HasReactions, SoftDeletes;
+    use HasBookmarks, HasComments, HasReactions, SoftDeletes;
 
     protected $fillable = [
         'user_id',

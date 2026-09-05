@@ -6,6 +6,8 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 new #[Title('Communities')] class extends Component {
+    public string $search = '';
+
     public function with(): array
     {
         $userId = Auth::id();
@@ -16,6 +18,7 @@ new #[Title('Communities')] class extends Component {
                 $query->where('visibility', '!=', Community::VISIBILITY_PRIVATE)
                     ->orWhereHas('members', fn ($q) => $q->whereKey($userId)->where('community_user.status', 'active'));
             })
+            ->when($this->search !== '', fn ($query) => $query->where('name', 'like', '%'.$this->search.'%'))
             ->latest()
             ->get();
 
@@ -31,6 +34,8 @@ new #[Title('Communities')] class extends Component {
             <flux:button variant="primary" color="cyan">{{ __('Create community') }}</flux:button>
         </a>
     </div>
+
+    <flux:input wire:model.live.debounce.300ms="search" icon="magnifying-glass" placeholder="{{ __('Search communities…') }}" class="mt-4" />
 
     <div class="mt-6 grid gap-3 sm:grid-cols-2">
         @forelse ($communities as $community)
@@ -68,7 +73,9 @@ new #[Title('Communities')] class extends Component {
             </a>
         @empty
             <div class="col-span-2 rounded-lg border border-dashed border-stone-300 p-6 text-center dark:border-stone-800">
-                <flux:text>{{ __('No communities yet — be the first to start one.') }}</flux:text>
+                <flux:text>
+                    {{ $search !== '' ? __('No communities match ":search".', ['search' => $search]) : __('No communities yet — be the first to start one.') }}
+                </flux:text>
             </div>
         @endforelse
     </div>

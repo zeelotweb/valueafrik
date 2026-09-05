@@ -2,10 +2,32 @@
 
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
 new #[Title('Discover')] class extends Component {
+    public string $search = '';
+
+    #[Computed]
+    public function searchResults()
+    {
+        if ($this->search === '') {
+            return collect();
+        }
+
+        return User::query()
+            ->whereKeyNot(Auth::id())
+            ->where('name', 'like', '%'.$this->search.'%')
+            ->with(['profile', 'heritages'])
+            ->limit(20)
+            ->get()
+            ->map(fn ($person) => [
+                'user' => $person,
+                'caption' => $person->profile?->bio ?: __('New here.'),
+            ]);
+    }
+
     public function with(): array
     {
         $viewer = Auth::user();
@@ -72,42 +94,56 @@ new #[Title('Discover')] class extends Component {
     <flux:heading size="xl">{{ __('Discover') }}</flux:heading>
     <flux:subheading>{{ __('People worth connecting with — through curiosity, not follower counts.') }}</flux:subheading>
 
-    @if ($sharedInterests->isEmpty() && $crossHeritage->isEmpty() && $newHere->isEmpty())
-        <div class="mt-6 rounded-lg border border-dashed border-stone-300 p-6 text-center dark:border-stone-800">
-            <flux:text>{{ __('No one else here yet.') }}</flux:text>
-        </div>
-    @endif
+    <flux:input wire:model.live.debounce.300ms="search" icon="magnifying-glass" placeholder="{{ __('Search people by name…') }}" class="mt-4" />
 
-    @if ($sharedInterests->isNotEmpty())
-        <div class="mt-8">
-            <flux:heading size="lg">{{ __('Shares your curiosities') }}</flux:heading>
-            <div class="mt-3 grid gap-3 sm:grid-cols-2">
-                @foreach ($sharedInterests as $entry)
-                    @include('pages.discover._person-card', $entry)
-                @endforeach
-            </div>
+    @if ($search !== '')
+        <div class="mt-6 grid gap-3 sm:grid-cols-2">
+            @forelse ($this->searchResults as $entry)
+                @include('pages.discover._person-card', $entry)
+            @empty
+                <div class="col-span-2 rounded-lg border border-dashed border-stone-300 p-6 text-center dark:border-stone-800">
+                    <flux:text>{{ __('No one matches ":search".', ['search' => $search]) }}</flux:text>
+                </div>
+            @endforelse
         </div>
-    @endif
+    @else
+        @if ($sharedInterests->isEmpty() && $crossHeritage->isEmpty() && $newHere->isEmpty())
+            <div class="mt-6 rounded-lg border border-dashed border-stone-300 p-6 text-center dark:border-stone-800">
+                <flux:text>{{ __('No one else here yet.') }}</flux:text>
+            </div>
+        @endif
 
-    @if ($crossHeritage->isNotEmpty())
-        <div class="mt-8">
-            <flux:heading size="lg">{{ __('A different perspective') }}</flux:heading>
-            <div class="mt-3 grid gap-3 sm:grid-cols-2">
-                @foreach ($crossHeritage as $entry)
-                    @include('pages.discover._person-card', $entry)
-                @endforeach
+        @if ($sharedInterests->isNotEmpty())
+            <div class="mt-8">
+                <flux:heading size="lg">{{ __('Shares your curiosities') }}</flux:heading>
+                <div class="mt-3 grid gap-3 sm:grid-cols-2">
+                    @foreach ($sharedInterests as $entry)
+                        @include('pages.discover._person-card', $entry)
+                    @endforeach
+                </div>
             </div>
-        </div>
-    @endif
+        @endif
 
-    @if ($newHere->isNotEmpty())
-        <div class="mt-8">
-            <flux:heading size="lg">{{ __('New here') }}</flux:heading>
-            <div class="mt-3 grid gap-3 sm:grid-cols-2">
-                @foreach ($newHere as $entry)
-                    @include('pages.discover._person-card', $entry)
-                @endforeach
+        @if ($crossHeritage->isNotEmpty())
+            <div class="mt-8">
+                <flux:heading size="lg">{{ __('A different perspective') }}</flux:heading>
+                <div class="mt-3 grid gap-3 sm:grid-cols-2">
+                    @foreach ($crossHeritage as $entry)
+                        @include('pages.discover._person-card', $entry)
+                    @endforeach
+                </div>
             </div>
-        </div>
+        @endif
+
+        @if ($newHere->isNotEmpty())
+            <div class="mt-8">
+                <flux:heading size="lg">{{ __('New here') }}</flux:heading>
+                <div class="mt-3 grid gap-3 sm:grid-cols-2">
+                    @foreach ($newHere as $entry)
+                        @include('pages.discover._person-card', $entry)
+                    @endforeach
+                </div>
+            </div>
+        @endif
     @endif
 </div>

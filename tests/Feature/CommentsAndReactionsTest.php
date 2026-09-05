@@ -110,6 +110,46 @@ test('reactions and comments work the same way on a community post', function ()
     expect($post->fresh()->commentsCount())->toBe(1);
 });
 
+test('a user can bookmark a wall post and unbookmark it, with no bridge score awarded', function () {
+    $author = User::factory()->create();
+    $post = $author->wallPosts()->create(['body' => 'Save me for later.']);
+    $viewer = User::factory()->create();
+
+    Livewire::actingAs($viewer)
+        ->test('pages::shared.bookmark', ['bookmarkable' => $post])
+        ->call('toggle')
+        ->assertSet('bookmarked', true);
+
+    expect($post->fresh()->bookmarks()->count())->toBe(1);
+    expect($viewer->fresh()->bridgeScore())->toBe(0);
+
+    Livewire::actingAs($viewer)
+        ->test('pages::shared.bookmark', ['bookmarkable' => $post])
+        ->call('toggle')
+        ->assertSet('bookmarked', false);
+
+    expect($post->fresh()->bookmarks()->count())->toBe(0);
+});
+
+test('bookmarked posts appear on the bookmarks page and stay private to the bookmarker', function () {
+    $author = User::factory()->create();
+    $post = $author->wallPosts()->create(['body' => 'A post worth saving.']);
+
+    $bookmarker = User::factory()->create();
+    $post->bookmarks()->create(['user_id' => $bookmarker->id]);
+
+    Livewire::actingAs($bookmarker)
+        ->test('pages::bookmarks.index')
+        ->assertSee('A post worth saving.');
+
+    $other = User::factory()->create();
+
+    Livewire::actingAs($other)
+        ->test('pages::bookmarks.index')
+        ->assertDontSee('A post worth saving.')
+        ->assertSee("You haven't bookmarked anything yet.");
+});
+
 test('a message can be reacted to', function () {
     $a = User::factory()->create();
     $b = User::factory()->create();

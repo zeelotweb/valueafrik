@@ -23,6 +23,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::livewire('notifications', 'pages::notifications.index')->name('notifications.index');
 
+    Route::livewire('bookmarks', 'pages::bookmarks.index')->name('bookmarks.index');
+
     Route::livewire('discover', 'pages::discover.index')->name('discover.index');
 
     Route::livewire('communities', 'pages::communities.index')->name('communities.index');
