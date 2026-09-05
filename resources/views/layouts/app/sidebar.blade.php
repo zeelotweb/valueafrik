@@ -11,7 +11,7 @@
             class="border-e border-stone-200 bg-stone-50 dark:border-stone-800 dark:bg-stone-950"
         >
             <flux:sidebar.header class="pb-4">
-                <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
+                <x-brand-mark href="{{ route('dashboard') }}" />
                 <flux:sidebar.collapse class="lg:hidden" />
             </flux:sidebar.header>
 
@@ -57,7 +57,7 @@
         >
             <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
 
-            <x-app-logo href="{{ route('dashboard') }}" wire:navigate />
+            <x-brand-mark href="{{ route('dashboard') }}" />
 
             <flux:spacer />
 
