@@ -10,7 +10,7 @@
             style="--color-accent: var(--color-cyan-500); --color-accent-content: var(--color-cyan-500); --color-accent-foreground: var(--color-stone-950);"
             class="border-e border-stone-200 bg-stone-50 dark:border-stone-800 dark:bg-stone-950"
         >
-            <flux:sidebar.header class="border-b border-stone-200 pb-4 dark:border-stone-800">
+            <flux:sidebar.header class="pb-4">
                 <x-app-logo :sidebar="true" href="{{ route('dashboard') }}" wire:navigate />
                 <flux:sidebar.collapse class="lg:hidden" />
             </flux:sidebar.header>
