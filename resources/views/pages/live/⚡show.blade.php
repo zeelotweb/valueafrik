@@ -3,6 +3,7 @@
 use App\Models\LiveSession;
 use App\Services\LiveKitToken;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -18,7 +19,16 @@ new #[Title('Live')] class extends Component {
         $this->session = $liveSession;
 
         if ($this->session->type === LiveSession::TYPE_CALL) {
-            abort_unless($this->session->isParticipant(Auth::user()), 403);
+            if (! $this->session->isParticipant(Auth::user())) {
+                Log::warning('Blocked a non-participant from opening a call room.', [
+                    'session_id' => $this->session->id,
+                    'session_host_id' => $this->session->host_id,
+                    'session_callee_id' => $this->session->callee_id,
+                    'auth_id' => Auth::id(),
+                ]);
+
+                abort(403);
+            }
 
             $this->session->expireIfStale();
         }
