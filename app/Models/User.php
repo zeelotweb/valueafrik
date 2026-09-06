@@ -50,8 +50,20 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     {
         return [
             'email_verified_at' => 'datetime',
+            'last_seen_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Heartbeat-based presence — see TrackLastSeen. Deliberately a wider
+     * window than the middleware's own write-throttle, so a user isn't
+     * flickered "offline" between two heartbeats.
+     */
+    public function isOnline(): bool
+    {
+        return $this->last_seen_at !== null
+            && $this->last_seen_at->gt(now()->subSeconds(config('calls.online_threshold_seconds')));
     }
 
     public function socialAccounts(): HasMany

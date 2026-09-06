@@ -2,7 +2,10 @@
 
 namespace App\Models;
 
+use App\Events\CallStatusUpdated;
+use App\Jobs\ExpireRingingCall;
 use App\Notifications\LiveCallStarted;
+use App\Notifications\MissedCall;
 use App\Support\SafeNotifier;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,17 +17,32 @@ class LiveSession extends Model
 
     public const TYPE_STREAM = 'stream';
 
+    public const STATUS_RINGING = 'ringing';
+
     public const STATUS_LIVE = 'live';
 
     public const STATUS_ENDED = 'ended';
 
+    public const STATUS_MISSED = 'missed';
+
+    public const STATUS_DECLINED = 'declined';
+
+    public const STATUS_CANCELED = 'canceled';
+
+    public const REASON_OFFLINE = 'offline';
+
+    public const REASON_TIMEOUT = 'timeout';
+
     protected $fillable = [
         'host_id',
+        'callee_id',
         'room_name',
         'title',
         'type',
         'status',
+        'ended_reason',
         'started_at',
+        'answered_at',
         'ended_at',
     ];
 
@@ -32,6 +50,7 @@ class LiveSession extends Model
     {
         return [
             'started_at' => 'datetime',
+            'answered_at' => 'datetime',
             'ended_at' => 'datetime',
         ];
     }
@@ -41,9 +60,55 @@ class LiveSession extends Model
         return $this->belongsTo(User::class, 'host_id');
     }
 
+    public function callee(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'callee_id');
+    }
+
     public function isLive(): bool
     {
         return $this->status === self::STATUS_LIVE;
+    }
+
+    public function isRinging(): bool
+    {
+        return $this->status === self::STATUS_RINGING;
+    }
+
+    /**
+     * Ringing, and still inside the ring window — the boundary that decides
+     * whether a ringer can still be shown/answered versus needing to be
+     * self-healed to "missed" first. Checked on every read path (page loads,
+     * the global ringer's mount) so a stale row never gets treated as live
+     * just because the sweep job hasn't run yet.
+     */
+    public function isStillRinging(): bool
+    {
+        return $this->isRinging()
+            && $this->started_at->addSeconds((int) config('calls.ring_seconds'))->isFuture();
+    }
+
+    public function isTerminal(): bool
+    {
+        return in_array($this->status, [self::STATUS_ENDED, self::STATUS_MISSED, self::STATUS_DECLINED, self::STATUS_CANCELED], true);
+    }
+
+    public function otherParty(User $user): ?User
+    {
+        if ($user->id === $this->host_id) {
+            return $this->callee;
+        }
+
+        if ($user->id === $this->callee_id) {
+            return $this->host;
+        }
+
+        return null;
+    }
+
+    public function isParticipant(User $user): bool
+    {
+        return $user->id === $this->host_id || $user->id === $this->callee_id;
     }
 
     /**
@@ -60,23 +125,52 @@ class LiveSession extends Model
     }
 
     /**
-     * Start a 1:1 call and let the other person know it's waiting for them —
-     * the only way they'd otherwise find out is by happening to visit the
-     * room URL directly.
+     * Start a 1:1 call. If the invitee is online, it rings — a delayed job
+     * registers a missed call if nobody answers in time. If they're offline,
+     * there's nothing to ring, so it's recorded as missed immediately and
+     * the caller sees that reflected the moment they land on the room page.
+     *
+     * Reuses an already-ringing/live call between the same two people
+     * instead of stacking a duplicate on top of it (e.g. a doubled click).
      */
     public static function startCallWith(User $host, User $invitee): self
     {
         abort_if($host->id === $invitee->id, 403);
 
+        $existing = self::query()
+            ->where('type', self::TYPE_CALL)
+            ->whereIn('status', [self::STATUS_RINGING, self::STATUS_LIVE])
+            ->where(function ($query) use ($host, $invitee) {
+                $query->where(['host_id' => $host->id, 'callee_id' => $invitee->id])
+                    ->orWhere(['host_id' => $invitee->id, 'callee_id' => $host->id]);
+            })
+            ->first();
+
+        if ($existing) {
+            return $existing;
+        }
+
+        $online = $invitee->isOnline();
+
         $session = self::create([
             'host_id' => $host->id,
+            'callee_id' => $invitee->id,
             'room_name' => (string) Str::uuid(),
             'type' => self::TYPE_CALL,
-            'status' => self::STATUS_LIVE,
+            'status' => $online ? self::STATUS_RINGING : self::STATUS_MISSED,
+            'ended_reason' => $online ? null : self::REASON_OFFLINE,
             'started_at' => now(),
+            'ended_at' => $online ? null : now(),
         ]);
 
-        SafeNotifier::send($invitee, new LiveCallStarted($session));
+        if ($online) {
+            SafeNotifier::send($invitee, new LiveCallStarted($session));
+            ExpireRingingCall::dispatch($session)->delay(now()->addSeconds((int) config('calls.ring_seconds')));
+        } else {
+            SafeNotifier::send($invitee, new MissedCall($session));
+        }
+
+        self::broadcastStatus($session);
 
         return $session;
     }
@@ -91,5 +185,75 @@ class LiveSession extends Model
             'status' => self::STATUS_LIVE,
             'started_at' => now(),
         ]);
+    }
+
+    /**
+     * The callee answers or declines a still-ringing call.
+     */
+    public function respondToRing(User $user, bool $accept): void
+    {
+        abort_unless($user->id === $this->callee_id, 403);
+
+        if (! $this->isStillRinging()) {
+            $this->expireIfStale();
+
+            return;
+        }
+
+        $this->update($accept
+            ? ['status' => self::STATUS_LIVE, 'answered_at' => now()]
+            : ['status' => self::STATUS_DECLINED, 'ended_at' => now()]);
+
+        self::broadcastStatus($this);
+    }
+
+    /**
+     * Either party can end a call — while it's still ringing (a cancel) or
+     * once it's live (a hangup) — and it ends for both sides immediately.
+     * Streams stay host-only, enforced by the caller (the live.show page).
+     */
+    public function endOrCancel(User $user): void
+    {
+        abort_unless($this->isParticipant($user), 403);
+
+        if ($this->isRinging()) {
+            $this->update(['status' => self::STATUS_CANCELED, 'ended_at' => now()]);
+        } elseif ($this->isLive()) {
+            $this->update(['status' => self::STATUS_ENDED, 'ended_at' => now()]);
+        } else {
+            return;
+        }
+
+        self::broadcastStatus($this);
+    }
+
+    /**
+     * Idempotent: marks a still-ringing call missed once its window has
+     * passed. Called by the delayed job (the push path) and opportunistically
+     * from every read path (the pull path, in case the job never ran) so the
+     * two can never disagree for long.
+     */
+    public function expireIfStale(): bool
+    {
+        if (! $this->isRinging() || $this->isStillRinging()) {
+            return false;
+        }
+
+        $this->update(['status' => self::STATUS_MISSED, 'ended_reason' => self::REASON_TIMEOUT, 'ended_at' => now()]);
+
+        SafeNotifier::send($this->callee, new MissedCall($this));
+
+        self::broadcastStatus($this);
+
+        return true;
+    }
+
+    private static function broadcastStatus(self $session): void
+    {
+        try {
+            broadcast(new CallStatusUpdated($session));
+        } catch (\Throwable $e) {
+            report($e);
+        }
     }
 }

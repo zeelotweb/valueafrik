@@ -7,11 +7,11 @@ use App\Services\LiveKitToken;
 use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
 
-test('starting a call from a profile creates a live session, redirects, and notifies the other person', function () {
+test('starting a call from a profile with an online invitee rings and notifies them', function () {
     Notification::fake();
 
     $host = User::factory()->create();
-    $invitee = User::factory()->create();
+    $invitee = User::factory()->create(['last_seen_at' => now()]);
 
     Livewire::actingAs($host)
         ->test('pages::profile.start-call-button', ['user' => $invitee])
@@ -21,8 +21,9 @@ test('starting a call from a profile creates a live session, redirects, and noti
     $session = LiveSession::first();
 
     expect($session->host_id)->toBe($host->id);
+    expect($session->callee_id)->toBe($invitee->id);
     expect($session->type)->toBe(LiveSession::TYPE_CALL);
-    expect($session->status)->toBe(LiveSession::STATUS_LIVE);
+    expect($session->status)->toBe(LiveSession::STATUS_RINGING);
     expect($session->room_name)->not->toBeEmpty();
 
     Notification::assertSentTo($invitee, LiveCallStarted::class);
@@ -43,7 +44,7 @@ test('starting a call from a conversation notifies the other participant', funct
     Notification::fake();
 
     $a = User::factory()->create();
-    $b = User::factory()->create();
+    $b = User::factory()->create(['last_seen_at' => now()]);
     $conversation = App\Models\Conversation::between($a, $b);
 
     Livewire::actingAs($a)
@@ -127,18 +128,18 @@ test('anyone can publish in a call but only the host can publish in a stream', f
     expect($stream->canPublish($viewer))->toBeFalse();
 });
 
-test('only the host can end a session', function () {
+test('only the host can end a stream', function () {
     $host = User::factory()->create();
-    $intruder = User::factory()->create();
+    $viewer = User::factory()->create();
     $session = LiveSession::create([
         'host_id' => $host->id,
         'room_name' => 'room-1',
-        'type' => LiveSession::TYPE_CALL,
+        'type' => LiveSession::TYPE_STREAM,
         'status' => LiveSession::STATUS_LIVE,
         'started_at' => now(),
     ]);
 
-    Livewire::actingAs($intruder)
+    Livewire::actingAs($viewer)
         ->test('pages::live.show', ['liveSession' => $session])
         ->call('endSession')
         ->assertForbidden();

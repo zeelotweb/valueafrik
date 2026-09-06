@@ -126,6 +126,10 @@
             </flux:toast.group>
         @endpersist
 
+        @persist('incoming-call')
+            <livewire:pages::layout.incoming-call :key="'incoming-call-'.auth()->id()" />
+        @endpersist
+
         @fluxScripts
     </body>
 </html>
