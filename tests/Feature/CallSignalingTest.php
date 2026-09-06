@@ -288,6 +288,40 @@ test('the host sees an outgoing calling screen while ringing, the callee sees ac
         ->assertSeeHtml('respond(false)');
 });
 
+test('the ringing screen and the connected room render under different wire:key markers so Livewire fully remounts instead of patching in place', function () {
+    // A bug this guards against: Livewire's morph will patch one x-data
+    // block into another in place (rather than tearing down and
+    // reinitializing Alpine) unless each state has a distinct key — which
+    // silently prevented the LiveKit connection from ever starting when a
+    // call went from ringing to live without a full page reload.
+    config([
+        'services.livekit.api_key' => 'test-key',
+        'services.livekit.api_secret' => base64_encode(random_bytes(64)),
+        'services.livekit.url' => 'wss://example.livekit.cloud',
+    ]);
+
+    $host = User::factory()->create();
+    $callee = User::factory()->create();
+    $session = LiveSession::create([
+        'host_id' => $host->id, 'callee_id' => $callee->id, 'room_name' => 'r14b',
+        'type' => LiveSession::TYPE_CALL, 'status' => LiveSession::STATUS_RINGING, 'started_at' => now(),
+    ]);
+
+    $component = Livewire::actingAs($host)->test('pages::live.show', ['liveSession' => $session]);
+
+    expect($component->html())->toContain("live-session-{$session->id}-ringing");
+
+    // The host's page never navigates — it's the same component instance,
+    // updated in place by the broadcast listener, exactly like a real
+    // CallStatusUpdated event landing while the "Calling…" screen is open.
+    $session->respondToRing($callee, true);
+    $component->call('onCallStatusUpdated', ['session_id' => $session->id]);
+
+    $roomHtml = $component->html();
+    expect($roomHtml)->toContain("live-session-{$session->id}-room");
+    expect($roomHtml)->not->toContain("live-session-{$session->id}-ringing");
+});
+
 test('accepting from the room page connects the call and issues a token', function () {
     config([
         'services.livekit.api_key' => 'test-key',

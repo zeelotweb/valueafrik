@@ -163,8 +163,9 @@ new #[Title('Live')] class extends Component {
     @if ($session->type === LiveSession::TYPE_CALL && $session->isRinging())
         {{-- Ringing: a different screen depending on which side of the call you're on. --}}
         <div
+            wire:key="live-session-{{ $session->id }}-ringing"
             x-data="{ deadline: @js($this->ringDeadline), secondsLeft: 0, tick() { this.secondsLeft = Math.max(0, Math.round((new Date(this.deadline) - new Date()) / 1000)); } }"
-            x-init="tick(); setInterval(tick, 1000)"
+            x-init="tick(); let interval = setInterval(tick, 1000); $cleanup(() => clearInterval(interval))"
             class="mt-10 flex flex-col items-center gap-4 rounded-xl border border-stone-200 bg-white p-10 text-center dark:border-stone-800 dark:bg-stone-900"
         >
             <div class="size-20 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
@@ -203,7 +204,7 @@ new #[Title('Live')] class extends Component {
             @endif
         </div>
     @elseif ($session->type === LiveSession::TYPE_CALL && in_array($session->status, [LiveSession::STATUS_MISSED, LiveSession::STATUS_DECLINED, LiveSession::STATUS_CANCELED]))
-        <div class="mt-6 rounded-lg border border-dashed border-stone-300 p-6 text-center dark:border-stone-800">
+        <div wire:key="live-session-{{ $session->id }}-ended-{{ $session->status }}" class="mt-6 rounded-lg border border-dashed border-stone-300 p-6 text-center dark:border-stone-800">
             <flux:text>
                 @if ($session->status === LiveSession::STATUS_MISSED)
                     @if ($this->isHost && $session->ended_reason === LiveSession::REASON_OFFLINE)
@@ -221,15 +222,16 @@ new #[Title('Live')] class extends Component {
             </flux:text>
         </div>
     @elseif (! $session->isLive())
-        <div class="mt-6 rounded-lg border border-dashed border-stone-300 p-6 text-center dark:border-stone-800">
+        <div wire:key="live-session-{{ $session->id }}-ended" class="mt-6 rounded-lg border border-dashed border-stone-300 p-6 text-center dark:border-stone-800">
             <flux:text>{{ __('This session has ended.') }}</flux:text>
         </div>
     @elseif (! $configured)
-        <div class="mt-6 rounded-lg border border-dashed border-stone-300 p-6 text-center dark:border-stone-800">
+        <div wire:key="live-session-{{ $session->id }}-not-configured" class="mt-6 rounded-lg border border-dashed border-stone-300 p-6 text-center dark:border-stone-800">
             <flux:text>{{ __("Live video isn't configured yet — set LIVEKIT_URL, LIVEKIT_API_KEY, and LIVEKIT_API_SECRET to enable it.") }}</flux:text>
         </div>
     @else
         <div
+            wire:key="live-session-{{ $session->id }}-room"
             x-data="{
                 liveRoom: null,
                 connected: false,
