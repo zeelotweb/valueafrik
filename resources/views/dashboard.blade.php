@@ -5,7 +5,7 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
 ?>
 <x-layouts::app :title="__('Dashboard')">
     <div class="mx-auto w-full max-w-5xl">
-        <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="flex flex-wrap items-center justify-between gap-3 hidden">
             <div>
                 <flux:heading size="l">
                     {{ __(':name', ['name' => Str::before($user->name, ' ')]) }}
