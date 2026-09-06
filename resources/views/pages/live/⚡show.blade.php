@@ -97,6 +97,23 @@ new #[Title('Live')] class extends Component {
         $this->redirect(route('live.index'), navigate: true);
     }
 
+    /**
+     * The control bar's leave/end button, shown to every connected
+     * participant — a stream viewer only gets to leave, not end it for the
+     * host, so this routes to the right one instead of hitting endSession's
+     * host-only guard.
+     */
+    public function leaveRoom(): void
+    {
+        if ($this->session->type === LiveSession::TYPE_STREAM && Auth::id() !== $this->session->host_id) {
+            $this->redirect(route('live.index'), navigate: true);
+
+            return;
+        }
+
+        $this->endSession();
+    }
+
     public function getListeners(): array
     {
         return Auth::check()
@@ -213,17 +230,76 @@ new #[Title('Live')] class extends Component {
         </div>
     @else
         <div
-            x-data="{ liveRoom: null, connected: false, error: null, mediaError: null }"
-            x-init="
-                liveRoom = window.createLiveRoom({
-                    wsUrl: @js($wsUrl),
-                    token: @js($token),
-                    canPublish: @js($session->canPublish(Auth::user())),
-                });
-                liveRoom.connect($refs.grid)
-                    .then((result) => { connected = true; mediaError = result.mediaError; })
-                    .catch((e) => error = e.message);
-            "
+            x-data="{
+                liveRoom: null,
+                connected: false,
+                error: null,
+                mediaError: null,
+                canPublish: @js($session->canPublish(Auth::user())),
+                micOn: true,
+                cameraOn: true,
+                deafened: false,
+                showReactions: false,
+                reactions: [],
+                nextReactionId: 0,
+                fullscreen: false,
+
+                init() {
+                    this.liveRoom = window.createLiveRoom({
+                        wsUrl: @js($wsUrl),
+                        token: @js($token),
+                        canPublish: this.canPublish,
+                    });
+
+                    this.liveRoom.connect(this.$refs.grid, { onReaction: (emoji) => this.spawnReaction(emoji) })
+                        .then((result) => {
+                            this.connected = true;
+                            this.mediaError = result.mediaError;
+                            if (this.mediaError) {
+                                this.micOn = false;
+                                this.cameraOn = false;
+                            }
+                        })
+                        .catch((e) => this.error = e.message);
+
+                    document.addEventListener('fullscreenchange', () => this.fullscreen = !!document.fullscreenElement);
+                },
+
+                async toggleMic() {
+                    this.micOn = !this.micOn;
+                    await this.liveRoom.setMicrophoneEnabled(this.micOn);
+                },
+
+                async toggleCamera() {
+                    this.cameraOn = !this.cameraOn;
+                    await this.liveRoom.setCameraEnabled(this.cameraOn);
+                },
+
+                toggleDeafen() {
+                    this.deafened = !this.deafened;
+                    this.liveRoom.setDeafened(this.deafened);
+                },
+
+                toggleFullscreen() {
+                    if (document.fullscreenElement) {
+                        document.exitFullscreen().catch(() => {});
+                    } else {
+                        this.$refs.stage.requestFullscreen().catch(() => {});
+                    }
+                },
+
+                sendReaction(emoji) {
+                    this.liveRoom.sendReaction(emoji);
+                    this.spawnReaction(emoji);
+                    this.showReactions = false;
+                },
+
+                spawnReaction(emoji) {
+                    const id = this.nextReactionId++;
+                    this.reactions.push({ id, emoji, left: 10 + Math.random() * 75 });
+                    setTimeout(() => { this.reactions = this.reactions.filter((r) => r.id !== id); }, 1600);
+                },
+            }"
             x-on:beforeunload.window="liveRoom?.disconnect()"
             class="mt-6"
         >
@@ -232,14 +308,115 @@ new #[Title('Live')] class extends Component {
             </template>
 
             <template x-if="connected && mediaError">
-                <div class="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-700 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300">
+                <div class="mb-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-700 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300">
                     {{ __("Connected, but your camera/mic couldn't be reached — you can still see and hear everyone else.") }}
                 </div>
             </template>
 
-            <p class="text-sm text-stone-500 dark:text-stone-400" x-show="!connected && !error">{{ __('Connecting…') }}</p>
+            <div
+                x-ref="stage"
+                class="relative isolate flex min-h-[60vh] flex-col overflow-hidden rounded-2xl bg-zinc-900"
+            >
+                <p class="p-6 text-sm text-zinc-400" x-show="!connected && !error">{{ __('Connecting…') }}</p>
 
-            <div x-ref="grid" class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2"></div>
+                <div x-ref="grid" class="grid flex-1 auto-rows-fr grid-cols-1 gap-3 p-3 sm:grid-cols-2"></div>
+
+                {{-- Floating reactions drift up from the control bar and fade out. --}}
+                <div class="pointer-events-none absolute inset-x-0 bottom-24 h-40">
+                    <template x-for="reaction in reactions" :key="reaction.id">
+                        <span
+                            class="absolute bottom-0 text-3xl"
+                            :style="{ left: reaction.left + '%', animation: 'float-up 1.6s ease-out forwards' }"
+                            x-text="reaction.emoji"
+                        ></span>
+                    </template>
+                </div>
+
+                <template x-if="connected">
+                    <div class="absolute inset-x-0 bottom-4 flex flex-col items-center gap-2">
+                        <div
+                            x-show="showReactions"
+                            x-transition
+                            x-on:click.outside="showReactions = false"
+                            class="flex items-center gap-1 rounded-lg bg-black/70 p-1.5 backdrop-blur-sm"
+                        >
+                            @foreach (['👍', '❤️', '😂', '👏', '🎉', '🌉'] as $emoji)
+                                <button
+                                    type="button"
+                                    x-on:click="sendReaction('{{ $emoji }}')"
+                                    class="flex size-9 items-center justify-center rounded-md text-xl hover:bg-white/10"
+                                >{{ $emoji }}</button>
+                            @endforeach
+                        </div>
+
+                        <div class="flex items-center gap-2 rounded-lg bg-black/70 p-2 backdrop-blur-sm">
+                            <template x-if="canPublish">
+                                <button
+                                    type="button"
+                                    x-on:click="toggleMic"
+                                    :class="micOn ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-red-500 text-white hover:bg-red-600'"
+                                    class="flex size-10 items-center justify-center rounded-md"
+                                    :aria-label="micOn ? '{{ __('Mute') }}' : '{{ __('Unmute') }}'"
+                                >
+                                    <flux:icon icon="microphone" class="size-5" />
+                                </button>
+                            </template>
+
+                            <template x-if="canPublish">
+                                <button
+                                    type="button"
+                                    x-on:click="toggleCamera"
+                                    :class="cameraOn ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-red-500 text-white hover:bg-red-600'"
+                                    class="flex size-10 items-center justify-center rounded-md"
+                                    :aria-label="cameraOn ? '{{ __('Hide video') }}' : '{{ __('Show video') }}'"
+                                >
+                                    <flux:icon x-show="cameraOn" icon="video-camera" class="size-5" />
+                                    <flux:icon x-show="!cameraOn" icon="video-camera-slash" class="size-5" x-cloak />
+                                </button>
+                            </template>
+
+                            <button
+                                type="button"
+                                x-on:click="toggleDeafen"
+                                :class="deafened ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-white/10 text-white hover:bg-white/20'"
+                                class="flex size-10 items-center justify-center rounded-md"
+                                :aria-label="deafened ? '{{ __('Unmute speaker') }}' : '{{ __('Mute speaker') }}'"
+                            >
+                                <flux:icon x-show="!deafened" icon="speaker-wave" class="size-5" />
+                                <flux:icon x-show="deafened" icon="speaker-x-mark" class="size-5" x-cloak />
+                            </button>
+
+                            <button
+                                type="button"
+                                x-on:click="showReactions = !showReactions"
+                                class="flex size-10 items-center justify-center rounded-md bg-white/10 text-white hover:bg-white/20"
+                                aria-label="{{ __('Send a reaction') }}"
+                            >
+                                <flux:icon icon="face-smile" class="size-5" />
+                            </button>
+
+                            <button
+                                type="button"
+                                x-on:click="toggleFullscreen"
+                                class="flex size-10 items-center justify-center rounded-md bg-white/10 text-white hover:bg-white/20"
+                                :aria-label="fullscreen ? '{{ __('Exit full screen') }}' : '{{ __('Full screen') }}'"
+                            >
+                                <flux:icon x-show="!fullscreen" icon="arrows-pointing-out" class="size-5" />
+                                <flux:icon x-show="fullscreen" icon="arrows-pointing-in" class="size-5" x-cloak />
+                            </button>
+
+                            <button
+                                type="button"
+                                wire:click="leaveRoom"
+                                class="ms-1 flex size-10 items-center justify-center rounded-md bg-red-600 text-white hover:bg-red-500"
+                                aria-label="{{ $session->type === LiveSession::TYPE_CALL ? __('End call') : __('Leave') }}"
+                            >
+                                <flux:icon icon="phone-x-mark" class="size-5" />
+                            </button>
+                        </div>
+                    </div>
+                </template>
+            </div>
         </div>
     @endif
 </div>

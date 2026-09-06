@@ -1,23 +1,77 @@
 import { Room, RoomEvent } from 'livekit-client';
 
 /**
- * A minimal room connector: joins, renders local + remote video/audio
- * tracks into a given grid element, and cleans up on disconnect. This is
- * the base primitive — call vs. stream UX, layout, and controls beyond
- * mute/camera get built later on top of this.
+ * A room connector: joins, renders local + remote video/audio tracks into
+ * a tiled grid (one tile per participant, with a name label), and exposes
+ * the controls the call screen wraps in its own UI — mute, camera,
+ * deafen ("speaker"), and lightweight emoji reactions over LiveKit's data
+ * channel. Layout/animation lives in the Blade component; this stays
+ * focused on the LiveKit wiring.
  */
 function createLiveRoom({ wsUrl, token, canPublish }) {
     const room = new Room();
+    const remoteAudioEls = new Set();
+    let deafened = false;
 
-    function attach(track, participantIdentity, gridEl) {
-        const el = track.attach();
-        el.dataset.participant = participantIdentity;
-        el.classList.add('size-full', 'rounded-lg', 'bg-zinc-900', 'object-cover');
-        gridEl.appendChild(el);
+    function tileFor(identity, label, gridEl) {
+        let tile = gridEl.querySelector(`[data-tile="${identity}"]`);
+
+        if (tile) {
+            return tile;
+        }
+
+        tile = document.createElement('div');
+        tile.dataset.tile = identity;
+        tile.className = 'relative isolate flex aspect-video items-center justify-center overflow-hidden rounded-xl bg-zinc-800';
+
+        const placeholder = document.createElement('div');
+        placeholder.dataset.placeholder = 'true';
+        placeholder.className = 'flex size-16 items-center justify-center rounded-full bg-zinc-700 text-zinc-400';
+        placeholder.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-8"><path fill-rule="evenodd" d="M18.685 19.097A9.723 9.723 0 0 0 21.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 0 0 3.065 7.097A9.716 9.716 0 0 0 12 21.75a9.716 9.716 0 0 0 6.685-2.653Zm-12.54-1.285A7.486 7.486 0 0 1 12 15a7.486 7.486 0 0 1 5.855 2.812A8.224 8.224 0 0 1 12 20.25a8.224 8.224 0 0 1-5.855-2.438ZM15.75 9a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" clip-rule="evenodd" /></svg>';
+        tile.appendChild(placeholder);
+
+        const labelEl = document.createElement('div');
+        labelEl.dataset.label = 'true';
+        labelEl.className = 'absolute bottom-2 left-2 z-10 rounded-md bg-black/60 px-2 py-1 text-xs font-medium text-white backdrop-blur-sm';
+        labelEl.textContent = label;
+        tile.appendChild(labelEl);
+
+        gridEl.appendChild(tile);
+
+        return tile;
     }
 
-    function detach(track) {
-        track.detach().forEach((el) => el.remove());
+    function attach(track, identity, label, gridEl) {
+        const tile = tileFor(identity, label, gridEl);
+        const el = track.attach();
+
+        if (track.kind === 'video') {
+            el.classList.add('absolute', 'inset-0', 'size-full', 'object-cover');
+            tile.querySelector('[data-placeholder]')?.classList.add('hidden');
+            tile.prepend(el);
+        } else {
+            el.classList.add('hidden');
+            tile.appendChild(el);
+
+            if (identity !== 'you') {
+                remoteAudioEls.add(el);
+                el.muted = deafened;
+            }
+        }
+    }
+
+    function detach(track, identity, gridEl) {
+        track.detach().forEach((el) => {
+            remoteAudioEls.delete(el);
+            el.remove();
+        });
+
+        const tile = gridEl.querySelector(`[data-tile="${identity}"]`);
+        const hasVideoLeft = tile?.querySelector('video');
+
+        if (tile && !hasVideoLeft) {
+            tile.querySelector('[data-placeholder]')?.classList.remove('hidden');
+        }
     }
 
     return {
@@ -27,22 +81,46 @@ function createLiveRoom({ wsUrl, token, canPublish }) {
         // room join can succeed even when the local device grants can't.
         // Callers get both back separately so they can show "connected, but
         // your camera is blocked" instead of a blanket connection error.
-        async connect(gridEl) {
+        async connect(gridEl, { onReaction } = {}) {
             room.on(RoomEvent.TrackSubscribed, (track, _publication, participant) => {
-                attach(track, participant.identity, gridEl);
+                attach(track, participant.identity, participant.name || 'Someone', gridEl);
             });
 
-            room.on(RoomEvent.TrackUnsubscribed, (track) => {
-                detach(track);
+            room.on(RoomEvent.TrackUnsubscribed, (track, _publication, participant) => {
+                detach(track, participant.identity, gridEl);
             });
 
             room.on(RoomEvent.LocalTrackPublished, (publication) => {
                 if (publication.track) {
-                    attach(publication.track, 'you', gridEl);
+                    attach(publication.track, 'you', 'You', gridEl);
                 }
             });
 
+            room.on(RoomEvent.LocalTrackUnpublished, (publication) => {
+                if (publication.track) {
+                    detach(publication.track, 'you', gridEl);
+                }
+            });
+
+            if (onReaction) {
+                room.on(RoomEvent.DataReceived, (payload) => {
+                    try {
+                        const message = JSON.parse(new TextDecoder().decode(payload));
+
+                        if (message?.type === 'reaction' && typeof message.emoji === 'string') {
+                            onReaction(message.emoji);
+                        }
+                    } catch {
+                        //
+                    }
+                });
+            }
+
             await room.connect(wsUrl, token);
+
+            // An empty tile with just a name label, so a muted mic or a
+            // camera-off participant still shows up in the grid.
+            tileFor('you', 'You', gridEl);
 
             let mediaError = null;
 
@@ -64,6 +142,20 @@ function createLiveRoom({ wsUrl, token, canPublish }) {
 
         async setMicrophoneEnabled(enabled) {
             await room.localParticipant.setMicrophoneEnabled(enabled);
+        },
+
+        setDeafened(enabled) {
+            deafened = enabled;
+            remoteAudioEls.forEach((el) => {
+                el.muted = enabled;
+            });
+        },
+
+        sendReaction(emoji) {
+            room.localParticipant.publishData(
+                new TextEncoder().encode(JSON.stringify({ type: 'reaction', emoji })),
+                { reliable: false },
+            );
         },
 
         async disconnect() {

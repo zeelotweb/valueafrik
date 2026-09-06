@@ -76,6 +76,22 @@ select:focus[data-flux-control] {
     border-radius: 0 !important;
 }
 
+/* A reaction emoji drifting up and fading out over the call canvas. */
+@keyframes float-up {
+    0% {
+        opacity: 0;
+        transform: translateY(0) scale(0.5);
+    }
+    15% {
+        opacity: 1;
+        transform: translateY(-10px) scale(1.1);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-140px) scale(1);
+    }
+}
+
 /* \[:where(&)\]:size-4 {
     @apply size-4;
 } */

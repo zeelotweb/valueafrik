@@ -342,6 +342,37 @@ test('the callee, not just the host, can end a live call from the room page', fu
     expect($session->fresh()->status)->toBe(LiveSession::STATUS_ENDED);
 });
 
+test('the control bar leave button lets a stream viewer leave without hitting the host-only guard', function () {
+    $host = User::factory()->create();
+    $viewer = User::factory()->create();
+    $session = LiveSession::create([
+        'host_id' => $host->id, 'room_name' => 'r17b',
+        'type' => LiveSession::TYPE_STREAM, 'status' => LiveSession::STATUS_LIVE, 'started_at' => now(),
+    ]);
+
+    Livewire::actingAs($viewer)
+        ->test('pages::live.show', ['liveSession' => $session])
+        ->call('leaveRoom')
+        ->assertRedirect(route('live.index'));
+
+    expect($session->fresh()->status)->toBe(LiveSession::STATUS_LIVE);
+});
+
+test('the control bar leave button ends the stream when the host uses it', function () {
+    $host = User::factory()->create();
+    $session = LiveSession::create([
+        'host_id' => $host->id, 'room_name' => 'r17c',
+        'type' => LiveSession::TYPE_STREAM, 'status' => LiveSession::STATUS_LIVE, 'started_at' => now(),
+    ]);
+
+    Livewire::actingAs($host)
+        ->test('pages::live.show', ['liveSession' => $session])
+        ->call('leaveRoom')
+        ->assertRedirect(route('live.index'));
+
+    expect($session->fresh()->status)->toBe(LiveSession::STATUS_ENDED);
+});
+
 test('a missed call because the callee was offline tells the host they were notified', function () {
     $host = User::factory()->create();
     $callee = User::factory()->create(['name' => 'Sleepy Person']);
