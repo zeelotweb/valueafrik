@@ -74,6 +74,10 @@ function createLiveRoom({ wsUrl, token, canPublish }) {
         }
     }
 
+    function removeTile(identity, gridEl) {
+        gridEl.querySelector(`[data-tile="${identity}"]`)?.remove();
+    }
+
     return {
         room,
 
@@ -82,6 +86,18 @@ function createLiveRoom({ wsUrl, token, canPublish }) {
         // Callers get both back separately so they can show "connected, but
         // your camera is blocked" instead of a blanket connection error.
         async connect(gridEl, { onReaction } = {}) {
+            // A participant gets a tile the moment they join — waiting for
+            // their first published track would leave anyone with camera
+            // and mic both off invisible in the grid, as if they weren't
+            // there at all.
+            room.on(RoomEvent.ParticipantConnected, (participant) => {
+                tileFor(participant.identity, participant.name || 'Someone', gridEl);
+            });
+
+            room.on(RoomEvent.ParticipantDisconnected, (participant) => {
+                removeTile(participant.identity, gridEl);
+            });
+
             room.on(RoomEvent.TrackSubscribed, (track, _publication, participant) => {
                 attach(track, participant.identity, participant.name || 'Someone', gridEl);
             });
@@ -121,6 +137,13 @@ function createLiveRoom({ wsUrl, token, canPublish }) {
             // An empty tile with just a name label, so a muted mic or a
             // camera-off participant still shows up in the grid.
             tileFor('you', 'You', gridEl);
+
+            // ParticipantConnected only fires for people who join after us —
+            // anyone already in the room needs to be added from the roster
+            // we get back the moment we connect.
+            room.remoteParticipants.forEach((participant) => {
+                tileFor(participant.identity, participant.name || 'Someone', gridEl);
+            });
 
             let mediaError = null;
 
