@@ -46,8 +46,8 @@ new class extends Component {
 
 <div class="space-y-2" wire:key="bridge-post-invites">
     @forelse ($invites as $invite)
-        <div class="flex items-center justify-between rounded-xl border border-cyan-200 p-4 dark:border-cyan-900" wire:key="invite-{{ $invite->id }}">
-            <div>
+        <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-cyan-200 p-4 dark:border-cyan-900" wire:key="invite-{{ $invite->id }}">
+            <div class="min-w-0 flex-1">
                 <p class="text-sm text-stone-900 dark:text-white">
                     <span class="font-medium">{{ $invite->initiator->name }}</span>
                     {{ __('invited you to a Bridge Post on') }}

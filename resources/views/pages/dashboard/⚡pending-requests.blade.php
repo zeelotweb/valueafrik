@@ -54,9 +54,9 @@ new class extends Component {
 
             <div class="mt-3 space-y-2">
                 @foreach ($community->members as $requester)
-                    <div class="flex items-center justify-between" wire:key="pending-{{ $community->id }}-{{ $requester->id }}">
-                        <span class="text-sm text-stone-700 dark:text-stone-300">{{ $requester->name }}</span>
-                        <div class="flex gap-2">
+                    <div class="flex flex-wrap items-center justify-between gap-2" wire:key="pending-{{ $community->id }}-{{ $requester->id }}">
+                        <span class="min-w-0 truncate text-sm text-stone-700 dark:text-stone-300">{{ $requester->name }}</span>
+                        <div class="flex shrink-0 gap-2">
                             <flux:button size="sm" variant="primary" color="cyan" wire:click="approve({{ $community->id }}, {{ $requester->id }})">
                                 {{ __('Approve') }}
                             </flux:button>

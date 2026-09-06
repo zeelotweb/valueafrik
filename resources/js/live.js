@@ -32,7 +32,10 @@ function createLiveRoom({ wsUrl, token, canPublish }) {
 
         const labelEl = document.createElement('div');
         labelEl.dataset.label = 'true';
-        labelEl.className = 'absolute bottom-2 left-2 z-10 rounded-md bg-black/60 px-2 py-1 text-xs font-medium text-white backdrop-blur-sm';
+        // Top-left, not bottom-left — the bottom of the stage is where the
+        // floating control bar sits, and a bottom-anchored label on the
+        // last row of tiles would end up hidden behind it.
+        labelEl.className = 'absolute top-2 left-2 z-10 rounded-md bg-black/60 px-2 py-1 text-xs font-medium text-white backdrop-blur-sm';
         labelEl.textContent = label;
         tile.appendChild(labelEl);
 

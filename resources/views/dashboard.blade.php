@@ -92,7 +92,7 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
         </div>
 
         <div class="mt-10 grid gap-8 lg:grid-cols-2">
-            <div>
+            <div class="min-w-0">
                 <flux:heading size="lg">{{ __('Needs your attention') }}</flux:heading>
 
                 <div class="mt-3">
@@ -117,7 +117,7 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
                 </div>
             </div>
 
-            <div>
+            <div class="min-w-0">
                 <div class="flex items-center justify-between">
                     <flux:heading size="lg">{{ __('Your communities') }}</flux:heading>
                     <a href="{{ route('communities.create') }}" wire:navigate class="text-sm font-medium text-cyan-600 hover:text-cyan-500 dark:text-cyan-400">
