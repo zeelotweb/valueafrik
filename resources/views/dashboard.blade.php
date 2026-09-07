@@ -46,7 +46,7 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
             </div>
         @endif
 
-        <div class="mt-6 grid gap-4 md:grid-cols-3">
+        <div class="mt-6 grid gap-4 sm:grid-cols-3">
             <a
                 href="{{ route('profile.show', $user) }}"
                 wire:navigate
