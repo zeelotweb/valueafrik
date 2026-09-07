@@ -9,13 +9,13 @@ use Illuminate\Support\Str;
 use Livewire\Component;
 
 /**
- * A personalized feed — what the people you follow have been up to, not
- * the sitewide firehose. Live streams from people you follow are pinned
- * above everything else since they're time-sensitive; the rest is a
- * merged, recency-sorted mix of wall posts, community posts, and bridge
- * posts. Community posts are filtered through Community::canView() so a
- * private community someone followed doesn't leak into a feed they
- * shouldn't see.
+ * A personalized, horizontally-scrolling gallery of what the people you
+ * follow have been up to — not the sitewide firehose. Live streams from
+ * people you follow lead the row since they're time-sensitive; the rest
+ * is a merged, recency-sorted mix of wall posts, community posts, and
+ * bridge posts, each carrying its own photo when there is one. Community
+ * posts are filtered through Community::canView() so a private community
+ * someone followed doesn't leak into a feed they shouldn't see.
  */
 new class extends Component {
     public function with(): array
@@ -37,7 +37,7 @@ new class extends Component {
 
         $wallPosts = WallPost::query()
             ->whereIn('user_id', $followingIds)
-            ->with('user.profile')
+            ->with(['user.profile', 'media'])
             ->latest()
             ->limit(10)
             ->get()
@@ -45,13 +45,14 @@ new class extends Component {
                 'type' => 'wall_post',
                 'timestamp' => $post->created_at,
                 'user' => $post->user,
-                'excerpt' => $post->body ? Str::limit($post->body, 90) : __('shared a photo.'),
+                'photo' => $post->media->first()?->url(),
+                'excerpt' => $post->body ? Str::limit($post->body, 110) : __('Shared a photo.'),
                 'url' => route('profile.show', $post->user),
             ]);
 
         $communityPosts = CommunityPost::query()
             ->whereIn('user_id', $followingIds)
-            ->with(['user.profile', 'community'])
+            ->with(['user.profile', 'community', 'media'])
             ->latest()
             ->limit(10)
             ->get()
@@ -61,7 +62,8 @@ new class extends Component {
                 'timestamp' => $post->created_at,
                 'user' => $post->user,
                 'community' => $post->community,
-                'excerpt' => $post->body ? Str::limit($post->body, 90) : __('shared a photo.'),
+                'photo' => $post->media->first()?->url(),
+                'excerpt' => $post->body ? Str::limit($post->body, 110) : __('Shared a photo.'),
                 'url' => route('communities.show', $post->community),
             ]);
 
@@ -85,7 +87,7 @@ new class extends Component {
 
         $items = $wallPosts->concat($communityPosts)->concat($bridgePosts)
             ->sortByDesc('timestamp')
-            ->take(8)
+            ->take(10)
             ->values();
 
         return [
@@ -96,97 +98,8 @@ new class extends Component {
     }
 }; ?>
 
-<div class="space-y-3" wire:key="dashboard-following-activity" wire:poll.60s>
-    @if ($liveFriends->isNotEmpty())
-        <div class="flex flex-wrap gap-2">
-            @foreach ($liveFriends as $stream)
-                <a
-                    href="{{ route('live.show', $stream) }}"
-                    wire:navigate
-                    wire:key="following-live-{{ $stream->id }}"
-                    class="flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 py-1.5 pe-3 ps-1.5 hover:bg-rose-100 dark:border-rose-900 dark:bg-rose-950/40 dark:hover:bg-rose-950"
-                >
-                    <div class="relative size-8 shrink-0 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
-                        @if ($stream->host->profile?->avatarUrl())
-                            <img src="{{ $stream->host->profile->avatarUrl() }}" class="size-full object-cover">
-                        @else
-                            <div class="flex size-full items-center justify-center text-stone-500">
-                                <flux:icon.user class="size-4" />
-                            </div>
-                        @endif
-                        <span class="absolute right-0 top-0 size-2 rounded-full bg-rose-500 ring-2 ring-rose-50 dark:ring-rose-950"></span>
-                    </div>
-                    <span class="truncate text-sm font-medium text-rose-700 dark:text-rose-300">{{ $stream->host->name }}</span>
-                    <span class="shrink-0 text-xs font-semibold uppercase tracking-wide text-rose-600 dark:text-rose-400">{{ __('Live') }}</span>
-                </a>
-            @endforeach
-        </div>
-    @endif
-
-    @forelse ($items as $item)
-        @if ($item['type'] === 'bridge_post')
-            <a
-                href="{{ $item['url'] }}"
-                wire:navigate
-                wire:key="following-activity-bridge-{{ $item['initiator']->id }}-{{ $item['timestamp'] }}"
-                class="flex items-center gap-3 rounded-xl border border-cyan-200 p-3 hover:bg-cyan-50/50 dark:border-cyan-900 dark:hover:bg-cyan-950/20"
-            >
-                <div class="flex -space-x-2">
-                    @foreach ([$item['initiator'], $item['partner']] as $person)
-                        <div class="size-8 shrink-0 overflow-hidden rounded-full border-2 border-white bg-stone-200 dark:border-stone-900 dark:bg-stone-700">
-                            @if ($person->profile?->avatarUrl())
-                                <img src="{{ $person->profile->avatarUrl() }}" class="size-full object-cover">
-                            @else
-                                <div class="flex size-full items-center justify-center text-stone-500">
-                                    <flux:icon.user class="size-4" />
-                                </div>
-                            @endif
-                        </div>
-                    @endforeach
-                </div>
-
-                <div class="min-w-0 flex-1">
-                    <p class="truncate text-sm font-medium text-stone-900 dark:text-white">
-                        {{ $item['initiator']->name }} &amp; {{ $item['partner']->name }}
-                    </p>
-                    <p class="truncate text-xs text-cyan-700 dark:text-cyan-400">{{ __('started a Bridge Post on') }} {{ $item['theme'] }}</p>
-                </div>
-
-                <flux:icon.arrows-right-left class="size-4 shrink-0 text-cyan-600 dark:text-cyan-400" />
-            </a>
-        @else
-            <a
-                href="{{ $item['url'] }}"
-                wire:navigate
-                wire:key="following-activity-{{ $item['type'] }}-{{ $item['user']->id }}-{{ $item['timestamp'] }}"
-                class="flex items-center gap-3 rounded-xl bg-white border border-stone-200 p-3 hover:bg-stone-50 dark:bg-stone-900 dark:border-stone-800 dark:hover:bg-stone-800"
-            >
-                <div class="size-9 shrink-0 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
-                    @if ($item['user']->profile?->avatarUrl())
-                        <img src="{{ $item['user']->profile->avatarUrl() }}" class="size-full object-cover">
-                    @else
-                        <div class="flex size-full items-center justify-center text-stone-500">
-                            <flux:icon.user class="size-4" />
-                        </div>
-                    @endif
-                </div>
-
-                <div class="min-w-0 flex-1">
-                    <p class="truncate text-sm text-stone-900 dark:text-white">
-                        <span class="font-medium">{{ $item['user']->name }}</span>
-                        @if ($item['type'] === 'community_post')
-                            {{ __('posted in') }} <span class="font-medium">{{ $item['community']->name }}</span>
-                        @else
-                            {{ __('posted to their Wall') }}
-                        @endif
-                    </p>
-                    <p class="truncate text-xs text-stone-500 dark:text-stone-400">{{ $item['excerpt'] }}</p>
-                </div>
-
-                <flux:icon.chevron-right class="size-4 shrink-0 text-stone-400" />
-            </a>
-        @endif
-    @empty
+<div wire:key="dashboard-following-activity" wire:poll.60s>
+    @if ($items->isEmpty() && $liveFriends->isEmpty())
         @if (! $isFollowingAnyone)
             <div class="rounded-xl border border-dashed border-stone-300 p-6 text-center dark:border-stone-700">
                 <flux:text>{{ __("You're not following anyone yet — find people to bridge with.") }}</flux:text>
@@ -201,5 +114,136 @@ new class extends Component {
                 <flux:text>{{ __('No recent activity from people you follow yet.') }}</flux:text>
             </div>
         @endif
-    @endforelse
+    @else
+        <div class="-mx-1 flex snap-x snap-mandatory gap-4 overflow-x-auto px-1 pb-3">
+            @foreach ($liveFriends as $stream)
+                <a
+                    href="{{ route('live.show', $stream) }}"
+                    wire:navigate
+                    wire:key="following-live-{{ $stream->id }}"
+                    class="group relative flex h-72 w-56 shrink-0 snap-start flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-rose-500 to-rose-700 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg"
+                >
+                    <div class="flex items-center gap-1.5 p-4">
+                        <span class="relative flex size-2">
+                            <span class="absolute inline-flex size-full animate-ping rounded-full bg-white opacity-75"></span>
+                            <span class="relative inline-flex size-2 rounded-full bg-white"></span>
+                        </span>
+                        <span class="text-xs font-bold uppercase tracking-wider text-white">{{ __('Live now') }}</span>
+                    </div>
+
+                    <div class="flex flex-1 flex-col items-center justify-center gap-3 px-4 text-center">
+                        <div class="size-16 shrink-0 overflow-hidden rounded-full ring-4 ring-white/30">
+                            @if ($stream->host->profile?->avatarUrl())
+                                <img src="{{ $stream->host->profile->avatarUrl() }}" class="size-full object-cover">
+                            @else
+                                <div class="flex size-full items-center justify-center bg-rose-400 text-white">
+                                    <flux:icon.user class="size-7" />
+                                </div>
+                            @endif
+                        </div>
+                        <p class="truncate text-sm font-semibold text-white">{{ $stream->host->name }}</p>
+                        @if ($stream->title)
+                            <p class="line-clamp-2 text-xs text-rose-100">{{ $stream->title }}</p>
+                        @endif
+                    </div>
+
+                    <div class="p-4 pt-0">
+                        <span class="block rounded-lg bg-white/15 py-2 text-center text-xs font-semibold text-white backdrop-blur-sm group-hover:bg-white/25">
+                            {{ __('Tap to join') }}
+                        </span>
+                    </div>
+                </a>
+            @endforeach
+
+            @foreach ($items as $item)
+                @if ($item['type'] === 'bridge_post')
+                    <a
+                        href="{{ $item['url'] }}"
+                        wire:navigate
+                        wire:key="following-activity-bridge-{{ $item['initiator']->id }}-{{ $item['timestamp'] }}"
+                        class="group flex h-72 w-56 shrink-0 snap-start flex-col overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg dark:border-stone-800 dark:bg-stone-900"
+                    >
+                        <div class="relative flex h-32 shrink-0 items-center justify-center bg-gradient-to-br from-rose-100 to-amber-50 dark:from-rose-950 dark:to-stone-900">
+                            <span class="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-rose-700 dark:bg-stone-900/80 dark:text-rose-400">
+                                {{ __('Bridge Post') }}
+                            </span>
+                            <div class="flex -space-x-3">
+                                @foreach ([$item['initiator'], $item['partner']] as $person)
+                                    <div class="size-12 shrink-0 overflow-hidden rounded-full border-2 border-white bg-stone-200 dark:border-stone-900 dark:bg-stone-700">
+                                        @if ($person->profile?->avatarUrl())
+                                            <img src="{{ $person->profile->avatarUrl() }}" class="size-full object-cover">
+                                        @else
+                                            <div class="flex size-full items-center justify-center text-stone-500">
+                                                <flux:icon.user class="size-5" />
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        <div class="flex flex-1 flex-col gap-1 p-4">
+                            <p class="truncate text-sm font-semibold text-stone-900 dark:text-white">
+                                {{ $item['initiator']->name }} &amp; {{ $item['partner']->name }}
+                            </p>
+                            <p class="line-clamp-3 flex-1 text-xs text-stone-500 dark:text-stone-400">
+                                {{ __('Comparing') }} {{ $item['theme'] }}
+                            </p>
+                            <p class="text-[11px] text-stone-400 dark:text-stone-500">{{ $item['timestamp']->diffForHumans() }}</p>
+                        </div>
+                    </a>
+                @else
+                    <a
+                        href="{{ $item['url'] }}"
+                        wire:navigate
+                        wire:key="following-activity-{{ $item['type'] }}-{{ $item['user']->id }}-{{ $item['timestamp'] }}"
+                        class="group flex h-72 w-56 shrink-0 snap-start flex-col overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg dark:border-stone-800 dark:bg-stone-900"
+                    >
+                        <div @class([
+                            'relative flex h-32 shrink-0 items-center justify-center overflow-hidden',
+                            'bg-gradient-to-br from-cyan-100 to-cyan-50 dark:from-cyan-950 dark:to-stone-900' => $item['type'] === 'wall_post' && ! $item['photo'],
+                            'bg-gradient-to-br from-amber-100 to-amber-50 dark:from-amber-950 dark:to-stone-900' => $item['type'] === 'community_post' && ! $item['photo'],
+                        ])>
+                            @if ($item['photo'])
+                                <img src="{{ $item['photo'] }}" class="absolute inset-0 size-full object-cover">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
+                            @else
+                                <flux:icon
+                                    :icon="$item['type'] === 'community_post' ? 'user-group' : 'pencil-square'"
+                                    class="size-10 {{ $item['type'] === 'community_post' ? 'text-amber-300 dark:text-amber-800' : 'text-cyan-300 dark:text-cyan-800' }}"
+                                />
+                            @endif
+
+                            <span @class([
+                                'absolute left-3 top-3 rounded-full px-2.5 py-1 text-[11px] font-semibold',
+                                'bg-white/90 dark:bg-stone-900/80' => true,
+                                'text-cyan-700 dark:text-cyan-400' => $item['type'] === 'wall_post',
+                                'text-amber-700 dark:text-amber-400' => $item['type'] === 'community_post',
+                            ])>
+                                {{ $item['type'] === 'community_post' ? $item['community']->name : __('Wall') }}
+                            </span>
+                        </div>
+
+                        <div class="flex flex-1 flex-col gap-2 p-4">
+                            <div class="flex items-center gap-2">
+                                <div class="size-6 shrink-0 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
+                                    @if ($item['user']->profile?->avatarUrl())
+                                        <img src="{{ $item['user']->profile->avatarUrl() }}" class="size-full object-cover">
+                                    @else
+                                        <div class="flex size-full items-center justify-center text-stone-500">
+                                            <flux:icon.user class="size-3" />
+                                        </div>
+                                    @endif
+                                </div>
+                                <span class="truncate text-sm font-semibold text-stone-900 dark:text-white">{{ $item['user']->name }}</span>
+                            </div>
+
+                            <p class="line-clamp-3 flex-1 text-xs text-stone-600 dark:text-stone-400">{{ $item['excerpt'] }}</p>
+                            <p class="text-[11px] text-stone-400 dark:text-stone-500">{{ $item['timestamp']->diffForHumans() }}</p>
+                        </div>
+                    </a>
+                @endif
+            @endforeach
+        </div>
+    @endif
 </div>
