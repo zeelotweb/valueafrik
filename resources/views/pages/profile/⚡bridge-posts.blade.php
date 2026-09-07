@@ -83,6 +83,7 @@ new class extends Component {
             ->where(fn ($query) => $query->where('initiator_id', $this->user->id)->orWhere('partner_id', $this->user->id))
             ->with(['initiator.profile', 'partner.profile', 'media'])
             ->latest()
+            ->limit(20)
             ->get();
 
         return ['bridgePosts' => $bridgePosts];

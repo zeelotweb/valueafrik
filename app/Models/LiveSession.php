@@ -9,6 +9,7 @@ use App\Notifications\MissedCall;
 use App\Support\SafeNotifier;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class LiveSession extends Model
@@ -285,12 +286,23 @@ class LiveSession extends Model
             return;
         }
 
-        $field = $user->id === $this->host_id ? 'host_accepted_at' : 'callee_accepted_at';
-        $this->update([$field => now()]);
+        // Locked so two near-simultaneous accepts can't both read a stale
+        // "other side hasn't accepted yet" snapshot and neither one ever
+        // sees the transition to live — without the lock, an in-memory
+        // read right after $this->update() can miss a concurrent write
+        // that landed between this request's read and write.
+        DB::transaction(function () use ($user) {
+            $locked = self::query()->lockForUpdate()->findOrFail($this->id);
 
-        if ($this->host_accepted_at && $this->callee_accepted_at) {
-            $this->update(['status' => self::STATUS_LIVE, 'answered_at' => now()]);
-        }
+            $field = $user->id === $locked->host_id ? 'host_accepted_at' : 'callee_accepted_at';
+            $locked->update([$field => now()]);
+
+            if ($locked->host_accepted_at && $locked->callee_accepted_at) {
+                $locked->update(['status' => self::STATUS_LIVE, 'answered_at' => now()]);
+            }
+
+            $this->setRawAttributes($locked->fresh()->getAttributes());
+        });
 
         self::broadcastStatus($this);
     }
@@ -299,11 +311,16 @@ class LiveSession extends Model
      * Both turns are up — ends the sprint and awards Bridge Score to both
      * sides for actually completing it (a bigger bonus when it happened to
      * cross a heritage line), same "engagement outweighs output" rule the
-     * rest of scoring follows.
+     * rest of scoring follows. Only a participant can trigger this — same
+     * guard as respondToSprint()/endOrCancel(), since this is otherwise
+     * callable by anyone who can reach a session ID.
      */
-    public function completeSprint(): void
+    public function completeSprint(User $user): void
     {
-        if ($this->type !== self::TYPE_SPRINT || ! $this->isLive()) {
+        abort_unless($this->type === self::TYPE_SPRINT, 403);
+        abort_unless($this->isParticipant($user), 403);
+
+        if (! $this->isLive()) {
             return;
         }
 

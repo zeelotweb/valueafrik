@@ -139,7 +139,7 @@ test('requesting a rematch from the ended screen switches to the new session pre
     $session = LiveSession::startSprintMatch($a, $b, 'Food');
     $session->respondToSprint($a, true);
     $session->respondToSprint($b, true);
-    $session->completeSprint();
+    $session->completeSprint($a);
 
     $component = Livewire::actingAs($a)
         ->test('pages::culture-sprint.index')
@@ -165,4 +165,75 @@ test('requestRematch does nothing if the current session has not ended', functio
         ->set('activeSessionId', $session->id)
         ->call('requestRematch')
         ->assertSet('activeSessionId', $session->id);
+});
+
+// --- authorization: activeSessionId is client-visible and must not be trustable ---
+
+test('a non-participant cannot see another pair\'s live sprint by setting activeSessionId', function () {
+    $a = readyForSprint('Host Person');
+    $b = readyForSprint('Callee Person');
+    $intruder = readyForSprint('Intruder');
+    $session = LiveSession::startSprintMatch($a, $b, 'Food');
+    $session->respondToSprint($a, true);
+    $session->respondToSprint($b, true);
+
+    Livewire::actingAs($intruder)
+        ->test('pages::culture-sprint.index')
+        ->set('activeSessionId', $session->id)
+        ->assertSet('session', null);
+});
+
+test('a non-participant gets no LiveKit token by tampering activeSessionId', function () {
+    config([
+        'services.livekit.api_key' => 'test-key',
+        'services.livekit.api_secret' => base64_encode(random_bytes(64)),
+        'services.livekit.url' => 'wss://example.livekit.cloud',
+    ]);
+
+    $a = readyForSprint('Host Person');
+    $b = readyForSprint('Callee Person');
+    $intruder = readyForSprint('Intruder');
+    $session = LiveSession::startSprintMatch($a, $b, 'Food');
+    $session->respondToSprint($a, true);
+    $session->respondToSprint($b, true);
+
+    Livewire::actingAs($intruder)
+        ->test('pages::culture-sprint.index')
+        ->set('activeSessionId', $session->id)
+        ->call('respond', true)
+        ->assertSet('token', '');
+
+    expect($session->fresh()->status)->toBe(LiveSession::STATUS_LIVE);
+});
+
+test('a non-participant cannot end another pair\'s live sprint by tampering activeSessionId', function () {
+    $a = readyForSprint('Host Person');
+    $b = readyForSprint('Callee Person');
+    $intruder = readyForSprint('Intruder');
+    $session = LiveSession::startSprintMatch($a, $b, 'Food');
+    $session->respondToSprint($a, true);
+    $session->respondToSprint($b, true);
+
+    Livewire::actingAs($intruder)
+        ->test('pages::culture-sprint.index')
+        ->set('activeSessionId', $session->id)
+        ->call('complete');
+
+    expect($session->fresh()->status)->toBe(LiveSession::STATUS_LIVE);
+});
+
+test('a forged onCallStatusUpdated payload for a session the caller is not part of is ignored', function () {
+    $a = readyForSprint('Host Person');
+    $b = readyForSprint('Callee Person');
+    $intruder = readyForSprint('Intruder');
+    $session = LiveSession::startSprintMatch($a, $b, 'Food');
+
+    Livewire::actingAs($intruder)
+        ->test('pages::culture-sprint.index')
+        ->call('onCallStatusUpdated', [
+            'type' => LiveSession::TYPE_SPRINT,
+            'status' => LiveSession::STATUS_RINGING,
+            'session_id' => $session->id,
+        ])
+        ->assertSet('activeSessionId', null);
 });

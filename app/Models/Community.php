@@ -86,6 +86,10 @@ class Community extends Model
 
     public function membershipFor(User $user): ?object
     {
+        if ($this->relationLoaded('members')) {
+            return $this->members->firstWhere('id', $user->id)?->pivot;
+        }
+
         return $this->members()->whereKey($user->id)->first()?->pivot;
     }
 

@@ -134,6 +134,13 @@ return [
         ...Octane::defaultServicesToWarm(),
     ],
 
+    // Empty is correct today: the app registers no custom singletons that
+    // hold per-request state (audited — grep for "$this->app->singleton"
+    // and "static $" turn up nothing that needs resetting). If a future
+    // singleton caches request-specific data in an instance property (the
+    // authenticated user, request input, anything not safe to share across
+    // requests on the same worker), add its binding here or it will
+    // silently leak between requests.
     'flush' => [
         //
     ],

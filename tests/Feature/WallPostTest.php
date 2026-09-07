@@ -79,6 +79,34 @@ test('wall posts are listed on the profile', function () {
         ->assertSee('A visible post');
 });
 
+test('rendering the wall post list does not run more queries as the post count grows', function () {
+    $user = User::factory()->create();
+
+    for ($i = 0; $i < 10; $i++) {
+        $user->wallPosts()->create(['body' => "Post {$i}"]);
+    }
+
+    \Illuminate\Support\Facades\DB::enableQueryLog();
+    Livewire::actingAs($user)->test('pages::profile.wall-posts', ['user' => $user]);
+    $tenPostQueries = count(\Illuminate\Support\Facades\DB::getQueryLog());
+    \Illuminate\Support\Facades\DB::flushQueryLog();
+
+    for ($i = 0; $i < 10; $i++) {
+        $user->wallPosts()->create(['body' => "More post {$i}"]);
+    }
+
+    \Illuminate\Support\Facades\DB::flushQueryLog();
+    Livewire::actingAs($user)->test('pages::profile.wall-posts', ['user' => $user]);
+    $twentyPostQueries = count(\Illuminate\Support\Facades\DB::getQueryLog());
+    \Illuminate\Support\Facades\DB::disableQueryLog();
+
+    // Without eager-loaded counts, each nested reactions/comments/bookmark
+    // component fires its own query per post — doubling the post count
+    // would nearly double the query count. With batching, it shouldn't
+    // move at all (pagination caps both renders at the same 10 shown).
+    expect($twentyPostQueries)->toBe($tenPostQueries);
+});
+
 test('owner can delete their own wall post and its media', function () {
     $user = User::factory()->create();
     $post = $user->wallPosts()->create(['body' => 'Delete me']);

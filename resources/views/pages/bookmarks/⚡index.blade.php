@@ -32,6 +32,19 @@ new #[Title('Bookmarks')] class extends Component {
             ->paginate(10)
             ->through(fn ($bookmark) => $bookmark->bookmarkable);
 
+        // A mixed WallPost/CommunityPost collection — loadCount/loadExists
+        // batch per model class (one query per class per aggregate) instead
+        // of each nested reactions/comments/bookmark component querying
+        // per post. filter() drops any dangling bookmark whose target post
+        // was deleted (rendered as null and skipped in the template).
+        $bookmarks->getCollection()
+            ->filter()
+            ->loadCount(['reactions', 'comments'])
+            ->loadExists([
+                'reactions as user_reacted' => fn ($q) => $q->where('user_id', Auth::id()),
+                'bookmarks as user_bookmarked' => fn ($q) => $q->where('user_id', Auth::id()),
+            ]);
+
         return ['bookmarks' => $bookmarks];
     }
 }; ?>

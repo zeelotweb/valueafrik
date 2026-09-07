@@ -73,8 +73,16 @@ new class extends Component {
     public function with(): array
     {
         return [
+            // Eager-loaded here so the nested reactions/comments/bookmark
+            // components don't each fire their own count/exists query per
+            // post — see HasReactions/HasComments/HasBookmarks.
             'posts' => $this->community->posts()
                 ->with(['user.profile', 'media'])
+                ->withCount(['reactions', 'comments'])
+                ->withExists([
+                    'reactions as user_reacted' => fn ($q) => $q->where('user_id', Auth::id()),
+                    'bookmarks as user_bookmarked' => fn ($q) => $q->where('user_id', Auth::id()),
+                ])
                 ->latest()
                 ->paginate(10),
         ];

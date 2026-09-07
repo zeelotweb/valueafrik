@@ -86,7 +86,17 @@ new #[Title('Culture Sprint')] class extends Component {
             return null;
         }
 
-        return LiveSession::with(['host.profile', 'callee.profile'])->find($this->activeSessionId);
+        // activeSessionId is a plain client-visible property — nothing stops
+        // a forged request from setting it to someone else's session ID.
+        // This is the backstop: no matter how it got set, only a real
+        // participant of an actual sprint ever gets the session back.
+        $session = LiveSession::with(['host.profile', 'callee.profile'])->find($this->activeSessionId);
+
+        if (! $session || $session->type !== LiveSession::TYPE_SPRINT || ! $session->isParticipant(Auth::user())) {
+            return null;
+        }
+
+        return $session;
     }
 
     #[Computed]
@@ -156,12 +166,12 @@ new #[Title('Culture Sprint')] class extends Component {
             return;
         }
 
-        $partner = CultureSprintPool::findWaitingPartnerFor(Auth::user(), $this->topic, $region);
+        // Atomic: locks and removes the matched pair's pool rows in one
+        // transaction, so two people searching at the same instant can't
+        // both claim the same waiting partner.
+        $partner = CultureSprintPool::claimWaitingPartnerFor(Auth::user(), $this->topic, $region);
 
         if ($partner) {
-            CultureSprintPool::where('user_id', $partner->id)->delete();
-            CultureSprintPool::where('user_id', Auth::id())->delete();
-
             $session = LiveSession::startSprintMatch(Auth::user(), $partner, $this->topic);
 
             $this->activeSessionId = $session->id;
@@ -195,7 +205,7 @@ new #[Title('Culture Sprint')] class extends Component {
 
     public function complete(): void
     {
-        $this->session?->completeSprint();
+        $this->session?->completeSprint(Auth::user());
         unset($this->session);
     }
 
@@ -234,18 +244,28 @@ new #[Title('Culture Sprint')] class extends Component {
 
         $incomingId = (int) ($event['session_id'] ?? 0);
 
-        // A brand new session for me — either a fresh pool match while I was
-        // waiting, or a rematch request while I was sitting on the "ended"
-        // screen. Either way, switch straight to it.
+        if (! $incomingId) {
+            return;
+        }
+
+        // This listener is a public Livewire method — reachable directly
+        // with a forged payload, not just via the real broadcast. Never
+        // trust $event beyond "something changed, go look" — always
+        // re-verify the session and participation against the database
+        // before letting it become the active session.
         if (($event['status'] ?? null) === LiveSession::STATUS_RINGING && $incomingId !== $this->activeSessionId) {
-            $this->waiting = false;
-            $this->activeSessionId = $incomingId;
-            unset($this->session);
+            $session = LiveSession::find($incomingId);
+
+            if ($session && $session->type === LiveSession::TYPE_SPRINT && $session->isParticipant(Auth::user())) {
+                $this->waiting = false;
+                $this->activeSessionId = $incomingId;
+                unset($this->session);
+            }
 
             return;
         }
 
-        if ($this->activeSessionId && (int) ($event['session_id'] ?? 0) === $this->activeSessionId) {
+        if ($this->activeSessionId && $incomingId === $this->activeSessionId) {
             unset($this->session);
             $this->issueTokenIfLive();
         }

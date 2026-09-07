@@ -14,10 +14,9 @@ return new class extends Migration
         Schema::table('culture_sprint_pool', function (Blueprint $table) {
             // The DMV-style "line" someone is waiting in: a required topic
             // (matched exactly — two people only pair up over the same
-            // topic) and an optional region they're specifically curious
-            // about (matched against the *other* person's actual heritage,
-            // not their own selection — this is "meet someone from," not
-            // "line up with people who also picked this region").
+            // topic) and an optional region — a courtesy between the two
+            // forms only, never checked against declared heritage. See
+            // CultureSprintPool::matchingQuery().
             $table->string('topic')->nullable()->after('user_id');
             $table->string('region')->nullable()->after('topic');
         });

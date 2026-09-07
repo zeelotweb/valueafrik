@@ -100,6 +100,30 @@ test('matching ignores heritage, language, and interests entirely', function () 
     expect(CultureSprintPool::findWaitingPartnerFor($me, 'Food', 'Asia')?->id)->toBe($candidate->id);
 });
 
+// --- CultureSprintPool::claimWaitingPartnerFor (atomic) ---------------------
+
+test('claiming a waiting partner returns them and removes both pool rows', function () {
+    $waiting = User::factory()->create(['last_seen_at' => now()]);
+    CultureSprintPool::create(['user_id' => $waiting->id, 'topic' => 'Food']);
+
+    $me = User::factory()->create();
+    CultureSprintPool::create(['user_id' => $me->id, 'topic' => 'Food']);
+
+    $partner = CultureSprintPool::claimWaitingPartnerFor($me, 'Food', null);
+
+    expect($partner->id)->toBe($waiting->id);
+    expect(CultureSprintPool::where('user_id', $waiting->id)->exists())->toBeFalse();
+    expect(CultureSprintPool::where('user_id', $me->id)->exists())->toBeFalse();
+});
+
+test('claiming with nobody waiting returns null and leaves rows untouched', function () {
+    $me = User::factory()->create();
+    CultureSprintPool::create(['user_id' => $me->id, 'topic' => 'Food']);
+
+    expect(CultureSprintPool::claimWaitingPartnerFor($me, 'Food', null))->toBeNull();
+    expect(CultureSprintPool::where('user_id', $me->id)->exists())->toBeTrue();
+});
+
 test('pruneStale removes only pool rows past the staleness window', function () {
     config(['culture_sprints.pool_stale_minutes' => 5]);
 
@@ -221,7 +245,7 @@ test('completing a sprint ends it and awards Bridge Score to both sides', functi
     $session->respondToSprint($a, true);
     $session->respondToSprint($b, true);
 
-    $session->completeSprint();
+    $session->completeSprint($a);
 
     expect($session->status)->toBe(LiveSession::STATUS_ENDED);
     expect(BridgeScoreEvent::where('user_id', $a->id)->where('reason', 'culture_sprint_completed')->exists())->toBeTrue();
@@ -241,7 +265,7 @@ test('completing a sprint between people of different heritages adds the cross-h
     $session->respondToSprint($a, true);
     $session->respondToSprint($b, true);
 
-    $session->completeSprint();
+    $session->completeSprint($a);
 
     expect(BridgeScoreEvent::where('user_id', $a->id)->where('reason', 'culture_sprint_cross_heritage_bonus')->exists())->toBeTrue();
 });
@@ -251,10 +275,22 @@ test('completeSprint is a no-op on a session that is not live', function () {
     $b = User::factory()->create();
     $session = LiveSession::startSprintMatch($a, $b, 'Food');
 
-    $session->completeSprint();
+    $session->completeSprint($a);
 
     expect($session->fresh()->status)->toBe(LiveSession::STATUS_RINGING);
     expect(BridgeScoreEvent::where('user_id', $a->id)->exists())->toBeFalse();
+});
+
+test('only a participant can complete a sprint', function () {
+    $a = User::factory()->create();
+    $b = User::factory()->create();
+    $intruder = User::factory()->create();
+    $session = LiveSession::startSprintMatch($a, $b, 'Food');
+    $session->respondToSprint($a, true);
+    $session->respondToSprint($b, true);
+
+    expect(fn () => $session->completeSprint($intruder))->toThrow(Symfony\Component\HttpKernel\Exception\HttpException::class);
+    expect($session->fresh()->status)->toBe(LiveSession::STATUS_LIVE);
 });
 
 // --- requestRematch ------------------------------------------------------
@@ -267,7 +303,7 @@ test('requesting a rematch creates a new ringing session with the requester pre-
     $session = LiveSession::startSprintMatch($a, $b, 'Food');
     $session->respondToSprint($a, true);
     $session->respondToSprint($b, true);
-    $session->completeSprint();
+    $session->completeSprint($a);
 
     $rematch = LiveSession::requestRematch($session, $a);
 
@@ -289,7 +325,7 @@ test('requesting a rematch as the original callee pre-accepts their own side', f
     $session = LiveSession::startSprintMatch($a, $b, 'Food');
     $session->respondToSprint($a, true);
     $session->respondToSprint($b, true);
-    $session->completeSprint();
+    $session->completeSprint($a);
 
     $rematch = LiveSession::requestRematch($session, $b);
 
@@ -307,7 +343,7 @@ test('a single accept from the partner is enough to go live on a rematch', funct
     $session = LiveSession::startSprintMatch($a, $b, 'Food');
     $session->respondToSprint($a, true);
     $session->respondToSprint($b, true);
-    $session->completeSprint();
+    $session->completeSprint($a);
 
     $rematch = LiveSession::requestRematch($session, $a);
     $rematch->respondToSprint($b, true);
@@ -330,7 +366,7 @@ test('only a participant of the original sprint can request a rematch', function
     $session = LiveSession::startSprintMatch($a, $b, 'Food');
     $session->respondToSprint($a, true);
     $session->respondToSprint($b, true);
-    $session->completeSprint();
+    $session->completeSprint($a);
 
     expect(fn () => LiveSession::requestRematch($session, $intruder))->toThrow(Symfony\Component\HttpKernel\Exception\HttpException::class);
 });

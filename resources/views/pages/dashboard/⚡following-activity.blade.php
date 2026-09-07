@@ -52,7 +52,14 @@ new class extends Component {
 
         $communityPosts = CommunityPost::query()
             ->whereIn('user_id', $followingIds)
-            ->with(['user.profile', 'community', 'media'])
+            ->with([
+                'user.profile',
+                'media',
+                // Scoped to just the viewer's own membership row (at most
+                // one) so canView()'s membershipFor() check below reads it
+                // from memory instead of firing a query per post.
+                'community.members' => fn ($q) => $q->whereKey($viewer->id),
+            ])
             ->latest()
             ->limit(10)
             ->get()

@@ -12,8 +12,16 @@ trait HasComments
         return $this->morphMany(Comment::class, 'commentable')->latest();
     }
 
+    /**
+     * Uses withCount('comments') when the caller eager-loaded it — falls
+     * back to a live query otherwise.
+     */
     public function commentsCount(): int
     {
+        if (array_key_exists('comments_count', $this->attributes)) {
+            return (int) $this->attributes['comments_count'];
+        }
+
         return $this->comments()->count();
     }
 }

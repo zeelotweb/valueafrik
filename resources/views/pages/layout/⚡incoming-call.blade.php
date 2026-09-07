@@ -40,7 +40,16 @@ new class extends Component {
             return null;
         }
 
-        return LiveSession::with('host.profile')->find($this->ringingSessionId);
+        // ringingSessionId is a plain client-visible property — the backstop
+        // here is the same as culture-sprint's: whatever set it, only the
+        // real callee of an actual call ever gets it back.
+        $session = LiveSession::with('host.profile')->find($this->ringingSessionId);
+
+        if (! $session || $session->type !== LiveSession::TYPE_CALL || $session->callee_id !== Auth::id()) {
+            return null;
+        }
+
+        return $session;
     }
 
     #[Computed]
@@ -97,13 +106,26 @@ new class extends Component {
             return;
         }
 
-        if (($event['status'] ?? null) === LiveSession::STATUS_RINGING && ($event['callee']['id'] ?? null) === Auth::id()) {
-            $this->ringingSessionId = (int) $event['session_id'];
+        $incomingId = (int) ($event['session_id'] ?? 0);
+
+        if (! $incomingId) {
+            return;
+        }
+
+        // This listener is a public Livewire method, reachable directly with
+        // a forged payload — never trust $event['callee']['id'] on its own.
+        // Re-verify who the callee actually is against the database.
+        if (($event['status'] ?? null) === LiveSession::STATUS_RINGING) {
+            $session = LiveSession::find($incomingId);
+
+            if ($session && $session->type === LiveSession::TYPE_CALL && $session->callee_id === Auth::id()) {
+                $this->ringingSessionId = $incomingId;
+            }
 
             return;
         }
 
-        if ($this->ringingSessionId && (int) ($event['session_id'] ?? 0) === $this->ringingSessionId) {
+        if ($this->ringingSessionId && $incomingId === $this->ringingSessionId) {
             $this->ringingSessionId = null;
         }
     }
