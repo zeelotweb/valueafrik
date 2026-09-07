@@ -132,3 +132,37 @@ test('mounting the page picks up a match already in progress after a refresh', f
         ->test('pages::culture-sprint.index')
         ->assertSet('activeSessionId', $session->id);
 });
+
+test('requesting a rematch from the ended screen switches to the new session pre-accepted', function () {
+    $a = readyForSprint('Host Person');
+    $b = readyForSprint('Callee Person');
+    $session = LiveSession::startSprintMatch($a, $b, 'Food');
+    $session->respondToSprint($a, true);
+    $session->respondToSprint($b, true);
+    $session->completeSprint();
+
+    $component = Livewire::actingAs($a)
+        ->test('pages::culture-sprint.index')
+        ->set('activeSessionId', $session->id)
+        ->call('requestRematch');
+
+    $newId = $component->get('activeSessionId');
+
+    expect($newId)->not->toBe($session->id);
+
+    $rematch = LiveSession::find($newId);
+    expect($rematch->status)->toBe(LiveSession::STATUS_RINGING);
+    expect($rematch->host_accepted_at)->not->toBeNull();
+});
+
+test('requestRematch does nothing if the current session has not ended', function () {
+    $a = readyForSprint('Host Person');
+    $b = readyForSprint('Callee Person');
+    $session = LiveSession::startSprintMatch($a, $b, 'Food');
+
+    Livewire::actingAs($a)
+        ->test('pages::culture-sprint.index')
+        ->set('activeSessionId', $session->id)
+        ->call('requestRematch')
+        ->assertSet('activeSessionId', $session->id);
+});

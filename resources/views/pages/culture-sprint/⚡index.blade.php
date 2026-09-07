@@ -199,6 +199,19 @@ new #[Title('Culture Sprint')] class extends Component {
         unset($this->session);
     }
 
+    public function requestRematch(): void
+    {
+        if (! $this->session || $this->session->status !== LiveSession::STATUS_ENDED) {
+            return;
+        }
+
+        $session = LiveSession::requestRematch($this->session, Auth::user());
+
+        $this->activeSessionId = $session->id;
+        $this->token = '';
+        unset($this->session);
+    }
+
     public function backToLobby(): void
     {
         $this->activeSessionId = null;
@@ -219,9 +232,14 @@ new #[Title('Culture Sprint')] class extends Component {
             return;
         }
 
-        if ($this->waiting && ($event['status'] ?? null) === LiveSession::STATUS_RINGING) {
+        $incomingId = (int) ($event['session_id'] ?? 0);
+
+        // A brand new session for me — either a fresh pool match while I was
+        // waiting, or a rematch request while I was sitting on the "ended"
+        // screen. Either way, switch straight to it.
+        if (($event['status'] ?? null) === LiveSession::STATUS_RINGING && $incomingId !== $this->activeSessionId) {
             $this->waiting = false;
-            $this->activeSessionId = (int) $event['session_id'];
+            $this->activeSessionId = $incomingId;
             unset($this->session);
 
             return;
@@ -429,9 +447,36 @@ new #[Title('Culture Sprint')] class extends Component {
                     <p class="text-sm text-stone-500 dark:text-stone-400">{{ __('That match timed out.') }}</p>
                 @endif
 
-                <flux:button wire:click="backToLobby" variant="primary" color="cyan" class="mt-2">
-                    {{ __('Pick another topic') }}
-                </flux:button>
+                @if ($this->otherParty)
+                    <div class="mt-2 flex items-center gap-3 rounded-lg bg-stone-100 px-4 py-3 dark:bg-stone-800">
+                        <div class="size-10 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
+                            @if ($this->otherParty->profile?->avatarUrl())
+                                <img src="{{ $this->otherParty->profile->avatarUrl() }}" class="size-full object-cover">
+                            @else
+                                <div class="flex size-full items-center justify-center text-stone-500">
+                                    <flux:icon.user class="size-5" />
+                                </div>
+                            @endif
+                        </div>
+                        <p class="font-medium text-stone-900 dark:text-white">{{ $this->otherParty->name }}</p>
+                        <livewire:pages::profile.follow-button :user="$this->otherParty" :icon-only="true" :key="'sprint-follow-'.$this->otherParty->id" />
+                    </div>
+                @endif
+
+                <div class="mt-2 flex items-center gap-3">
+                    @if ($this->session?->status === LiveSession::STATUS_ENDED && $this->otherParty)
+                        <flux:button wire:click="requestRematch" variant="primary" color="cyan">
+                            {{ __('Go again') }}
+                        </flux:button>
+                        <flux:button wire:click="backToLobby" variant="ghost">
+                            {{ __('Pick another topic') }}
+                        </flux:button>
+                    @else
+                        <flux:button wire:click="backToLobby" variant="primary" color="cyan">
+                            {{ __('Pick another topic') }}
+                        </flux:button>
+                    @endif
+                </div>
             </div>
         @endif
     </div>

@@ -227,6 +227,42 @@ class LiveSession extends Model
     }
 
     /**
+     * "That went well — same topic, one more round." Unlike the original
+     * pool match, the two people here already know exactly who they're
+     * asking — closer to a call than a random pairing, so the requester's
+     * own side is pre-accepted (they consented by asking) and only the
+     * other person needs to respond via the normal respondToSprint() flow.
+     */
+    public static function requestRematch(self $completed, User $requester): self
+    {
+        abort_unless($completed->type === self::TYPE_SPRINT, 403);
+        abort_unless($completed->status === self::STATUS_ENDED, 403);
+        abort_unless($completed->isParticipant($requester), 403);
+
+        $partner = $completed->otherParty($requester);
+
+        abort_if(! $partner, 404);
+
+        $requesterIsHost = $requester->id === $completed->host_id;
+
+        $session = self::create([
+            'host_id' => $requesterIsHost ? $requester->id : $partner->id,
+            'callee_id' => $requesterIsHost ? $partner->id : $requester->id,
+            'room_name' => (string) Str::uuid(),
+            'type' => self::TYPE_SPRINT,
+            'status' => self::STATUS_RINGING,
+            'culture_word' => $completed->culture_word,
+            'started_at' => now(),
+            'host_accepted_at' => $requesterIsHost ? now() : null,
+            'callee_accepted_at' => $requesterIsHost ? null : now(),
+        ]);
+
+        self::broadcastStatus($session);
+
+        return $session;
+    }
+
+    /**
      * Either side accepting or declining a matched sprint. The room only
      * goes live once *both* have accepted — accepting alone just records
      * that side's readiness and waits.

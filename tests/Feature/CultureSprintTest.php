@@ -291,6 +291,84 @@ test('completeSprint is a no-op on a session that is not live', function () {
     expect(BridgeScoreEvent::where('user_id', $a->id)->exists())->toBeFalse();
 });
 
+// --- requestRematch ------------------------------------------------------
+
+test('requesting a rematch creates a new ringing session with the requester pre-accepted', function () {
+    Event::fake([CallStatusUpdated::class]);
+
+    $a = User::factory()->create();
+    $b = User::factory()->create();
+    $session = LiveSession::startSprintMatch($a, $b, 'Food');
+    $session->respondToSprint($a, true);
+    $session->respondToSprint($b, true);
+    $session->completeSprint();
+
+    $rematch = LiveSession::requestRematch($session, $a);
+
+    expect($rematch->id)->not->toBe($session->id);
+    expect($rematch->type)->toBe(LiveSession::TYPE_SPRINT);
+    expect($rematch->status)->toBe(LiveSession::STATUS_RINGING);
+    expect($rematch->culture_word)->toBe('Food');
+    expect($rematch->host_id)->toBe($a->id);
+    expect($rematch->callee_id)->toBe($b->id);
+    expect($rematch->host_accepted_at)->not->toBeNull();
+    expect($rematch->callee_accepted_at)->toBeNull();
+
+    Event::assertDispatched(CallStatusUpdated::class, fn ($e) => $e->session->is($rematch));
+});
+
+test('requesting a rematch as the original callee pre-accepts their own side', function () {
+    $a = User::factory()->create();
+    $b = User::factory()->create();
+    $session = LiveSession::startSprintMatch($a, $b, 'Food');
+    $session->respondToSprint($a, true);
+    $session->respondToSprint($b, true);
+    $session->completeSprint();
+
+    $rematch = LiveSession::requestRematch($session, $b);
+
+    // Roles carry over from the original match — the requester keeps
+    // whichever side they were on, and that's the side marked accepted.
+    expect($rematch->host_id)->toBe($a->id);
+    expect($rematch->callee_id)->toBe($b->id);
+    expect($rematch->host_accepted_at)->toBeNull();
+    expect($rematch->callee_accepted_at)->not->toBeNull();
+});
+
+test('a single accept from the partner is enough to go live on a rematch', function () {
+    $a = User::factory()->create();
+    $b = User::factory()->create();
+    $session = LiveSession::startSprintMatch($a, $b, 'Food');
+    $session->respondToSprint($a, true);
+    $session->respondToSprint($b, true);
+    $session->completeSprint();
+
+    $rematch = LiveSession::requestRematch($session, $a);
+    $rematch->respondToSprint($b, true);
+
+    expect($rematch->status)->toBe(LiveSession::STATUS_LIVE);
+});
+
+test('a rematch can only be requested for a completed sprint', function () {
+    $a = User::factory()->create();
+    $b = User::factory()->create();
+    $session = LiveSession::startSprintMatch($a, $b, 'Food');
+
+    expect(fn () => LiveSession::requestRematch($session, $a))->toThrow(Symfony\Component\HttpKernel\Exception\HttpException::class);
+});
+
+test('only a participant of the original sprint can request a rematch', function () {
+    $a = User::factory()->create();
+    $b = User::factory()->create();
+    $intruder = User::factory()->create();
+    $session = LiveSession::startSprintMatch($a, $b, 'Food');
+    $session->respondToSprint($a, true);
+    $session->respondToSprint($b, true);
+    $session->completeSprint();
+
+    expect(fn () => LiveSession::requestRematch($session, $intruder))->toThrow(Symfony\Component\HttpKernel\Exception\HttpException::class);
+});
+
 // --- canPublish ---------------------------------------------------------
 
 test('both sides of a sprint can publish audio/video', function () {
