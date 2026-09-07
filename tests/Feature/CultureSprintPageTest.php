@@ -33,20 +33,33 @@ test('joining the pool with nobody else waiting shows the waiting state', functi
 
     Livewire::actingAs($user)
         ->test('pages::culture-sprint.index')
+        ->set('topic', 'Food')
         ->call('joinPool')
         ->assertSet('waiting', true);
 
-    expect(CultureSprintPool::where('user_id', $user->id)->exists())->toBeTrue();
+    expect(CultureSprintPool::where('user_id', $user->id)->where('topic', 'Food')->exists())->toBeTrue();
 });
 
-test('joining the pool when someone is already waiting matches them immediately', function () {
+test('a topic is required to join the pool', function () {
+    $user = readyForSprint();
+
+    Livewire::actingAs($user)
+        ->test('pages::culture-sprint.index')
+        ->call('joinPool')
+        ->assertHasErrors('topic');
+
+    expect(CultureSprintPool::where('user_id', $user->id)->exists())->toBeFalse();
+});
+
+test('joining the pool when someone is already waiting on the same topic matches them immediately', function () {
     $waiting = readyForSprint('Waiting Person');
-    CultureSprintPool::create(['user_id' => $waiting->id]);
+    CultureSprintPool::create(['user_id' => $waiting->id, 'topic' => 'Food']);
 
     $joiner = readyForSprint('Joining Person');
 
     Livewire::actingAs($joiner)
         ->test('pages::culture-sprint.index')
+        ->set('topic', 'Food')
         ->call('joinPool')
         ->assertSet('waiting', false);
 
@@ -54,12 +67,13 @@ test('joining the pool when someone is already waiting matches them immediately'
 
     expect($session)->not->toBeNull();
     expect($session->status)->toBe(LiveSession::STATUS_RINGING);
+    expect($session->culture_word)->toBe('Food');
     expect(CultureSprintPool::count())->toBe(0);
 });
 
 test('leaving the pool removes the pointer row', function () {
     $user = readyForSprint();
-    CultureSprintPool::create(['user_id' => $user->id]);
+    CultureSprintPool::create(['user_id' => $user->id, 'topic' => 'Food']);
 
     Livewire::actingAs($user)
         ->test('pages::culture-sprint.index')

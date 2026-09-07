@@ -42,15 +42,16 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Prompts
+    | Topics
     |--------------------------------------------------------------------------
     |
-    | One is assigned at random per match — the lens each side shares
-    | their culture through.
+    | The "service lines" — chosen up front, before joining the pool. Two
+    | people only ever match within the same topic; it's the lens they
+    | share their culture through once paired.
     |
     */
 
-    'words' => [
+    'topics' => [
         'Weddings',
         'Food',
         'Family',

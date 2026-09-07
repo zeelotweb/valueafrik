@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\CultureSprintPool;
+use App\Models\Heritage;
 use App\Models\LiveSession;
 use App\Services\LiveKitToken;
 use Illuminate\Support\Facades\Auth;
@@ -9,17 +10,21 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
- * One page, one URL, the whole lifecycle: lobby → waiting in the pool →
- * matched (both sides must accept) → live turn-timer room → ended. There's
- * no dedicated "room" URL the way calls have one — a match is ephemeral,
- * and requiring you to be on this page to participate is deliberate: unlike
- * a call, nothing here should be able to interrupt you from elsewhere in
- * the app.
+ * One page, one URL, the whole lifecycle: lobby (pick a topic, optionally a
+ * region) → waiting in that line → matched (both sides must accept) → live
+ * turn-timer room → ended. There's no dedicated "room" URL the way calls
+ * have one — a match is ephemeral, and requiring you to be on this page to
+ * participate is deliberate: unlike a call, nothing here should be able to
+ * interrupt you from elsewhere in the app.
  */
 new #[Title('Culture Sprint')] class extends Component {
     public ?int $activeSessionId = null;
 
     public bool $waiting = false;
+
+    public string $topic = '';
+
+    public string $region = '';
 
     public string $token = '';
 
@@ -33,8 +38,10 @@ new #[Title('Culture Sprint')] class extends Component {
 
         if ($existing = $this->findMyActiveSession()) {
             $this->activeSessionId = $existing->id;
-        } elseif (CultureSprintPool::where('user_id', Auth::id())->exists()) {
+        } elseif ($myPoolRow = CultureSprintPool::where('user_id', Auth::id())->first()) {
             $this->waiting = true;
+            $this->topic = $myPoolRow->topic;
+            $this->region = $myPoolRow->region ?? '';
         }
 
         $this->wsUrl = (string) config('services.livekit.url');
@@ -58,6 +65,18 @@ new #[Title('Culture Sprint')] class extends Component {
         if ($this->session?->isLive() && $this->configured && $this->token === '') {
             $this->token = LiveKitToken::generate($this->session, Auth::user());
         }
+    }
+
+    #[Computed]
+    public function topics(): array
+    {
+        return config('culture_sprints.topics');
+    }
+
+    #[Computed]
+    public function regions(): array
+    {
+        return Heritage::REGIONS;
     }
 
     #[Computed]
@@ -122,6 +141,13 @@ new #[Title('Culture Sprint')] class extends Component {
     {
         abort_if($this->rootsIncomplete, 403);
 
+        $this->validate([
+            'topic' => ['required', 'string', 'in:'.implode(',', config('culture_sprints.topics'))],
+            'region' => ['nullable', 'string', 'in:'.implode(',', Heritage::REGIONS)],
+        ]);
+
+        $region = $this->region !== '' ? $this->region : null;
+
         CultureSprintPool::pruneStale();
 
         if ($existing = $this->findMyActiveSession()) {
@@ -130,17 +156,20 @@ new #[Title('Culture Sprint')] class extends Component {
             return;
         }
 
-        $partner = CultureSprintPool::findWaitingPartnerFor(Auth::user());
+        $partner = CultureSprintPool::findWaitingPartnerFor(Auth::user(), $this->topic, $region);
 
         if ($partner) {
             CultureSprintPool::where('user_id', $partner->id)->delete();
             CultureSprintPool::where('user_id', Auth::id())->delete();
 
-            $session = LiveSession::startSprintMatch(Auth::user(), $partner, collect(config('culture_sprints.words'))->random());
+            $session = LiveSession::startSprintMatch(Auth::user(), $partner, $this->topic);
 
             $this->activeSessionId = $session->id;
         } else {
-            CultureSprintPool::firstOrCreate(['user_id' => Auth::id()]);
+            CultureSprintPool::updateOrCreate(
+                ['user_id' => Auth::id()],
+                ['topic' => $this->topic, 'region' => $region]
+            );
             $this->waiting = true;
         }
     }
@@ -207,11 +236,11 @@ new #[Title('Culture Sprint')] class extends Component {
 
 <div class="mx-auto w-full max-w-2xl">
     <flux:heading size="xl">{{ __('Culture Sprint') }}</flux:heading>
-    <flux:subheading>{{ __('Meet someone new, at random, anywhere in the world — one word, twenty seconds each.') }}</flux:subheading>
+    <flux:subheading>{{ __('Pick a topic, signal you\'re in, and get paired for a fast, focused exchange — twenty seconds each.') }}</flux:subheading>
 
     <div class="mt-6">
         @if (! $this->session && ! $waiting)
-            {{-- Lobby --}}
+            {{-- Lobby: choose a line before taking a number --}}
             @if ($this->rootsIncomplete)
                 <div class="rounded-xl border border-dashed border-stone-300 p-6 text-center dark:border-stone-700">
                     <flux:text>{{ __("Finish your Roots first — it's what gives your match something to actually meet.") }}</flux:text>
@@ -222,14 +251,30 @@ new #[Title('Culture Sprint')] class extends Component {
                     </div>
                 </div>
             @else
-                <div class="rounded-xl border border-stone-200 bg-white p-8 text-center dark:border-stone-800 dark:bg-stone-900">
-                    <flux:icon.globe-alt class="mx-auto size-10 text-cyan-600 dark:text-cyan-400" />
+                <div class="rounded-xl border border-stone-200 bg-white p-6 dark:border-stone-800 dark:bg-stone-900">
+                    <flux:icon.globe-alt class="size-8 text-cyan-600 dark:text-cyan-400" />
                     <p class="mt-3 text-sm text-stone-600 dark:text-stone-400">
-                        {{ __("We'll pair you with a random stranger and give you both a word. You each get twenty seconds to share what it means in your culture — then it's over.") }}
+                        {{ __("You'll be paired with someone else waiting on the same topic. You each get twenty seconds to share what it means in your culture — then it's over.") }}
                     </p>
-                    <flux:button wire:click="joinPool" wire:loading.attr="disabled" variant="primary" color="cyan" class="mt-5">
-                        {{ __('Find a match') }}
-                    </flux:button>
+
+                    <form wire:submit="joinPool" class="mt-5 space-y-4">
+                        <flux:select wire:model="topic" :label="__('Topic')" placeholder="{{ __('Choose a topic…') }}">
+                            @foreach ($this->topics as $option)
+                                <flux:select.option value="{{ $option }}">{{ $option }}</flux:select.option>
+                            @endforeach
+                        </flux:select>
+
+                        <flux:select wire:model="region" :label="__('Region you\'re curious about')" :description="__('Optional — leave blank to match with anyone.')">
+                            <flux:select.option value="">{{ __('Anywhere') }}</flux:select.option>
+                            @foreach ($this->regions as $option)
+                                <flux:select.option value="{{ $option }}">{{ $option }}</flux:select.option>
+                            @endforeach
+                        </flux:select>
+
+                        <flux:button type="submit" wire:loading.attr="disabled" variant="primary" color="cyan">
+                            {{ __('Signal intent') }}
+                        </flux:button>
+                    </form>
                 </div>
             @endif
         @elseif ($waiting)
@@ -245,7 +290,11 @@ new #[Title('Culture Sprint')] class extends Component {
             >
                 <flux:icon.loading class="size-6 text-cyan-600 dark:text-cyan-400" />
                 <p class="text-sm text-stone-600 dark:text-stone-400">
-                    {{ __('Looking for someone to match you with') }}<span x-text="dots"></span>
+                    {{ __('Waiting for a match on') }} <span class="font-semibold text-stone-900 dark:text-white">{{ $topic }}</span>
+                    @if ($region)
+                        {{ __('from') }} <span class="font-semibold text-stone-900 dark:text-white">{{ $region }}</span>
+                    @endif
+                    <span x-text="dots"></span>
                 </p>
                 <flux:button wire:click="leavePool" size="sm" variant="ghost">{{ __('Cancel') }}</flux:button>
             </div>
@@ -273,7 +322,7 @@ new #[Title('Culture Sprint')] class extends Component {
                 <p class="text-lg font-semibold text-stone-900 dark:text-white">{{ $this->otherParty?->name }}</p>
 
                 <div class="rounded-lg bg-stone-100 px-4 py-2 dark:bg-stone-800">
-                    <p class="text-xs text-stone-500 dark:text-stone-400">{{ __('Your word') }}</p>
+                    <p class="text-xs text-stone-500 dark:text-stone-400">{{ __('Topic') }}</p>
                     <p class="text-lg font-bold text-cyan-700 dark:text-cyan-400">{{ $this->session->culture_word }}</p>
                 </div>
 
@@ -379,10 +428,9 @@ new #[Title('Culture Sprint')] class extends Component {
                     <p class="text-sm text-stone-500 dark:text-stone-400">{{ __('That match timed out.') }}</p>
                 @endif
 
-                <div class="mt-2 flex items-center gap-3">
-                    <flux:button wire:click="backToLobby" variant="ghost">{{ __('Done') }}</flux:button>
-                    <flux:button wire:click="joinPool" variant="primary" color="cyan">{{ __('Find another match') }}</flux:button>
-                </div>
+                <flux:button wire:click="backToLobby" variant="primary" color="cyan" class="mt-2">
+                    {{ __('Pick another topic') }}
+                </flux:button>
             </div>
         @endif
     </div>
