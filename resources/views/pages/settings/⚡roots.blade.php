@@ -26,6 +26,8 @@ new #[Title('Roots')] class extends Component {
 
     public string $newHeritageName = '';
 
+    public string $newHeritageRegion = '';
+
     public function mount(): void
     {
         $user = Auth::user();
@@ -50,6 +52,12 @@ new #[Title('Roots')] class extends Component {
     }
 
     #[Computed]
+    public function regions(): array
+    {
+        return Heritage::REGIONS;
+    }
+
+    #[Computed]
     public function interests()
     {
         return Interest::orderBy('name')->get();
@@ -67,18 +75,27 @@ new #[Title('Roots')] class extends Component {
 
         $this->validate([
             'newHeritageName' => ['required', 'string', 'max:255'],
+            'newHeritageRegion' => ['required', 'string', 'in:'.implode(',', Heritage::REGIONS)],
         ]);
 
         $heritage = Heritage::firstOrCreate(
             ['slug' => Str::slug($name)],
-            ['name' => $name]
+            ['name' => $name, 'region' => $this->newHeritageRegion]
         );
+
+        // A sub-identity someone else already added (e.g. "Yoruba") may exist
+        // without a region if it predates this field — fill it in now rather
+        // than leaving it permanently unmatched by region-specific Culture
+        // Sprint searches.
+        if ($heritage->region === null) {
+            $heritage->update(['region' => $this->newHeritageRegion]);
+        }
 
         if (! in_array($heritage->id, $this->heritageIds, true)) {
             $this->heritageIds[] = $heritage->id;
         }
 
-        $this->reset('newHeritageName');
+        $this->reset('newHeritageName', 'newHeritageRegion');
         unset($this->heritages);
 
         Flux::toast(variant: 'success', text: __(':name added to your Roots.', ['name' => $heritage->name]));
@@ -174,6 +191,11 @@ new #[Title('Roots')] class extends Component {
                         :placeholder="__('e.g. Yoruba')"
                         class="max-w-xs"
                     />
+                    <flux:select wire:model="newHeritageRegion" :label="__('Which region is that part of?')" placeholder="{{ __('Choose a region…') }}" class="max-w-48">
+                        @foreach ($this->regions as $option)
+                            <flux:select.option value="{{ $option }}">{{ $option }}</flux:select.option>
+                        @endforeach
+                    </flux:select>
                     <flux:button wire:click="addHeritage" variant="ghost" data-test="add-heritage-button">
                         {{ __('Add') }}
                     </flux:button>
