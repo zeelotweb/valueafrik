@@ -46,11 +46,11 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
             </div>
         @endif
 
-        <div class="mt-6 grid gap-4 sm:grid-cols-3">
+        <div class="mt-6 flex flex-wrap gap-4">
             <a
                 href="{{ route('profile.show', $user) }}"
                 wire:navigate
-                class="rounded-xl bg-white border border-stone-200 p-5 hover:bg-stone-50 dark:bg-stone-900 dark:border-stone-800 dark:hover:bg-stone-800"
+                class="w-fit min-w-40 rounded-xl bg-white border border-stone-200 p-5 hover:bg-stone-50 dark:bg-stone-900 dark:border-stone-800 dark:hover:bg-stone-800"
             >
                 <div class="flex items-center gap-2 text-cyan-600 dark:text-cyan-400">
                     <flux:icon.sparkles class="size-5" />
@@ -65,7 +65,7 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
             <a
                 href="{{ route('communities.index') }}"
                 wire:navigate
-                class="rounded-xl bg-white border border-stone-200 p-5 hover:bg-stone-50 dark:bg-stone-900 dark:border-stone-800 dark:hover:bg-stone-800"
+                class="w-fit min-w-40 rounded-xl bg-white border border-stone-200 p-5 hover:bg-stone-50 dark:bg-stone-900 dark:border-stone-800 dark:hover:bg-stone-800"
             >
                 <div class="flex items-center gap-2 text-cyan-600 dark:text-cyan-400">
                     <flux:icon.user-group class="size-5" />
@@ -80,7 +80,7 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
             <a
                 href="{{ route('messages.index') }}"
                 wire:navigate
-                class="rounded-xl bg-white border border-stone-200 p-5 hover:bg-stone-50 dark:bg-stone-900 dark:border-stone-800 dark:hover:bg-stone-800"
+                class="w-fit min-w-40 rounded-xl bg-white border border-stone-200 p-5 hover:bg-stone-50 dark:bg-stone-900 dark:border-stone-800 dark:hover:bg-stone-800"
             >
                 <div class="flex items-center gap-2 text-cyan-600 dark:text-cyan-400">
                     <flux:icon.chat-bubble-left-right class="size-5" />
