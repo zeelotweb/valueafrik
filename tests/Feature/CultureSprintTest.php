@@ -197,6 +197,20 @@ test('either side declining a sprint match ends it for both', function () {
     expect($session->status)->toBe(LiveSession::STATUS_DECLINED);
 });
 
+test('a user who already accepted can still back out while waiting on their partner', function () {
+    $a = User::factory()->create();
+    $b = User::factory()->create();
+    $session = LiveSession::startSprintMatch($a, $b, 'Food');
+
+    $session->respondToSprint($a, true);
+    expect($session->host_accepted_at)->not->toBeNull();
+
+    // Changed their mind before the other side ever responded.
+    $session->respondToSprint($a, false);
+
+    expect($session->status)->toBe(LiveSession::STATUS_DECLINED);
+});
+
 test('only a participant can respond to a sprint match', function () {
     $a = User::factory()->create();
     $b = User::factory()->create();

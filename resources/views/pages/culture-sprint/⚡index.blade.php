@@ -329,6 +329,7 @@ new #[Title('Culture Sprint')] class extends Component {
                 @if ($this->iAccepted)
                     <p class="text-sm text-stone-500 dark:text-stone-400">{{ __('Waiting for them to accept…') }}</p>
                     <p class="text-xs text-stone-400 dark:text-stone-500" x-text="secondsLeft + ' {{ __('s') }}'"></p>
+                    <flux:button wire:click="respond(false)" size="sm" variant="ghost">{{ __('Cancel') }}</flux:button>
                 @else
                     <p class="text-xs text-stone-400 dark:text-stone-500" x-text="secondsLeft + ' {{ __('s') }}'"></p>
                     <div class="flex items-center gap-3">
