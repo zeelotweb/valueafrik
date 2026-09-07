@@ -40,58 +40,27 @@ class CultureSprintPool extends Model
 
     /**
      * The longest-waiting other online person waiting in the same topic
-     * line. Region is a two-way courtesy, not a queue key: if I asked for
-     * "someone from Asia," only a candidate whose own heritage is actually
-     * Asian qualifies — and if *they* asked for a region, I have to satisfy
-     * theirs too, so nobody's stated preference gets silently ignored just
-     * because the other side didn't set one. Within whatever's left,
-     * shared interests or language are a soft nudge, not a requirement —
-     * the topic line is usually thin enough that hard-requiring them would
-     * mean waiting forever.
+     * line. Both topic and region come straight from what each side typed
+     * into the intent form — never from declared heritage, language, or
+     * interests, which drive Discover and the rest of the platform, not
+     * this queue. Topic is a hard, exact key. Region is a two-way courtesy
+     * *between the two forms*: leaving it blank means "anyone," and
+     * picking one only rules out a candidate who picked a different one —
+     * a candidate who also left theirs blank still qualifies.
      */
     public static function findWaitingPartnerFor(User $user, string $topic, ?string $region): ?User
     {
         $onlineSince = now()->subSeconds((int) config('calls.online_threshold_seconds'));
-        $myHeritageRegions = $user->heritages()->pluck('heritages.region')->filter()->unique()->values();
-        $myLanguageIds = $user->languages()->pluck('languages.id');
-        $myInterestIds = $user->interests()->pluck('interests.id');
 
-        $base = fn () => self::query()
+        return self::query()
             ->where('user_id', '!=', $user->id)
             ->where('topic', $topic)
             ->whereHas('user', fn ($q) => $q->where('last_seen_at', '>', $onlineSince))
-            ->when($region, fn ($q) => $q->whereHas(
-                'user.heritages',
-                fn ($q2) => $q2->where('heritages.region', $region)
+            ->when($region, fn ($q) => $q->where(
+                fn ($q2) => $q2->whereNull('region')->orWhere('region', $region)
             ))
-            ->where(function ($q) use ($myHeritageRegions) {
-                $q->whereNull('region');
-
-                if ($myHeritageRegions->isNotEmpty()) {
-                    $q->orWhereIn('region', $myHeritageRegions);
-                }
-            })
-            ->with('user');
-
-        if ($myInterestIds->isNotEmpty() || $myLanguageIds->isNotEmpty()) {
-            $preferred = $base()
-                ->where(function ($q) use ($myInterestIds, $myLanguageIds) {
-                    if ($myInterestIds->isNotEmpty()) {
-                        $q->orWhereHas('user.interests', fn ($q2) => $q2->whereIn('interests.id', $myInterestIds));
-                    }
-
-                    if ($myLanguageIds->isNotEmpty()) {
-                        $q->orWhereHas('user.languages', fn ($q2) => $q2->whereIn('languages.id', $myLanguageIds));
-                    }
-                })
-                ->oldest('created_at')
-                ->first();
-
-            if ($preferred) {
-                return $preferred->user;
-            }
-        }
-
-        return $base()->oldest('created_at')->first()?->user;
+            ->with('user')
+            ->oldest('created_at')
+            ->first()?->user;
     }
 }

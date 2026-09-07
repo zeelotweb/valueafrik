@@ -50,88 +50,54 @@ test('does not match across different topics', function () {
     expect(CultureSprintPool::findWaitingPartnerFor($me, 'Food', null))->toBeNull();
 });
 
-test('a region filter only matches a candidate whose own heritage is actually from that region', function () {
-    $asia = Heritage::create(['name' => 'Japanese', 'slug' => 'japanese-r', 'region' => 'Asia']);
-    $europe = Heritage::create(['name' => 'Irish', 'slug' => 'irish-r', 'region' => 'Europe']);
-
+test('a region filter only matches a candidate whose own form entry is that region or blank', function () {
     $me = User::factory()->create();
 
-    $fromEurope = User::factory()->create(['last_seen_at' => now()]);
-    $fromEurope->heritages()->attach($europe->id);
-    CultureSprintPool::create(['user_id' => $fromEurope->id, 'topic' => 'Food']);
+    $askedForEurope = User::factory()->create(['last_seen_at' => now()]);
+    CultureSprintPool::create(['user_id' => $askedForEurope->id, 'topic' => 'Food', 'region' => 'Europe']);
 
-    $fromAsia = User::factory()->create(['last_seen_at' => now()]);
-    $fromAsia->heritages()->attach($asia->id);
-    CultureSprintPool::create(['user_id' => $fromAsia->id, 'topic' => 'Food']);
+    $askedForAsia = User::factory()->create(['last_seen_at' => now()]);
+    CultureSprintPool::create(['user_id' => $askedForAsia->id, 'topic' => 'Food', 'region' => 'Asia']);
 
     $partner = CultureSprintPool::findWaitingPartnerFor($me, 'Food', 'Asia');
 
-    expect($partner->id)->toBe($fromAsia->id);
+    expect($partner->id)->toBe($askedForAsia->id);
 });
 
-test('a candidate who asked for a region themselves is skipped unless the seeker actually satisfies it', function () {
-    $asia = Heritage::create(['name' => 'Japanese', 'slug' => 'japanese-r2', 'region' => 'Asia']);
-    $europe = Heritage::create(['name' => 'Irish', 'slug' => 'irish-r2', 'region' => 'Europe']);
+test('a specific region search still matches a candidate who left their region blank', function () {
+    $me = User::factory()->create();
 
-    $seekerFromEurope = User::factory()->create();
-    $seekerFromEurope->heritages()->attach($europe->id);
+    $anywhere = User::factory()->create(['last_seen_at' => now()]);
+    CultureSprintPool::create(['user_id' => $anywhere->id, 'topic' => 'Food', 'region' => null]);
 
-    $picky = User::factory()->create(['last_seen_at' => now()]);
-    CultureSprintPool::create(['user_id' => $picky->id, 'topic' => 'Food', 'region' => 'Asia']);
-
-    // The seeker isn't from Asia, so they can't satisfy what the waiting
-    // person asked for — no match, even with no region filter of their own.
-    expect(CultureSprintPool::findWaitingPartnerFor($seekerFromEurope, 'Food', null))->toBeNull();
-
-    $seekerFromAsia = User::factory()->create();
-    $seekerFromAsia->heritages()->attach($asia->id);
-
-    expect(CultureSprintPool::findWaitingPartnerFor($seekerFromAsia, 'Food', null)->id)->toBe($picky->id);
+    expect(CultureSprintPool::findWaitingPartnerFor($me, 'Food', 'Asia')->id)->toBe($anywhere->id);
 });
 
-test('prefers a waiting partner who shares a language over one who does not', function () {
-    $spanish = Language::create(['name' => 'Spanish', 'slug' => 'spanish']);
+test('a blank region search matches a candidate regardless of what region they asked for', function () {
+    $me = User::factory()->create();
 
+    $askedForAsia = User::factory()->create(['last_seen_at' => now()]);
+    CultureSprintPool::create(['user_id' => $askedForAsia->id, 'topic' => 'Food', 'region' => 'Asia']);
+
+    expect(CultureSprintPool::findWaitingPartnerFor($me, 'Food', null)->id)->toBe($askedForAsia->id);
+});
+
+test('matching ignores heritage, language, and interests entirely', function () {
+    $mismatchedHeritage = Heritage::create(['name' => 'Irish', 'slug' => 'irish-independent', 'region' => 'Europe']);
+    $spanish = Language::create(['name' => 'Spanish', 'slug' => 'spanish-independent']);
+    $cooking = Interest::create(['name' => 'Cooking', 'slug' => 'cooking-independent']);
+
+    // The seeker shares nothing with the waiting candidate on heritage,
+    // language, or interest — none of that should matter to the match.
     $me = User::factory()->create();
     $me->languages()->attach($spanish->id);
-
-    $noSharedLanguage = User::factory()->create(['last_seen_at' => now()]);
-    CultureSprintPool::create(['user_id' => $noSharedLanguage->id, 'topic' => 'Food', 'created_at' => now()->subMinutes(1)]);
-
-    $sharedLanguage = User::factory()->create(['last_seen_at' => now()]);
-    $sharedLanguage->languages()->attach($spanish->id);
-    CultureSprintPool::create(['user_id' => $sharedLanguage->id, 'topic' => 'Food', 'created_at' => now()->subSeconds(5)]);
-
-    $partner = CultureSprintPool::findWaitingPartnerFor($me, 'Food', null);
-
-    expect($partner->id)->toBe($sharedLanguage->id);
-});
-
-test('prefers a waiting partner who shares an interest over one who does not', function () {
-    $cooking = Interest::create(['name' => 'Cooking', 'slug' => 'cooking']);
-
-    $me = User::factory()->create();
     $me->interests()->attach($cooking->id);
 
-    $noSharedInterest = User::factory()->create(['last_seen_at' => now()]);
-    CultureSprintPool::create(['user_id' => $noSharedInterest->id, 'topic' => 'Food', 'created_at' => now()->subMinutes(1)]);
+    $candidate = User::factory()->create(['last_seen_at' => now()]);
+    $candidate->heritages()->attach($mismatchedHeritage->id);
+    CultureSprintPool::create(['user_id' => $candidate->id, 'topic' => 'Food', 'region' => 'Asia']);
 
-    $sharedInterest = User::factory()->create(['last_seen_at' => now()]);
-    $sharedInterest->interests()->attach($cooking->id);
-    CultureSprintPool::create(['user_id' => $sharedInterest->id, 'topic' => 'Food', 'created_at' => now()->subSeconds(5)]);
-
-    expect(CultureSprintPool::findWaitingPartnerFor($me, 'Food', null)->id)->toBe($sharedInterest->id);
-});
-
-test('falls back to any online waiting user when no shared language or interest exists', function () {
-    $spanish = Language::create(['name' => 'Spanish', 'slug' => 'spanish']);
-    $me = User::factory()->create();
-    $me->languages()->attach($spanish->id);
-
-    $noSharedLanguage = User::factory()->create(['last_seen_at' => now()]);
-    CultureSprintPool::create(['user_id' => $noSharedLanguage->id, 'topic' => 'Food']);
-
-    expect(CultureSprintPool::findWaitingPartnerFor($me, 'Food', null)->id)->toBe($noSharedLanguage->id);
+    expect(CultureSprintPool::findWaitingPartnerFor($me, 'Food', 'Asia')?->id)->toBe($candidate->id);
 });
 
 test('pruneStale removes only pool rows past the staleness window', function () {
