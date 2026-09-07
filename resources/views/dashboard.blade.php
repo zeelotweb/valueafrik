@@ -141,6 +141,14 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
         </div>
 
         <div class="mt-10">
+            <flux:heading size="lg">{{ __('From people you follow') }}</flux:heading>
+            <flux:subheading>{{ __('Their latest posts, bridges, and communities.') }}</flux:subheading>
+            <div class="mt-3">
+                <livewire:pages::dashboard.following-activity :key="'dashboard-following-activity-'.$user->id" />
+            </div>
+        </div>
+
+        <div class="mt-10">
             <flux:heading size="lg">{{ __('Fresh Bridge Posts') }}</flux:heading>
             <flux:subheading>{{ __('Real exchange happening across the platform right now.') }}</flux:subheading>
             <div class="mt-3">
