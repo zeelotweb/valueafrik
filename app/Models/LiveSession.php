@@ -17,6 +17,8 @@ class LiveSession extends Model
 
     public const TYPE_STREAM = 'stream';
 
+    public const TYPE_SPRINT = 'sprint';
+
     public const STATUS_RINGING = 'ringing';
 
     public const STATUS_LIVE = 'live';
@@ -38,11 +40,14 @@ class LiveSession extends Model
         'callee_id',
         'room_name',
         'title',
+        'culture_word',
         'type',
         'status',
         'ended_reason',
         'started_at',
         'answered_at',
+        'host_accepted_at',
+        'callee_accepted_at',
         'ended_at',
     ];
 
@@ -51,6 +56,8 @@ class LiveSession extends Model
         return [
             'started_at' => 'datetime',
             'answered_at' => 'datetime',
+            'host_accepted_at' => 'datetime',
+            'callee_accepted_at' => 'datetime',
             'ended_at' => 'datetime',
         ];
     }
@@ -85,7 +92,17 @@ class LiveSession extends Model
     public function isStillRinging(): bool
     {
         return $this->isRinging()
-            && $this->started_at->addSeconds((int) config('calls.ring_seconds'))->isFuture();
+            && $this->started_at->addSeconds($this->ringWindowSeconds())->isFuture();
+    }
+
+    /**
+     * Calls ring for a while — someone might be mid-task and need a moment
+     * to notice. A sprint match is meant to feel instant, so its accept
+     * window is deliberately much shorter.
+     */
+    private function ringWindowSeconds(): int
+    {
+        return (int) config($this->type === self::TYPE_SPRINT ? 'culture_sprints.accept_seconds' : 'calls.ring_seconds');
     }
 
     public function isTerminal(): bool
@@ -188,6 +205,86 @@ class LiveSession extends Model
     }
 
     /**
+     * Two people just got matched out of the pool. Unlike a call, neither
+     * side has already consented to this specific pairing — both
+     * independently accept via respondToSprint() before it goes live.
+     */
+    public static function startSprintMatch(User $a, User $b, string $cultureWord): self
+    {
+        $session = self::create([
+            'host_id' => $a->id,
+            'callee_id' => $b->id,
+            'room_name' => (string) Str::uuid(),
+            'type' => self::TYPE_SPRINT,
+            'status' => self::STATUS_RINGING,
+            'culture_word' => $cultureWord,
+            'started_at' => now(),
+        ]);
+
+        self::broadcastStatus($session);
+
+        return $session;
+    }
+
+    /**
+     * Either side accepting or declining a matched sprint. The room only
+     * goes live once *both* have accepted — accepting alone just records
+     * that side's readiness and waits.
+     */
+    public function respondToSprint(User $user, bool $accept): void
+    {
+        abort_unless($this->type === self::TYPE_SPRINT, 403);
+        abort_unless($this->isParticipant($user), 403);
+
+        if (! $this->isStillRinging()) {
+            $this->expireIfStale();
+
+            return;
+        }
+
+        if (! $accept) {
+            $this->update(['status' => self::STATUS_DECLINED, 'ended_at' => now()]);
+            self::broadcastStatus($this);
+
+            return;
+        }
+
+        $field = $user->id === $this->host_id ? 'host_accepted_at' : 'callee_accepted_at';
+        $this->update([$field => now()]);
+
+        if ($this->host_accepted_at && $this->callee_accepted_at) {
+            $this->update(['status' => self::STATUS_LIVE, 'answered_at' => now()]);
+        }
+
+        self::broadcastStatus($this);
+    }
+
+    /**
+     * Both turns are up — ends the sprint and awards Bridge Score to both
+     * sides for actually completing it (a bigger bonus when it happened to
+     * cross a heritage line), same "engagement outweighs output" rule the
+     * rest of scoring follows.
+     */
+    public function completeSprint(): void
+    {
+        if ($this->type !== self::TYPE_SPRINT || ! $this->isLive()) {
+            return;
+        }
+
+        $this->update(['status' => self::STATUS_ENDED, 'ended_at' => now()]);
+
+        foreach ([$this->host, $this->callee] as $participant) {
+            $participant->awardBridgeScore('culture_sprint_completed', $this);
+
+            if ($this->host->isCrossHeritageWith($this->callee)) {
+                $participant->awardBridgeScore('culture_sprint_cross_heritage_bonus', $this);
+            }
+        }
+
+        self::broadcastStatus($this);
+    }
+
+    /**
      * The callee answers or declines a still-ringing call.
      */
     public function respondToRing(User $user, bool $accept): void
@@ -241,7 +338,13 @@ class LiveSession extends Model
 
         $this->update(['status' => self::STATUS_MISSED, 'ended_reason' => self::REASON_TIMEOUT, 'ended_at' => now()]);
 
-        SafeNotifier::send($this->callee, new MissedCall($this));
+        // A sprint match is a same-page, real-time-only interaction — if it
+        // times out, whoever's still there sees it live via the broadcast.
+        // There's no "you missed a call" moment worth an async notification
+        // for a random match the way there is for someone calling you by name.
+        if ($this->type === self::TYPE_CALL) {
+            SafeNotifier::send($this->callee, new MissedCall($this));
+        }
 
         self::broadcastStatus($this);
 

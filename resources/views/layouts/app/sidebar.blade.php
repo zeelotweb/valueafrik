@@ -46,6 +46,10 @@
                     <flux:sidebar.item icon="video-camera" :href="route('live.index')" :current="request()->routeIs('live.*')" wire:navigate>
                         {{ __('Live') }}
                     </flux:sidebar.item>
+
+                    <flux:sidebar.item icon="globe-alt" :href="route('culture-sprint.index')" :current="request()->routeIs('culture-sprint.*')" wire:navigate>
+                        {{ __('Culture Sprint') }}
+                    </flux:sidebar.item>
                 </flux:sidebar.group>
             </flux:sidebar.nav>
 

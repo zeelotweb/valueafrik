@@ -42,7 +42,9 @@ class CallStatusUpdated implements ShouldBroadcastNow
     {
         return [
             'session_id' => $this->session->id,
+            'type' => $this->session->type,
             'status' => $this->session->status,
+            'culture_word' => $this->session->culture_word,
             'room_url' => route('live.show', $this->session),
             'host' => [
                 'id' => $this->session->host_id,

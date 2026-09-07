@@ -26,6 +26,8 @@ return [
         'conversation_started' => 3,
         'promoted_to_monitor' => 10,
         'bridge_post_completed' => 5,
+        'culture_sprint_completed' => 3,
+        'culture_sprint_cross_heritage_bonus' => 3,
     ],
 
     /*

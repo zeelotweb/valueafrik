@@ -38,6 +38,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::livewire('live', 'pages::live.index')->name('live.index');
     Route::livewire('live/{liveSession}', 'pages::live.show')->name('live.show');
+
+    Route::livewire('culture-sprint', 'pages::culture-sprint.index')->name('culture-sprint.index');
 });
 
 Route::post('logout', Logout::class)

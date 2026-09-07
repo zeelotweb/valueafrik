@@ -93,6 +93,10 @@ new class extends Component {
 
     public function onCallStatusUpdated(array $event): void
     {
+        if (($event['type'] ?? null) !== LiveSession::TYPE_CALL) {
+            return;
+        }
+
         if (($event['status'] ?? null) === LiveSession::STATUS_RINGING && ($event['callee']['id'] ?? null) === Auth::id()) {
             $this->ringingSessionId = (int) $event['session_id'];
 
