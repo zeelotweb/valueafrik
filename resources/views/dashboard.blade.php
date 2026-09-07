@@ -91,6 +91,14 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
             </a>
         </div>
 
+        <div class="mt-10">
+            <flux:heading size="lg">{{ __('From people you follow') }}</flux:heading>
+            <flux:subheading>{{ __('Their latest posts, bridges, and communities.') }}</flux:subheading>
+            <div class="mt-3">
+                <livewire:pages::dashboard.following-activity :key="'dashboard-following-activity-'.$user->id" />
+            </div>
+        </div>
+
         <div class="mt-10 grid gap-8 lg:grid-cols-2">
             <div class="min-w-0">
                 <flux:heading size="lg">{{ __('Needs your attention') }}</flux:heading>
@@ -137,14 +145,6 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
                 <div class="mt-3">
                     <livewire:pages::dashboard.people-widget :key="'dashboard-people-'.$user->id" />
                 </div>
-            </div>
-        </div>
-
-        <div class="mt-10">
-            <flux:heading size="lg">{{ __('From people you follow') }}</flux:heading>
-            <flux:subheading>{{ __('Their latest posts, bridges, and communities.') }}</flux:subheading>
-            <div class="mt-3">
-                <livewire:pages::dashboard.following-activity :key="'dashboard-following-activity-'.$user->id" />
             </div>
         </div>
 

@@ -115,7 +115,54 @@ new class extends Component {
             </div>
         @endif
     @else
-        <div class="-mx-1 flex snap-x snap-mandatory gap-4 overflow-x-auto px-1 pb-3">
+        <div
+            class="group/gallery relative"
+            x-data="{
+                atStart: true,
+                atEnd: false,
+                showArrows: false,
+                updateEdges() {
+                    this.atStart = $refs.scroller.scrollLeft <= 0;
+                    this.atEnd = $refs.scroller.scrollLeft + $refs.scroller.clientWidth >= $refs.scroller.scrollWidth - 1;
+                },
+                scroll(direction) {
+                    $refs.scroller.scrollBy({ left: direction * 240, behavior: 'smooth' });
+                },
+            }"
+            x-init="updateEdges()"
+            @mouseenter="showArrows = true"
+            @mouseleave="showArrows = false"
+            @touchstart="showArrows = true"
+        >
+            <button
+                type="button"
+                x-show="showArrows && !atStart"
+                x-transition.opacity
+                x-cloak
+                @click="scroll(-1)"
+                class="absolute -left-3 top-1/2 z-10 flex size-9 -translate-y-1/2 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-600 shadow-md hover:text-stone-900 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:text-white"
+                aria-label="{{ __('Scroll left') }}"
+            >
+                <flux:icon.chevron-left class="size-4" />
+            </button>
+
+            <button
+                type="button"
+                x-show="showArrows && !atEnd"
+                x-transition.opacity
+                x-cloak
+                @click="scroll(1)"
+                class="absolute -right-3 top-1/2 z-10 flex size-9 -translate-y-1/2 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-600 shadow-md hover:text-stone-900 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:text-white"
+                aria-label="{{ __('Scroll right') }}"
+            >
+                <flux:icon.chevron-right class="size-4" />
+            </button>
+
+            <div
+                x-ref="scroller"
+                @scroll.debounce.50ms="updateEdges()"
+                class="scrollbar-hide -mx-1 flex snap-x snap-mandatory gap-4 overflow-x-auto px-1 pb-3"
+            >
             @foreach ($liveFriends as $stream)
                 <a
                     href="{{ route('live.show', $stream) }}"
@@ -244,6 +291,7 @@ new class extends Component {
                     </a>
                 @endif
             @endforeach
+            </div>
         </div>
     @endif
 </div>

@@ -92,6 +92,17 @@ select:focus[data-flux-control] {
     }
 }
 
+/* Horizontal card galleries scroll by swipe/arrow buttons, not a visible
+   scrollbar track sitting under them. */
+.scrollbar-hide {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+
 /* \[:where(&)\]:size-4 {
     @apply size-4;
 } */
