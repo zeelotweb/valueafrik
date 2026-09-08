@@ -134,8 +134,12 @@
 
             @case('live')
                 @php $session = $item['session']; @endphp
-                <div class="flex aspect-video items-center justify-center rounded-lg bg-stone-900">
-                    <flux:icon.video-camera class="size-10 text-stone-500" />
+                <div class="relative flex aspect-video items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-orange-600 to-rose-700">
+                    <div class="absolute top-3 left-3 flex items-center gap-1.5 rounded-full bg-black/30 px-2.5 py-1 text-xs font-medium text-white backdrop-blur">
+                        <span class="size-1.5 animate-pulse rounded-full bg-white"></span>
+                        LIVE
+                    </div>
+                    <flux:icon.video-camera class="size-10 text-white/70" />
                 </div>
                 <p class="mt-4 font-medium">{{ $session->title }}</p>
                 <p class="mt-1 text-sm text-stone-500 dark:text-stone-400">hosted by {{ $session->host->name }}</p>
