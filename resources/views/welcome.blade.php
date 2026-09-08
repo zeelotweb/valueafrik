@@ -99,11 +99,28 @@ $pillarColors = [
                                     Real profile, live on valueAFRIK
                                 </span>
 
-                                @foreach ($showcaseItems as $index => $item)
-                                    <div x-show="active === {{ $index }}" x-transition.opacity.duration.500ms>
-                                        @include('partials.welcome-illustration', ['item' => $item])
-                                    </div>
-                                @endforeach
+                                {{-- All items stacked in the same grid cell and always kept in
+                                     flow (never display:none) — the grid row height is the
+                                     tallest item's height, permanently, so switching which one
+                                     is visible is a pure opacity crossfade with zero layout
+                                     shift. x-show + x-transition on toggled siblings here would
+                                     be the more obvious approach, but Alpine can get individual
+                                     items' enter/leave state out of sync when several such
+                                     siblings share one boolean expression (observed: two items
+                                     getting stuck out of sync after the first transition) —
+                                     opacity-only avoids that class of bug entirely. --}}
+                                <div class="grid">
+                                    @foreach ($showcaseItems as $index => $item)
+                                        <div
+                                            class="[grid-area:1/1] transition-opacity duration-500"
+                                            x-bind:class="active === {{ $index }} ? 'opacity-100' : 'opacity-0 pointer-events-none'"
+                                            aria-hidden="{{ $index === 0 ? 'false' : 'true' }}"
+                                            x-bind:aria-hidden="active === {{ $index }} ? 'false' : 'true'"
+                                        >
+                                            @include('partials.welcome-illustration', ['item' => $item])
+                                        </div>
+                                    @endforeach
+                                </div>
 
                                 @if (count($showcaseItems) > 1)
                                     <div class="mt-3 flex items-center justify-center gap-1.5">
