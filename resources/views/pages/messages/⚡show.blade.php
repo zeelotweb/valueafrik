@@ -165,9 +165,12 @@ new #[Title('Messages')] class extends Component {
             <div class="flex flex-col {{ $isMine ? 'items-end' : 'items-start' }}" wire:key="message-{{ $message['id'] }}">
                 <div class="max-w-[75%] rounded-2xl px-4 py-2 {{ $isMine ? 'bg-cyan-600 text-white' : 'bg-stone-100 text-stone-900 dark:bg-stone-800 dark:text-stone-100' }}">
                     @if (! empty($message['media']))
-                        <div class="mb-1 grid gap-1 {{ count($message['media']) > 1 ? 'grid-cols-2' : '' }}">
-                            @foreach ($message['media'] as $media)
-                                <img src="{{ $media['url'] }}" class="max-h-64 w-full rounded-lg object-cover">
+                        @php $mediaUrls = array_column($message['media'], 'url'); @endphp
+                        <div class="mb-1 grid gap-1 {{ count($message['media']) > 1 ? 'grid-cols-2' : '' }}" x-data>
+                            @foreach ($message['media'] as $index => $media)
+                                <button type="button" x-on:click="window.dispatchEvent(new CustomEvent('media-viewer:show', { detail: { images: @js($mediaUrls), index: {{ $index }} } }))" class="block">
+                                    <img src="{{ $media['url'] }}" class="max-h-64 w-full rounded-lg object-cover">
+                                </button>
                             @endforeach
                         </div>
                     @endif

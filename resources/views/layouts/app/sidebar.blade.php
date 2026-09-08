@@ -134,6 +134,10 @@
             <livewire:pages::layout.incoming-call :key="'incoming-call-'.auth()->id()" />
         @endpersist
 
+        @persist('media-viewer')
+            @include('partials.media-viewer')
+        @endpersist
+
         @fluxScripts
     </body>
 </html>

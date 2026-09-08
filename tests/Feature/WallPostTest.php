@@ -79,6 +79,25 @@ test('wall posts are listed on the profile', function () {
         ->assertSee('A visible post');
 });
 
+test('a wall post photo is wrapped in a media-viewer trigger with all the post\'s photo URLs', function () {
+    $user = User::factory()->create();
+    $post = $user->wallPosts()->create(['body' => 'Photo post']);
+    $post->media()->create(['user_id' => $user->id, 'disk' => 'public', 'path' => 'wall-media/one.jpg', 'mime_type' => 'image/jpeg', 'type' => 'image', 'size' => 100]);
+    $post->media()->create(['user_id' => $user->id, 'disk' => 'public', 'path' => 'wall-media/two.jpg', 'mime_type' => 'image/jpeg', 'type' => 'image', 'size' => 100]);
+
+    $html = Livewire::actingAs($user)
+        ->test('pages::profile.wall-posts', ['user' => $user])
+        ->html();
+
+    expect($html)->toContain('media-viewer:show');
+    expect($html)->toContain('wall-media/one.jpg');
+    expect($html)->toContain('wall-media/two.jpg');
+    // Each photo button carries the full gallery plus its own index, so the
+    // lightbox can navigate between this post's photos.
+    expect($html)->toContain('index: 0');
+    expect($html)->toContain('index: 1');
+});
+
 test('rendering the wall post list does not run more queries as the post count grows', function () {
     $user = User::factory()->create();
 
