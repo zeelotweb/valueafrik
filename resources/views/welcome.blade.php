@@ -1,6 +1,5 @@
 <?php
 $showcaseItems = \App\Support\WelcomeShowcase::items();
-$heroItem = count($showcaseItems) > 0 ? $showcaseItems[array_rand($showcaseItems)] : null;
 $countries = \App\Support\WelcomeShowcase::countries();
 
 $pillars = [
@@ -30,8 +29,9 @@ $pillarColors = [
         @include('partials.head')
     </head>
     <body
-        x-data="{ modalOpen: false, active: 0, total: {{ count($showcaseItems) }} }"
+        x-data="{ modalOpen: false, active: 0, total: {{ count($showcaseItems) }}, heroPaused: false }"
         x-on:keydown.escape.window="modalOpen = false"
+        x-init="if (total > 1) { setInterval(() => { if (! modalOpen && ! heroPaused) active = (active + 1) % total }, 5000) }"
         class="min-h-screen bg-stone-50 text-stone-900 antialiased dark:bg-stone-950 dark:text-stone-100"
     >
         @include('partials.marketing-header')
@@ -43,9 +43,9 @@ $pillarColors = [
                      "bridge" — warm meeting cool, nobody depicted, so nothing to
                      misrepresent. Blurred, decorative, ignored by screen readers. --}}
                 <div class="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
-                    <div class="absolute -top-24 -left-24 size-80 rounded-full bg-cyan-300/50 blur-3xl dark:bg-cyan-700/20"></div>
-                    <div class="absolute top-4 -right-16 size-96 rounded-full bg-amber-300/40 blur-3xl dark:bg-amber-700/15"></div>
-                    <div class="absolute bottom-0 left-1/3 size-72 rounded-full bg-rose-300/30 blur-3xl dark:bg-rose-800/15"></div>
+                    <div class="animate-drift absolute -top-24 -left-24 size-80 rounded-full bg-cyan-300/50 blur-3xl dark:bg-cyan-700/20"></div>
+                    <div class="animate-drift absolute top-4 -right-16 size-96 rounded-full bg-amber-300/40 blur-3xl dark:bg-amber-700/15" style="animation-delay: -5s"></div>
+                    <div class="animate-drift absolute bottom-0 left-1/3 size-72 rounded-full bg-rose-300/30 blur-3xl dark:bg-rose-800/15" style="animation-delay: -9s"></div>
 
                     <svg class="absolute inset-x-0 bottom-0 h-40 w-full text-cyan-600/10 dark:text-cyan-400/10" viewBox="0 0 1200 200" preserveAspectRatio="none" fill="none">
                         <path d="M0 160 Q 300 40 600 160 T 1200 160" stroke="currentColor" stroke-width="2" />
@@ -88,19 +88,41 @@ $pillarColors = [
                             </div>
                         </div>
 
-                        @if ($heroItem)
-                            <div class="relative">
+                        @if (count($showcaseItems) > 0)
+                            <div
+                                class="relative"
+                                x-on:mouseenter="heroPaused = true"
+                                x-on:mouseleave="heroPaused = false"
+                            >
                                 <span class="absolute -top-3 -left-3 z-10 flex items-center gap-1.5 rounded-full bg-stone-900 px-3 py-1 text-xs font-medium text-white shadow-sm dark:bg-white dark:text-stone-900">
                                     <span class="size-1.5 rounded-full bg-emerald-400"></span>
                                     Real profile, live on valueAFRIK
                                 </span>
 
-                                @include('partials.welcome-illustration', ['item' => $heroItem])
+                                @foreach ($showcaseItems as $index => $item)
+                                    <div x-show="active === {{ $index }}" x-transition.opacity.duration.500ms>
+                                        @include('partials.welcome-illustration', ['item' => $item])
+                                    </div>
+                                @endforeach
+
+                                @if (count($showcaseItems) > 1)
+                                    <div class="mt-3 flex items-center justify-center gap-1.5">
+                                        @foreach ($showcaseItems as $index => $item)
+                                            <button
+                                                type="button"
+                                                x-on:click="active = {{ $index }}"
+                                                aria-label="Show showcase item {{ $index + 1 }}"
+                                                class="size-1.5 rounded-full transition-all"
+                                                x-bind:class="active === {{ $index }} ? 'w-4 bg-cyan-600 dark:bg-cyan-400' : 'bg-stone-300 dark:bg-stone-700'"
+                                            ></button>
+                                        @endforeach
+                                    </div>
+                                @endif
 
                                 <button
                                     type="button"
-                                    x-on:click="active = 0; modalOpen = true"
-                                    class="mt-4 flex w-full items-center justify-center gap-2 text-sm font-medium text-cyan-600 hover:text-cyan-500 dark:text-cyan-400"
+                                    x-on:click="modalOpen = true"
+                                    class="mt-3 flex w-full items-center justify-center gap-2 text-sm font-medium text-cyan-600 hover:text-cyan-500 dark:text-cyan-400"
                                 >
                                     See how it works
                                     <flux:icon.arrow-right class="size-4" />
@@ -111,9 +133,45 @@ $pillarColors = [
                 </div>
             </section>
 
+            {{-- What we're not — the anti-virality pitch, made explicit instead of implicit --}}
+            <section
+                x-data="{ visible: false }"
+                x-init="const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { visible = true; io.disconnect() } }, { threshold: 0.15 }); io.observe($el)"
+                x-bind:class="{ 'is-visible': visible }"
+                class="scroll-reveal bg-stone-900 py-12 dark:bg-black"
+            >
+                <div class="mx-auto max-w-4xl px-6">
+                    <p class="text-center text-xs font-medium tracking-widest text-stone-500 uppercase">
+                        What you won't find here
+                    </p>
+                    <div class="mt-6 grid gap-4 sm:grid-cols-3">
+                        <div class="flex items-center justify-center gap-2 text-stone-300">
+                            <flux:icon.x-circle class="size-4 shrink-0 text-rose-500" />
+                            <span>An algorithm deciding who you see</span>
+                        </div>
+                        <div class="flex items-center justify-center gap-2 text-stone-300">
+                            <flux:icon.x-circle class="size-4 shrink-0 text-rose-500" />
+                            <span>Follower-count pressure</span>
+                        </div>
+                        <div class="flex items-center justify-center gap-2 text-stone-300">
+                            <flux:icon.x-circle class="size-4 shrink-0 text-rose-500" />
+                            <span>Infinite scroll built to keep you here</span>
+                        </div>
+                    </div>
+                    <p class="mt-6 text-center text-sm font-medium text-cyan-400">
+                        Just real people, real curiosity, and bridges worth building.
+                    </p>
+                </div>
+            </section>
+
             {{-- Cultures already here --}}
             @if (count($countries) > 0)
-                <section class="relative overflow-hidden border-y border-stone-200 bg-gradient-to-r from-cyan-50 via-white to-amber-50 py-8 dark:border-stone-800 dark:from-cyan-950/30 dark:via-stone-900/40 dark:to-amber-950/20">
+                <section
+                    x-data="{ visible: false }"
+                    x-init="const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { visible = true; io.disconnect() } }, { threshold: 0.15 }); io.observe($el)"
+                    x-bind:class="{ 'is-visible': visible }"
+                    class="scroll-reveal relative overflow-hidden border-y border-stone-200 bg-gradient-to-r from-cyan-50 via-white to-amber-50 py-8 dark:border-stone-800 dark:from-cyan-950/30 dark:via-stone-900/40 dark:to-amber-950/20"
+                >
                     <div class="mx-auto flex max-w-6xl flex-col items-center gap-3 px-6 text-center">
                         <p class="text-xs font-medium tracking-widest text-stone-400 uppercase dark:text-stone-600">
                             Already on valueAFRIK
@@ -135,7 +193,12 @@ $pillarColors = [
             @endif
 
             {{-- Pillars --}}
-            <section class="mx-auto max-w-6xl px-6 py-20">
+            <section
+                x-data="{ visible: false }"
+                x-init="const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { visible = true; io.disconnect() } }, { threshold: 0.1 }); io.observe($el)"
+                x-bind:class="{ 'is-visible': visible }"
+                class="scroll-reveal mx-auto max-w-6xl px-6 py-20"
+            >
                 <div class="mx-auto max-w-2xl text-center">
                     <p class="text-sm font-medium tracking-widest text-cyan-600 uppercase dark:text-cyan-400">
                         What you can do here
@@ -178,7 +241,12 @@ $pillarColors = [
             </section>
 
             {{-- Why it's different --}}
-            <section class="relative overflow-hidden border-t border-stone-200 bg-white py-20 dark:border-stone-800 dark:bg-stone-900/40">
+            <section
+                x-data="{ visible: false }"
+                x-init="const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { visible = true; io.disconnect() } }, { threshold: 0.1 }); io.observe($el)"
+                x-bind:class="{ 'is-visible': visible }"
+                class="scroll-reveal relative overflow-hidden border-t border-stone-200 bg-white py-20 dark:border-stone-800 dark:bg-stone-900/40"
+            >
                 <div
                     class="pointer-events-none absolute inset-0 -z-10 opacity-[0.4] dark:opacity-[0.15]"
                     aria-hidden="true"
@@ -231,7 +299,12 @@ $pillarColors = [
             </section>
 
             {{-- Final CTA --}}
-            <section class="mx-auto max-w-6xl px-6 py-20">
+            <section
+                x-data="{ visible: false }"
+                x-init="const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { visible = true; io.disconnect() } }, { threshold: 0.1 }); io.observe($el)"
+                x-bind:class="{ 'is-visible': visible }"
+                class="scroll-reveal mx-auto max-w-6xl px-6 py-20"
+            >
                 <div class="relative flex flex-col items-center gap-6 overflow-hidden rounded-3xl bg-gradient-to-br from-cyan-600 to-cyan-800 px-8 py-14 text-center shadow-lg">
                     <div class="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
                         <div class="absolute -top-10 -right-10 size-56 rounded-full bg-amber-400/20 blur-3xl"></div>

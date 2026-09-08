@@ -103,6 +103,37 @@ select:focus[data-flux-control] {
     display: none;
 }
 
+/* Slow, subtle drift for decorative background blobs (welcome page hero) —
+   barely perceptible, just enough to read as "alive" rather than static. */
+@keyframes drift {
+    0%, 100% {
+        transform: translate(0, 0) scale(1);
+    }
+    50% {
+        transform: translate(3%, -4%) scale(1.05);
+    }
+}
+
+.animate-drift {
+    animation: drift 14s ease-in-out infinite;
+}
+
+/* Scroll-reveal: sections start faded/offset and settle into place once
+   the [x-intersect] directive below adds .is-visible. Respects reduced
+   motion by skipping straight to the visible state. */
+@media (prefers-reduced-motion: no-preference) {
+    .scroll-reveal {
+        opacity: 0;
+        transform: translateY(16px);
+        transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    }
+
+    .scroll-reveal.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 /* \[:where(&)\]:size-4 {
     @apply size-4;
 } */
