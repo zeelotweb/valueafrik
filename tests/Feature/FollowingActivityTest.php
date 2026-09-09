@@ -162,6 +162,41 @@ test('a wall post photo opens the media viewer instead of navigating, while the 
     expect($html)->toContain('href="'.route('profile.show', $followed).'"');
 });
 
+test('the card thumbnail is only the first photo, but the media viewer opens with every photo on the post', function () {
+    $viewer = User::factory()->create();
+    $followed = User::factory()->create(['name' => 'Multi Photo Poster']);
+    $viewer->following()->attach($followed->id);
+
+    $post = WallPost::create(['user_id' => $followed->id, 'body' => 'Photo post']);
+    $post->media()->create([
+        'user_id' => $followed->id,
+        'disk' => 'public',
+        'path' => 'wall-media/first.jpg',
+        'mime_type' => 'image/jpeg',
+        'type' => 'image',
+        'size' => 100,
+    ]);
+    $post->media()->create([
+        'user_id' => $followed->id,
+        'disk' => 'public',
+        'path' => 'wall-media/second.jpg',
+        'mime_type' => 'image/jpeg',
+        'type' => 'image',
+        'size' => 100,
+    ]);
+
+    $html = Livewire::actingAs($viewer)
+        ->test('pages::dashboard.following-activity')
+        ->html();
+
+    // The visible <img> thumbnail is only the first photo...
+    expect($html)->toContain('src="'.$post->media()->first()->url().'"');
+    // ...but the dispatched gallery for the lightbox carries both — checked
+    // without the slash, since @js() JSON-encodes it as "wall-media\/second.jpg".
+    expect($html)->toContain('first.jpg');
+    expect($html)->toContain('second.jpg');
+});
+
 test('a wall post with no photo still navigates to the profile from the media area', function () {
     $viewer = User::factory()->create();
     $followed = User::factory()->create(['name' => 'Text Only Poster']);

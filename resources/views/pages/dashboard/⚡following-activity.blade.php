@@ -46,6 +46,10 @@ new class extends Component {
                 'timestamp' => $post->created_at,
                 'user' => $post->user,
                 'photo' => $post->media->first()?->url(),
+                // The card only ever shows the first photo as a thumbnail,
+                // but the lightbox opened from it should let you browse
+                // every photo actually on the post, not just that one.
+                'photos' => $post->media->map->url()->all(),
                 'excerpt' => $post->body ? Str::limit($post->body, 110) : __('Shared a photo.'),
                 'url' => route('profile.show', $post->user),
             ]);
@@ -70,6 +74,7 @@ new class extends Component {
                 'user' => $post->user,
                 'community' => $post->community,
                 'photo' => $post->media->first()?->url(),
+                'photos' => $post->media->map->url()->all(),
                 'excerpt' => $post->body ? Str::limit($post->body, 110) : __('Shared a photo.'),
                 'url' => route('communities.show', $post->community),
             ]);
@@ -260,7 +265,7 @@ new class extends Component {
                             <button
                                 type="button"
                                 x-data
-                                x-on:click="window.dispatchEvent(new CustomEvent('media-viewer:show', { detail: { images: @js([$item['photo']]), index: 0 } }))"
+                                x-on:click="window.dispatchEvent(new CustomEvent('media-viewer:show', { detail: { images: @js($item['photos']), index: 0 } }))"
                                 class="relative flex h-32 shrink-0 items-center justify-center overflow-hidden"
                             >
                                 <img src="{{ $item['photo'] }}" class="absolute inset-0 size-full object-cover">
