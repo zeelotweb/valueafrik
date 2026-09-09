@@ -211,11 +211,12 @@ new class extends Component {
 
             @foreach ($items as $item)
                 @if ($item['type'] === 'bridge_post')
-                    <a
-                        href="{{ $item['url'] }}"
-                        wire:navigate
+                    {{-- Each person's avatar/name links to their own profile —
+                         not one shared link, which used to send you to the
+                         wrong person if you clicked the partner's side. --}}
+                    <div
                         wire:key="following-activity-bridge-{{ $item['initiator']->id }}-{{ $item['timestamp'] }}"
-                        class="group flex h-72 w-56 shrink-0 snap-start flex-col overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg dark:border-stone-800 dark:bg-stone-900"
+                        class="flex h-72 w-56 shrink-0 snap-start flex-col overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm dark:border-stone-800 dark:bg-stone-900"
                     >
                         <div class="relative flex h-32 shrink-0 items-center justify-center bg-gradient-to-br from-rose-100 to-amber-50 dark:from-rose-950 dark:to-stone-900">
                             <span class="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-rose-700 dark:bg-stone-900/80 dark:text-rose-400">
@@ -223,7 +224,7 @@ new class extends Component {
                             </span>
                             <div class="flex -space-x-3">
                                 @foreach ([$item['initiator'], $item['partner']] as $person)
-                                    <div class="size-12 shrink-0 overflow-hidden rounded-full border-2 border-white bg-stone-200 dark:border-stone-900 dark:bg-stone-700">
+                                    <a href="{{ route('profile.show', $person) }}" wire:navigate class="size-12 shrink-0 overflow-hidden rounded-full border-2 border-white bg-stone-200 dark:border-stone-900 dark:bg-stone-700">
                                         @if ($person->profile?->avatarUrl())
                                             <img src="{{ $person->profile->avatarUrl() }}" class="size-full object-cover">
                                         @else
@@ -231,21 +232,23 @@ new class extends Component {
                                                 <flux:icon.user class="size-5" />
                                             </div>
                                         @endif
-                                    </div>
+                                    </a>
                                 @endforeach
                             </div>
                         </div>
 
                         <div class="flex flex-1 flex-col gap-1 p-4">
                             <p class="truncate text-sm font-semibold text-stone-900 dark:text-white">
-                                {{ $item['initiator']->name }} &amp; {{ $item['partner']->name }}
+                                <a href="{{ route('profile.show', $item['initiator']) }}" wire:navigate class="hover:underline">{{ $item['initiator']->name }}</a>
+                                &amp;
+                                <a href="{{ route('profile.show', $item['partner']) }}" wire:navigate class="hover:underline">{{ $item['partner']->name }}</a>
                             </p>
                             <p class="line-clamp-3 flex-1 text-xs text-stone-500 dark:text-stone-400">
                                 {{ __('Comparing') }} {{ $item['theme'] }}
                             </p>
                             <p class="text-[11px] text-stone-400 dark:text-stone-500">{{ $item['timestamp']->diffForHumans() }}</p>
                         </div>
-                    </a>
+                    </div>
                 @else
                     <div
                         wire:key="following-activity-{{ $item['type'] }}-{{ $item['user']->id }}-{{ $item['timestamp'] }}"
@@ -298,8 +301,11 @@ new class extends Component {
                             </a>
                         @endif
 
-                        <a href="{{ $item['url'] }}" wire:navigate class="flex flex-1 flex-col gap-2 p-4">
-                            <div class="flex items-center gap-2">
+                        <div class="flex flex-1 flex-col gap-2 p-4">
+                            {{-- Always the person's own profile — for a
+                                 community post, $item['url'] below points at
+                                 the community, not them. --}}
+                            <a href="{{ route('profile.show', $item['user']) }}" wire:navigate class="flex items-center gap-2">
                                 <div class="size-6 shrink-0 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
                                     @if ($item['user']->profile?->avatarUrl())
                                         <img src="{{ $item['user']->profile->avatarUrl() }}" class="size-full object-cover">
@@ -309,12 +315,14 @@ new class extends Component {
                                         </div>
                                     @endif
                                 </div>
-                                <span class="truncate text-sm font-semibold text-stone-900 dark:text-white">{{ $item['user']->name }}</span>
-                            </div>
+                                <span class="truncate text-sm font-semibold text-stone-900 hover:underline dark:text-white">{{ $item['user']->name }}</span>
+                            </a>
 
-                            <p class="line-clamp-3 flex-1 text-xs text-stone-600 dark:text-stone-400">{{ $item['excerpt'] }}</p>
-                            <p class="text-[11px] text-stone-400 dark:text-stone-500">{{ $item['timestamp']->diffForHumans() }}</p>
-                        </a>
+                            <a href="{{ $item['url'] }}" wire:navigate class="flex flex-1 flex-col gap-2">
+                                <p class="line-clamp-3 flex-1 text-xs text-stone-600 dark:text-stone-400">{{ $item['excerpt'] }}</p>
+                                <p class="text-[11px] text-stone-400 dark:text-stone-500">{{ $item['timestamp']->diffForHumans() }}</p>
+                            </a>
+                        </div>
                     </div>
                 @endif
             @endforeach

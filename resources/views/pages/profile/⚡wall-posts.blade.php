@@ -56,7 +56,7 @@ new class extends Component {
         <div class="rounded-xl bg-white border border-stone-200 p-4 dark:bg-stone-900 dark:border-stone-800" wire:key="wall-post-{{ $post->id }}">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <div class="size-10 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
+                    <a href="{{ route('profile.show', $post->user) }}" wire:navigate class="size-10 shrink-0 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
                         @if ($post->user->profile?->avatarUrl())
                             <img src="{{ $post->user->profile->avatarUrl() }}" class="size-full object-cover">
                         @else
@@ -64,9 +64,9 @@ new class extends Component {
                                 <flux:icon.user class="size-5" />
                             </div>
                         @endif
-                    </div>
+                    </a>
                     <div>
-                        <div class="font-medium text-stone-900 dark:text-white">{{ $post->user->name }}</div>
+                        <a href="{{ route('profile.show', $post->user) }}" wire:navigate class="font-medium text-stone-900 hover:underline dark:text-white">{{ $post->user->name }}</a>
                         <div class="text-xs text-stone-500 dark:text-stone-400">{{ $post->created_at->diffForHumans() }}</div>
                     </div>
                 </div>

@@ -168,19 +168,32 @@ new #[Title('Live')] class extends Component {
             x-init="tick(); let interval = setInterval(tick, 1000); $cleanup(() => clearInterval(interval))"
             class="mt-10 flex flex-col items-center gap-4 rounded-xl border border-stone-200 bg-white p-10 text-center dark:border-stone-800 dark:bg-stone-900"
         >
-            <div class="size-20 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
-                @if ($this->otherParty?->profile?->avatarUrl())
-                    <img src="{{ $this->otherParty->profile->avatarUrl() }}" class="size-full object-cover">
-                @else
+            @if ($this->otherParty)
+                <a href="{{ route('profile.show', $this->otherParty) }}" wire:navigate class="size-20 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
+                    @if ($this->otherParty->profile?->avatarUrl())
+                        <img src="{{ $this->otherParty->profile->avatarUrl() }}" class="size-full object-cover">
+                    @else
+                        <div class="flex size-full items-center justify-center text-stone-500">
+                            <flux:icon.user class="size-8" />
+                        </div>
+                    @endif
+                </a>
+            @else
+                <div class="size-20 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
                     <div class="flex size-full items-center justify-center text-stone-500">
                         <flux:icon.user class="size-8" />
                     </div>
-                @endif
-            </div>
+                </div>
+            @endif
 
             @if ($this->isCallee)
                 <div>
-                    <p class="text-lg font-semibold text-stone-900 dark:text-white">{{ $this->otherParty?->name }} {{ __('is calling you') }}</p>
+                    <p class="text-lg font-semibold text-stone-900 dark:text-white">
+                        @if ($this->otherParty)
+                            <a href="{{ route('profile.show', $this->otherParty) }}" wire:navigate class="hover:underline">{{ $this->otherParty->name }}</a>
+                        @endif
+                        {{ __('is calling you') }}
+                    </p>
                     <p class="mt-1 text-sm text-stone-500 dark:text-stone-400" x-text="secondsLeft + ' {{ __('s') }}'"></p>
                 </div>
 
@@ -194,7 +207,13 @@ new #[Title('Live')] class extends Component {
                 </div>
             @else
                 <div>
-                    <p class="text-lg font-semibold text-stone-900 dark:text-white">{{ __('Calling') }} {{ $this->otherParty?->name }}…</p>
+                    <p class="text-lg font-semibold text-stone-900 dark:text-white">
+                        {{ __('Calling') }}
+                        @if ($this->otherParty)
+                            <a href="{{ route('profile.show', $this->otherParty) }}" wire:navigate class="hover:underline">{{ $this->otherParty->name }}</a>
+                        @endif
+                        …
+                    </p>
                     <p class="mt-1 text-sm text-stone-500 dark:text-stone-400" x-text="secondsLeft + ' {{ __('s') }}'"></p>
                 </div>
 

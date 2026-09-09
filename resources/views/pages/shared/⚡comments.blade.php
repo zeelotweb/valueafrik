@@ -82,7 +82,7 @@ new class extends Component {
         <div class="mt-3 space-y-3 border-t border-stone-200 pt-3 dark:border-stone-800">
             @forelse ($this->comments as $comment)
                 <div class="flex items-start gap-2" wire:key="comment-{{ $comment->id }}">
-                    <div class="size-7 shrink-0 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
+                    <a href="{{ route('profile.show', $comment->user) }}" wire:navigate class="size-7 shrink-0 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
                         @if ($comment->user->profile?->avatarUrl())
                             <img src="{{ $comment->user->profile->avatarUrl() }}" class="size-full object-cover">
                         @else
@@ -90,11 +90,11 @@ new class extends Component {
                                 <flux:icon.user class="size-3.5" />
                             </div>
                         @endif
-                    </div>
+                    </a>
 
                     <div class="min-w-0 flex-1 rounded-lg bg-stone-100 px-3 py-2 dark:bg-stone-800">
                         <div class="flex items-center justify-between gap-2">
-                            <span class="truncate text-sm font-medium text-stone-900 dark:text-white">{{ $comment->user->name }}</span>
+                            <a href="{{ route('profile.show', $comment->user) }}" wire:navigate class="truncate text-sm font-medium text-stone-900 hover:underline dark:text-white">{{ $comment->user->name }}</a>
                             <div class="flex shrink-0 items-center gap-2">
                                 <span class="text-xs text-stone-400 dark:text-stone-500">{{ $comment->created_at->diffForHumans(null, true) }}</span>
                                 @if ($comment->user_id === Auth::id())

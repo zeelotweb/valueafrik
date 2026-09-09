@@ -135,19 +135,29 @@ new #[Title('Messages')] class extends Component {
     <div class="flex items-center gap-3 border-b border-stone-200 pb-4 dark:border-stone-800">
         <flux:button :href="route('messages.index')" wire:navigate size="sm" variant="ghost" icon="arrow-left" />
 
-        <div class="size-9 shrink-0 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
-            @if ($otherParticipant?->profile?->avatarUrl())
-                <img src="{{ $otherParticipant->profile->avatarUrl() }}" class="size-full object-cover">
-            @else
+        @if ($otherParticipant)
+            <a href="{{ route('profile.show', $otherParticipant) }}" wire:navigate class="size-9 shrink-0 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
+                @if ($otherParticipant->profile?->avatarUrl())
+                    <img src="{{ $otherParticipant->profile->avatarUrl() }}" class="size-full object-cover">
+                @else
+                    <div class="flex size-full items-center justify-center text-stone-500">
+                        <flux:icon.user class="size-4" />
+                    </div>
+                @endif
+            </a>
+
+            <flux:link :href="route('profile.show', $otherParticipant)" wire:navigate class="min-w-0 flex-1 truncate font-medium text-stone-900 dark:text-white">
+                {{ $otherParticipant->name }}
+            </flux:link>
+        @else
+            <div class="size-9 shrink-0 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
                 <div class="flex size-full items-center justify-center text-stone-500">
                     <flux:icon.user class="size-4" />
                 </div>
-            @endif
-        </div>
+            </div>
 
-        <flux:link :href="route('profile.show', $otherParticipant)" wire:navigate class="min-w-0 flex-1 truncate font-medium text-stone-900 dark:text-white">
-            {{ $otherParticipant?->name ?? __('Unknown') }}
-        </flux:link>
+            <span class="min-w-0 flex-1 truncate font-medium text-stone-900 dark:text-white">{{ __('Unknown') }}</span>
+        @endif
 
         <flux:button wire:click="startCall" wire:loading.attr="disabled" size="sm" variant="ghost" icon="video-camera" data-test="start-call-button">
             <span class="hidden sm:inline">{{ __('Call') }}</span>

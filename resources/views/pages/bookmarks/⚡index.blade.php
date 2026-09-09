@@ -62,7 +62,7 @@ new #[Title('Bookmarks')] class extends Component {
             <div class="rounded-xl bg-white border border-stone-200 p-4 dark:bg-stone-900 dark:border-stone-800" wire:key="bookmarked-{{ get_class($post) }}-{{ $post->id }}">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
-                        <div class="size-10 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
+                        <a href="{{ route('profile.show', $post->user) }}" wire:navigate class="size-10 shrink-0 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
                             @if ($post->user->profile?->avatarUrl())
                                 <img src="{{ $post->user->profile->avatarUrl() }}" class="size-full object-cover">
                             @else
@@ -70,10 +70,10 @@ new #[Title('Bookmarks')] class extends Component {
                                     <flux:icon.user class="size-5" />
                                 </div>
                             @endif
-                        </div>
+                        </a>
                         <div>
                             <div class="font-medium text-stone-900 dark:text-white">
-                                {{ $post->user->name }}
+                                <a href="{{ route('profile.show', $post->user) }}" wire:navigate class="hover:underline">{{ $post->user->name }}</a>
                                 @if ($isCommunityPost)
                                     <span class="font-normal text-stone-500 dark:text-stone-400">{{ __('in') }}</span>
                                     <a href="{{ route('communities.show', $post->community) }}" wire:navigate class="text-cyan-600 hover:text-cyan-500 dark:text-cyan-400">

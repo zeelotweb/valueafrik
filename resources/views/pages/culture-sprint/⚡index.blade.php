@@ -347,17 +347,19 @@ new #[Title('Culture Sprint')] class extends Component {
                     {{ __('Matched!') }}
                 </span>
 
-                <div class="size-16 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
-                    @if ($this->otherParty?->profile?->avatarUrl())
-                        <img src="{{ $this->otherParty->profile->avatarUrl() }}" class="size-full object-cover">
-                    @else
-                        <div class="flex size-full items-center justify-center text-stone-500">
-                            <flux:icon.user class="size-7" />
-                        </div>
-                    @endif
-                </div>
+                @if ($this->otherParty)
+                    <a href="{{ route('profile.show', $this->otherParty) }}" wire:navigate class="size-16 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
+                        @if ($this->otherParty->profile?->avatarUrl())
+                            <img src="{{ $this->otherParty->profile->avatarUrl() }}" class="size-full object-cover">
+                        @else
+                            <div class="flex size-full items-center justify-center text-stone-500">
+                                <flux:icon.user class="size-7" />
+                            </div>
+                        @endif
+                    </a>
 
-                <p class="text-lg font-semibold text-stone-900 dark:text-white">{{ $this->otherParty?->name }}</p>
+                    <a href="{{ route('profile.show', $this->otherParty) }}" wire:navigate class="text-lg font-semibold text-stone-900 hover:underline dark:text-white">{{ $this->otherParty->name }}</a>
+                @endif
 
                 <div class="rounded-lg bg-stone-100 px-4 py-2 dark:bg-stone-800">
                     <p class="text-xs text-stone-500 dark:text-stone-400">{{ __('Topic') }}</p>
@@ -469,7 +471,7 @@ new #[Title('Culture Sprint')] class extends Component {
 
                 @if ($this->otherParty)
                     <div class="mt-2 flex items-center gap-3 rounded-lg bg-stone-100 px-4 py-3 dark:bg-stone-800">
-                        <div class="size-10 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
+                        <a href="{{ route('profile.show', $this->otherParty) }}" wire:navigate class="size-10 shrink-0 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
                             @if ($this->otherParty->profile?->avatarUrl())
                                 <img src="{{ $this->otherParty->profile->avatarUrl() }}" class="size-full object-cover">
                             @else
@@ -477,8 +479,8 @@ new #[Title('Culture Sprint')] class extends Component {
                                     <flux:icon.user class="size-5" />
                                 </div>
                             @endif
-                        </div>
-                        <p class="font-medium text-stone-900 dark:text-white">{{ $this->otherParty->name }}</p>
+                        </a>
+                        <a href="{{ route('profile.show', $this->otherParty) }}" wire:navigate class="font-medium text-stone-900 hover:underline dark:text-white">{{ $this->otherParty->name }}</a>
                         <livewire:pages::profile.follow-button :user="$this->otherParty" :icon-only="true" :key="'sprint-follow-'.$this->otherParty->id" />
                     </div>
                 @endif

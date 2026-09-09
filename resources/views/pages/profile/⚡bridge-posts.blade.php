@@ -111,7 +111,7 @@ new class extends Component {
                 ] as $column)
                     <div class="p-4">
                         <div class="flex items-center gap-2">
-                            <div class="size-8 shrink-0 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
+                            <a href="{{ route('profile.show', $column['user']) }}" wire:navigate class="size-8 shrink-0 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
                                 @if ($column['user']->profile?->avatarUrl())
                                     <img src="{{ $column['user']->profile->avatarUrl() }}" class="size-full object-cover">
                                 @else
@@ -119,8 +119,8 @@ new class extends Component {
                                         <flux:icon.user class="size-4" />
                                     </div>
                                 @endif
-                            </div>
-                            <span class="text-sm font-medium text-stone-900 dark:text-white">{{ $column['user']->name }}</span>
+                            </a>
+                            <a href="{{ route('profile.show', $column['user']) }}" wire:navigate class="text-sm font-medium text-stone-900 hover:underline dark:text-white">{{ $column['user']->name }}</a>
                         </div>
 
                         @if ($column['body'])

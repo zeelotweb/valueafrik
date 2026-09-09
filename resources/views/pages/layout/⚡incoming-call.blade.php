@@ -139,7 +139,7 @@ new class extends Component {
             class="fixed inset-x-0 bottom-4 z-50 mx-auto flex w-[calc(100%-2rem)] max-w-sm items-center gap-3 rounded-2xl border border-stone-200 bg-white p-4 shadow-xl dark:border-stone-800 dark:bg-stone-900"
             data-test="incoming-call-ringer"
         >
-            <div class="size-12 shrink-0 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
+            <a href="{{ route('profile.show', $this->call->host) }}" wire:navigate class="size-12 shrink-0 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
                 @if ($this->call->host->profile?->avatarUrl())
                     <img src="{{ $this->call->host->profile->avatarUrl() }}" class="size-full object-cover">
                 @else
@@ -147,10 +147,10 @@ new class extends Component {
                         <flux:icon.user class="size-5" />
                     </div>
                 @endif
-            </div>
+            </a>
 
             <div class="min-w-0 flex-1">
-                <p class="truncate font-medium text-stone-900 dark:text-white">{{ $this->call->host->name }}</p>
+                <a href="{{ route('profile.show', $this->call->host) }}" wire:navigate class="block truncate font-medium text-stone-900 hover:underline dark:text-white">{{ $this->call->host->name }}</a>
                 <p class="text-xs text-stone-500 dark:text-stone-400">{{ __('Incoming call…') }}</p>
             </div>
 
