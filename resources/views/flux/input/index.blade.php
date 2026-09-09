@@ -111,8 +111,11 @@ $classes = Flux::classes()
         5 => 'pe-37',
         6 => 'pe-44',
     })
-    ->add(match ($variant) { // Background...
-        'outline' => 'bg-white dark:bg-white/10 dark:disabled:bg-white/[7%]',
+    ->add(match ($variant) { // Background — faded cyan fill, no border; a
+        // darker shade of the same fill signals focus/active, and a red
+        // fill (same mechanic) signals a validation error, uniformly
+        // across every text field on the platform.
+        'outline' => 'bg-cyan-50 focus:bg-cyan-100 dark:bg-cyan-950/40 dark:focus:bg-cyan-950/70 dark:disabled:bg-white/[7%]',
         'filled'  => 'bg-zinc-800/5 dark:bg-white/10 dark:disabled:bg-white/[7%]',
     })
     ->add(match ($variant) { // Text color
@@ -120,11 +123,11 @@ $classes = Flux::classes()
         'filled'  => 'text-zinc-700 placeholder-zinc-500 disabled:placeholder-zinc-400 dark:text-zinc-200 dark:placeholder-white/60 dark:disabled:placeholder-white/40',
     })
     ->add(match ($variant) { // Border...
-        'outline' => 'shadow-xs border-zinc-200 border-b-zinc-300/80 disabled:border-b-zinc-200 dark:border-white/10 dark:disabled:border-white/5',
+        'outline' => 'border-0 shadow-none',
         'filled'  => 'border-0',
     })
     ->add(match ($variant) { // Invalid...
-        'outline' => 'data-invalid:shadow-none data-invalid:border-red-500 dark:data-invalid:border-red-500 disabled:data-invalid:border-red-500 dark:disabled:data-invalid:border-red-500',
+        'outline' => 'data-invalid:bg-red-50 data-invalid:focus:bg-red-100 dark:data-invalid:bg-red-950/40 dark:data-invalid:focus:bg-red-950/70',
         'filled' => 'data-invalid:border-red-500'
     })
     ->add($attributes->pluck('class:input'))
