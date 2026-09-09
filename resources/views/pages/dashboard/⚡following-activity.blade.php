@@ -247,38 +247,58 @@ new class extends Component {
                         </div>
                     </a>
                 @else
-                    <a
-                        href="{{ $item['url'] }}"
-                        wire:navigate
+                    <div
                         wire:key="following-activity-{{ $item['type'] }}-{{ $item['user']->id }}-{{ $item['timestamp'] }}"
                         class="group flex h-72 w-56 shrink-0 snap-start flex-col overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg dark:border-stone-800 dark:bg-stone-900"
                     >
-                        <div @class([
-                            'relative flex h-32 shrink-0 items-center justify-center overflow-hidden',
-                            'bg-gradient-to-br from-cyan-100 to-cyan-50 dark:from-cyan-950 dark:to-stone-900' => $item['type'] === 'wall_post' && ! $item['photo'],
-                            'bg-gradient-to-br from-amber-100 to-amber-50 dark:from-amber-950 dark:to-stone-900' => $item['type'] === 'community_post' && ! $item['photo'],
-                        ])>
-                            @if ($item['photo'])
+                        @if ($item['photo'])
+                            {{-- The photo itself opens the full-size lightbox — the rest of
+                                 the card still navigates to the profile/community below. --}}
+                            <button
+                                type="button"
+                                x-data
+                                x-on:click="window.dispatchEvent(new CustomEvent('media-viewer:show', { detail: { images: @js([$item['photo']]), index: 0 } }))"
+                                class="relative flex h-32 shrink-0 items-center justify-center overflow-hidden"
+                            >
                                 <img src="{{ $item['photo'] }}" class="absolute inset-0 size-full object-cover">
                                 <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
-                            @else
+
+                                <span @class([
+                                    'absolute left-3 top-3 rounded-full px-2.5 py-1 text-[11px] font-semibold',
+                                    'bg-white/90 dark:bg-stone-900/80' => true,
+                                    'text-cyan-700 dark:text-cyan-400' => $item['type'] === 'wall_post',
+                                    'text-amber-700 dark:text-amber-400' => $item['type'] === 'community_post',
+                                ])>
+                                    {{ $item['type'] === 'community_post' ? $item['community']->name : __('Wall') }}
+                                </span>
+                            </button>
+                        @else
+                            <a
+                                href="{{ $item['url'] }}"
+                                wire:navigate
+                                @class([
+                                    'relative flex h-32 shrink-0 items-center justify-center',
+                                    'bg-gradient-to-br from-cyan-100 to-cyan-50 dark:from-cyan-950 dark:to-stone-900' => $item['type'] === 'wall_post',
+                                    'bg-gradient-to-br from-amber-100 to-amber-50 dark:from-amber-950 dark:to-stone-900' => $item['type'] === 'community_post',
+                                ])
+                            >
                                 <flux:icon
                                     :icon="$item['type'] === 'community_post' ? 'user-group' : 'pencil-square'"
                                     class="size-10 {{ $item['type'] === 'community_post' ? 'text-amber-300 dark:text-amber-800' : 'text-cyan-300 dark:text-cyan-800' }}"
                                 />
-                            @endif
 
-                            <span @class([
-                                'absolute left-3 top-3 rounded-full px-2.5 py-1 text-[11px] font-semibold',
-                                'bg-white/90 dark:bg-stone-900/80' => true,
-                                'text-cyan-700 dark:text-cyan-400' => $item['type'] === 'wall_post',
-                                'text-amber-700 dark:text-amber-400' => $item['type'] === 'community_post',
-                            ])>
-                                {{ $item['type'] === 'community_post' ? $item['community']->name : __('Wall') }}
-                            </span>
-                        </div>
+                                <span @class([
+                                    'absolute left-3 top-3 rounded-full px-2.5 py-1 text-[11px] font-semibold',
+                                    'bg-white/90 dark:bg-stone-900/80' => true,
+                                    'text-cyan-700 dark:text-cyan-400' => $item['type'] === 'wall_post',
+                                    'text-amber-700 dark:text-amber-400' => $item['type'] === 'community_post',
+                                ])>
+                                    {{ $item['type'] === 'community_post' ? $item['community']->name : __('Wall') }}
+                                </span>
+                            </a>
+                        @endif
 
-                        <div class="flex flex-1 flex-col gap-2 p-4">
+                        <a href="{{ $item['url'] }}" wire:navigate class="flex flex-1 flex-col gap-2 p-4">
                             <div class="flex items-center gap-2">
                                 <div class="size-6 shrink-0 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
                                     @if ($item['user']->profile?->avatarUrl())
@@ -294,8 +314,8 @@ new class extends Component {
 
                             <p class="line-clamp-3 flex-1 text-xs text-stone-600 dark:text-stone-400">{{ $item['excerpt'] }}</p>
                             <p class="text-[11px] text-stone-400 dark:text-stone-500">{{ $item['timestamp']->diffForHumans() }}</p>
-                        </div>
-                    </a>
+                        </a>
+                    </div>
                 @endif
             @endforeach
             </div>

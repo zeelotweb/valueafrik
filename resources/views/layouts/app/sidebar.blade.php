@@ -1,3 +1,12 @@
+<?php
+    // Flux's own sidebar.group heading is hardcoded to a muted
+    // text-zinc-400 with no color prop to override — passing an Htmlable
+    // heading is the supported way to control its color, since Blade's
+    // {{ }} skips escaping for anything implementing Htmlable.
+    $darkHeading = fn (string $text) => new Illuminate\Support\HtmlString(
+        '<span class="text-stone-900 dark:text-white">'.e(__($text)).'</span>'
+    );
+?>
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
     <head>
@@ -16,14 +25,9 @@
             </flux:sidebar.header>
 
             <flux:sidebar.nav>
-                <flux:sidebar.group :heading="__('Platform')" class="grid">
+                <flux:sidebar.group :heading="$darkHeading('You')" class="grid">
                     <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
                         {{ __('Dashboard') }}
-                    </flux:sidebar.item>
-
-                    <flux:sidebar.item icon="bell" :href="route('notifications.index')" :current="request()->routeIs('notifications.*')" wire:navigate>
-                        {{ __('Notifications') }}
-                        <livewire:pages::layout.notifications-badge :key="'notifications-badge-'.auth()->id()" />
                     </flux:sidebar.item>
 
                     <flux:sidebar.item icon="chat-bubble-left-right" :href="route('messages.index')" :current="request()->routeIs('messages.*')" wire:navigate>
@@ -31,18 +35,27 @@
                         <livewire:pages::layout.messages-badge :key="'messages-badge-'.auth()->id()" />
                     </flux:sidebar.item>
 
-                    <flux:sidebar.item icon="user-group" :href="route('communities.index')" :current="request()->routeIs('communities.*')" wire:navigate>
-                        {{ __('Communities') }}
-                    </flux:sidebar.item>
-
                     <flux:sidebar.item icon="bookmark" :href="route('bookmarks.index')" :current="request()->routeIs('bookmarks.*')" wire:navigate>
                         {{ __('Bookmarks') }}
                     </flux:sidebar.item>
 
+                    <flux:sidebar.item icon="bell" :href="route('notifications.index')" :current="request()->routeIs('notifications.*')" wire:navigate>
+                        {{ __('Notifications') }}
+                        <livewire:pages::layout.notifications-badge :key="'notifications-badge-'.auth()->id()" />
+                    </flux:sidebar.item>
+                </flux:sidebar.group>
+
+                <flux:sidebar.group :heading="$darkHeading('Explore')" class="grid">
                     <flux:sidebar.item icon="magnifying-glass" :href="route('discover.index')" :current="request()->routeIs('discover.*')" wire:navigate>
                         {{ __('Discover') }}
                     </flux:sidebar.item>
 
+                    <flux:sidebar.item icon="user-group" :href="route('communities.index')" :current="request()->routeIs('communities.*')" wire:navigate>
+                        {{ __('Communities') }}
+                    </flux:sidebar.item>
+                </flux:sidebar.group>
+
+                <flux:sidebar.group :heading="$darkHeading('Live')" class="grid">
                     <flux:sidebar.item icon="video-camera" :href="route('live.index')" :current="request()->routeIs('live.*')" wire:navigate>
                         {{ __('Live') }}
                     </flux:sidebar.item>

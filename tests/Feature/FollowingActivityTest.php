@@ -138,6 +138,45 @@ test('a pending bridge post without both sides contributed does not appear', fun
         ->assertDontSee('Not Ready Yet');
 });
 
+test('a wall post photo opens the media viewer instead of navigating, while the username still links to the profile', function () {
+    $viewer = User::factory()->create();
+    $followed = User::factory()->create(['name' => 'Photo Poster']);
+    $viewer->following()->attach($followed->id);
+
+    $post = WallPost::create(['user_id' => $followed->id, 'body' => 'Photo post']);
+    $post->media()->create([
+        'user_id' => $followed->id,
+        'disk' => 'public',
+        'path' => 'wall-media/example.jpg',
+        'mime_type' => 'image/jpeg',
+        'type' => 'image',
+        'size' => 100,
+    ]);
+
+    $html = Livewire::actingAs($viewer)
+        ->test('pages::dashboard.following-activity')
+        ->html();
+
+    expect($html)->toContain('media-viewer:show');
+    expect($html)->toContain('wall-media/example.jpg');
+    expect($html)->toContain('href="'.route('profile.show', $followed).'"');
+});
+
+test('a wall post with no photo still navigates to the profile from the media area', function () {
+    $viewer = User::factory()->create();
+    $followed = User::factory()->create(['name' => 'Text Only Poster']);
+    $viewer->following()->attach($followed->id);
+
+    WallPost::create(['user_id' => $followed->id, 'body' => 'No photo here.']);
+
+    $html = Livewire::actingAs($viewer)
+        ->test('pages::dashboard.following-activity')
+        ->html();
+
+    expect($html)->not->toContain('media-viewer:show');
+    expect($html)->toContain('href="'.route('profile.show', $followed).'"');
+});
+
 test('a live stream from someone followed is pinned above the regular activity', function () {
     $viewer = User::factory()->create();
     $followed = User::factory()->create(['name' => 'Streaming Friend']);
