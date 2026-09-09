@@ -68,7 +68,7 @@ new class extends Component {
     }
 }; ?>
 
-<flux:modal name="bridge-post-composer" class="max-w-lg w-full">
+<flux:modal name="bridge-post-composer" class="max-w-lg">
     <div class="space-y-4">
         <div>
             <flux:heading size="lg">{{ __('Start a Bridge Post') }}</flux:heading>

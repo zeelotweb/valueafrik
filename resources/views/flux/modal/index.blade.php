@@ -52,21 +52,31 @@ if ($flyout) {
     $contentClasses = Flux::classes()
         ->add('relative')
         ->add(match ($variant) {
-            default => 'p-6 [:where(&)]:max-w-xl [:where(&)]:min-w-xs shadow-lg rounded-xl',
+            // Full-screen edge-to-edge below `sm` (no card floating in a sea
+            // of backdrop on a phone), the usual centered card from `sm` up.
+            // The `sm:` breakpoint is still wrapped in `:where()` so a
+            // caller's own size classes (e.g. `class="max-w-lg"`) continue
+            // to win the cascade at every screen size, same as upstream.
+            default => 'h-dvh w-full max-w-none rounded-none p-4 sm:h-auto sm:w-auto sm:[:where(&)]:max-w-xl sm:[:where(&)]:min-w-xs sm:rounded-xl sm:p-6 shadow-lg',
             'bare' => '',
         })
         ->add(match ($variant) {
-            default => 'bg-white dark:bg-zinc-800 ring ring-black/5 dark:ring-zinc-700 shadow-lg rounded-xl',
+            default => 'bg-white dark:bg-zinc-800 ring ring-black/5 dark:ring-zinc-700 shadow-lg rounded-none sm:rounded-xl',
             'bare' => 'bg-transparent',
         });
 } else {
     $classes = Flux::classes()
         ->add(match ($variant) {
-            default => 'p-6 [:where(&)]:max-w-xl [:where(&)]:min-w-xs shadow-lg rounded-xl',
+            // Full-screen edge-to-edge below `sm` (no card floating in a sea
+            // of backdrop on a phone), the usual centered card from `sm` up.
+            // The `sm:` breakpoint is still wrapped in `:where()` so a
+            // caller's own size classes (e.g. `class="max-w-lg"`) continue
+            // to win the cascade at every screen size, same as upstream.
+            default => 'h-dvh w-full max-w-none rounded-none p-4 sm:h-auto sm:w-auto sm:[:where(&)]:max-w-xl sm:[:where(&)]:min-w-xs sm:rounded-xl sm:p-6 shadow-lg',
             'bare' => '',
         })
         ->add(match ($variant) {
-            default => 'bg-white dark:bg-zinc-800 ring ring-black/5 dark:ring-zinc-700 shadow-lg rounded-xl',
+            default => 'bg-white dark:bg-zinc-800 ring ring-black/5 dark:ring-zinc-700 shadow-lg rounded-none sm:rounded-xl',
             'bare' => 'bg-transparent',
         });
 }

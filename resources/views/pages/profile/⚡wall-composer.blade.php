@@ -58,7 +58,7 @@ new class extends Component {
     }
 }; ?>
 
-<flux:modal name="wall-composer" class="max-w-lg w-full">
+<flux:modal name="wall-composer" class="max-w-lg">
     <form wire:submit="post" class="space-y-4">
         <flux:heading size="lg">{{ __('Post to your wall') }}</flux:heading>
 

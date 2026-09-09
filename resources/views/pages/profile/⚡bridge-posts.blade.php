@@ -159,7 +159,7 @@ new class extends Component {
         </div>
 
         @if ($viewerSide)
-            <flux:modal name="bridge-post-side-{{ $post->id }}" class="max-w-lg w-full">
+            <flux:modal name="bridge-post-side-{{ $post->id }}" class="max-w-lg">
                 <form wire:submit="submitSide" class="space-y-4">
                     <flux:heading size="lg">{{ __('Add your side') }}</flux:heading>
                     <flux:subheading>{{ __('Bridge Post') }} — {{ $post->theme }}</flux:subheading>

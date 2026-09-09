@@ -72,7 +72,7 @@ new class extends Component {
 
 <div>
     @if ($community->canPost(Auth::user()))
-        <flux:modal name="community-composer-{{ $community->id }}" class="max-w-lg w-full">
+        <flux:modal name="community-composer-{{ $community->id }}" class="max-w-lg">
             <form wire:submit="post" class="space-y-4">
                 <flux:heading size="lg">{{ __('Post to :name', ['name' => $community->name]) }}</flux:heading>
 
