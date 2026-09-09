@@ -23,6 +23,8 @@ new class extends Component {
         $this->editingId = $bridgePostId;
         $this->sideBody = '';
         $this->sidePhotos = [];
+
+        $this->modal('bridge-post-side-'.$bridgePostId)->show();
     }
 
     public function removeSidePhoto(int $index): void
@@ -34,6 +36,10 @@ new class extends Component {
 
     public function cancelSide(): void
     {
+        if ($this->editingId) {
+            $this->modal('bridge-post-side-'.$this->editingId)->close();
+        }
+
         $this->editingId = null;
         $this->reset(['sideBody', 'sidePhotos']);
     }
@@ -71,6 +77,8 @@ new class extends Component {
             $other = $side === 'initiator' ? $bridgePost->partner : $bridgePost->initiator;
             SafeNotifier::send($other, new BridgePostCompleted($bridgePost, Auth::user()));
         }
+
+        $this->modal('bridge-post-side-'.$this->editingId)->close();
 
         $this->editingId = null;
         $this->reset(['sideBody', 'sidePhotos']);
@@ -137,26 +145,9 @@ new class extends Component {
                                 </div>
                             @endif
                         @elseif ($viewerSide === $column['side'])
-                            @if ($editingId === $post->id)
-                                <div class="mt-3 space-y-2">
-                                    <flux:textarea wire:model="sideBody" rows="3" placeholder="{{ __('Your side of the story…') }}" />
-
-                                    @include('partials.photo-picker', ['photos' => $sidePhotos, 'property' => 'sidePhotos', 'removeMethod' => 'removeSidePhoto', 'max' => 4])
-
-                                    <div class="flex items-center justify-end gap-2">
-                                        <flux:button size="sm" variant="ghost" wire:click="cancelSide">{{ __('Cancel') }}</flux:button>
-                                        <flux:button size="sm" variant="primary" color="cyan" wire:click="submitSide" wire:loading.attr="disabled" wire:target="submitSide">
-                                            {{ __('Post my side') }}
-                                        </flux:button>
-                                    </div>
-
-                                    @error('sideBody') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
-                                </div>
-                            @else
-                                <flux:button size="sm" variant="ghost" class="mt-3" wire:click="startSide({{ $post->id }})">
-                                    {{ __('Add your side') }}
-                                </flux:button>
-                            @endif
+                            <flux:button size="sm" variant="ghost" class="mt-3" wire:click="startSide({{ $post->id }})">
+                                {{ __('Add your side') }}
+                            </flux:button>
                         @else
                             <p class="mt-3 text-sm italic text-stone-400 dark:text-stone-500">
                                 {{ __('Waiting for :name to add their side.', ['name' => $column['user']->name]) }}
@@ -166,5 +157,27 @@ new class extends Component {
                 @endforeach
             </div>
         </div>
+
+        @if ($viewerSide)
+            <flux:modal name="bridge-post-side-{{ $post->id }}" class="max-w-lg w-full">
+                <form wire:submit="submitSide" class="space-y-4">
+                    <flux:heading size="lg">{{ __('Add your side') }}</flux:heading>
+                    <flux:subheading>{{ __('Bridge Post') }} — {{ $post->theme }}</flux:subheading>
+
+                    <flux:textarea wire:model="sideBody" rows="4" placeholder="{{ __('Your side of the story…') }}" />
+
+                    @include('partials.photo-picker', ['photos' => $sidePhotos, 'property' => 'sidePhotos', 'removeMethod' => 'removeSidePhoto', 'max' => 4])
+
+                    @error('sideBody') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+
+                    <div class="flex items-center justify-end gap-2">
+                        <flux:button type="button" variant="ghost" wire:click="cancelSide">{{ __('Cancel') }}</flux:button>
+                        <flux:button type="submit" variant="primary" color="cyan" wire:loading.attr="disabled" wire:target="submitSide">
+                            {{ __('Post my side') }}
+                        </flux:button>
+                    </div>
+                </form>
+            </flux:modal>
+        @endif
     @endforeach
 </div>

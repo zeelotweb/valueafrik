@@ -156,6 +156,16 @@ $countryFlag = \App\Support\Countries::flag($profile?->country);
 
                 <div x-show="tab === 'wall'" class="mt-4">
                     @if ($isOwnProfile)
+                        <div class="mb-6 flex flex-wrap gap-2">
+                            <flux:modal.trigger name="wall-composer">
+                                <flux:button icon="pencil-square" variant="primary" color="cyan">{{ __('Post to Wall') }}</flux:button>
+                            </flux:modal.trigger>
+
+                            <flux:modal.trigger name="bridge-post-composer">
+                                <flux:button icon="arrows-right-left" variant="ghost">{{ __('Start a Bridge Post') }}</flux:button>
+                            </flux:modal.trigger>
+                        </div>
+
                         <livewire:pages::profile.wall-composer :key="'wall-composer-'.$user->id" />
                         <livewire:pages::profile.bridge-post-composer :key="'bridge-post-composer-'.$user->id" />
                     @endif

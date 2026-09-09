@@ -22,13 +22,13 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
         <div class="mt-4 flex flex-wrap gap-2">
             <livewire:pages::dashboard.start-stream :key="'start-stream-'.$user->id" class="{{ $quickActionClass }}" />
 
-            <a href="{{ route('profile.show', $user) }}#wall-composer" wire:navigate>
+            <flux:modal.trigger name="wall-composer">
                 <flux:button size="sm" variant="ghost" icon="pencil-square" class="{{ $quickActionClass }}">{{ __('Post to Wall') }}</flux:button>
-            </a>
+            </flux:modal.trigger>
 
-            <a href="{{ route('profile.show', $user) }}#wall-composer" wire:navigate>
+            <flux:modal.trigger name="bridge-post-composer">
                 <flux:button size="sm" variant="ghost" icon="arrows-right-left" class="{{ $quickActionClass }}">{{ __('Start a Bridge Post') }}</flux:button>
-            </a>
+            </flux:modal.trigger>
 
             <a href="{{ route('communities.create') }}" wire:navigate>
                 <flux:button size="sm" variant="ghost" icon="plus" class="{{ $quickActionClass }}">{{ __('Create Community') }}</flux:button>
@@ -38,6 +38,11 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
                 <flux:button size="sm" variant="ghost" icon="identification" class="{{ $quickActionClass }}">{{ __('Edit Roots') }}</flux:button>
             </a>
         </div>
+
+        {{-- Mounted here (hidden until triggered) so the quick actions above
+             can open them directly, without navigating to the wall first. --}}
+        <livewire:pages::profile.wall-composer :key="'dashboard-wall-composer-'.$user->id" />
+        <livewire:pages::profile.bridge-post-composer :key="'dashboard-bridge-post-composer-'.$user->id" />
 
         @if ($rootsIncomplete)
             <div class="mt-4 flex flex-col gap-2 rounded-lg border border-dashed border-stone-300 p-4 sm:flex-row sm:items-center sm:justify-between dark:border-stone-700">

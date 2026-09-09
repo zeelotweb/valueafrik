@@ -88,6 +88,12 @@ new #[Title('Community')] class extends Component {
         </p>
 
         <div class="mt-8">
+            @if ($community->canPost(Auth::user()))
+                <flux:modal.trigger name="community-composer-{{ $community->id }}">
+                    <flux:button icon="pencil-square" variant="primary" color="cyan" class="mb-6">{{ __('Post to :name', ['name' => $community->name]) }}</flux:button>
+                </flux:modal.trigger>
+            @endif
+
             <livewire:pages::communities.composer :community="$community" :key="'composer-'.$community->id" />
 
             <livewire:pages::communities.posts :community="$community" :key="'posts-'.$community->id" />

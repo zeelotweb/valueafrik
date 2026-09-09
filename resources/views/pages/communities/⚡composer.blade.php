@@ -64,30 +64,38 @@ new class extends Component {
 
         $this->reset(['body', 'photos']);
 
+        $this->modal('community-composer-'.$this->community->id)->close();
+
         $this->dispatch('community-post-created');
     }
 }; ?>
 
 <div>
     @if ($community->canPost(Auth::user()))
-        <div class="mb-6 rounded-xl bg-white border border-stone-200 p-4 dark:bg-stone-900 dark:border-stone-800">
-            <form wire:submit="post">
+        <flux:modal name="community-composer-{{ $community->id }}" class="max-w-lg w-full">
+            <form wire:submit="post" class="space-y-4">
+                <flux:heading size="lg">{{ __('Post to :name', ['name' => $community->name]) }}</flux:heading>
+
                 <flux:textarea
                     wire:model="body"
                     placeholder="{{ __('Share something with the community...') }}"
-                    rows="3"
+                    rows="4"
                 />
 
                 @include('partials.photo-picker', ['photos' => $photos, 'property' => 'photos', 'removeMethod' => 'removePhoto', 'max' => 4])
 
-                <div class="mt-3 flex items-center justify-end">
+                @error('body') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+
+                <div class="flex items-center justify-end gap-2">
+                    <flux:modal.close>
+                        <flux:button variant="ghost">{{ __('Cancel') }}</flux:button>
+                    </flux:modal.close>
+
                     <flux:button type="submit" variant="primary" color="cyan" wire:loading.attr="disabled" wire:target="post">
                         {{ __('Post') }}
                     </flux:button>
                 </div>
-
-                @error('body') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
             </form>
-        </div>
+        </flux:modal>
     @endif
 </div>

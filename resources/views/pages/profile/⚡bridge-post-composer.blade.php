@@ -10,7 +10,6 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 
 new class extends Component {
-    public bool $open = false;
     public string $theme = '';
     public string $partnerSearch = '';
     public ?int $partnerId = null;
@@ -63,58 +62,58 @@ new class extends Component {
 
         Flux::toast(variant: 'success', text: __('Bridge Post invite sent to :name.', ['name' => $this->partnerName]));
 
-        $this->reset(['theme', 'partnerId', 'partnerName', 'partnerSearch', 'open']);
+        $this->reset(['theme', 'partnerId', 'partnerName', 'partnerSearch']);
+
+        $this->modal('bridge-post-composer')->close();
     }
 }; ?>
 
-<div class="mb-6">
-    @if (! $open)
-        <flux:button variant="ghost" wire:click="$set('open', true)" icon="arrows-right-left">
-            {{ __('Start a Bridge Post') }}
-        </flux:button>
-    @else
-        <div class="rounded-xl bg-white border border-stone-200 p-4 dark:bg-stone-900 dark:border-stone-800">
+<flux:modal name="bridge-post-composer" class="max-w-lg w-full">
+    <div class="space-y-4">
+        <div>
+            <flux:heading size="lg">{{ __('Start a Bridge Post') }}</flux:heading>
             <flux:subheading>{{ __('Invite someone to compare a shared tradition, side by side.') }}</flux:subheading>
-
-            <flux:input wire:model="theme" :label="__('Theme')" placeholder="{{ __('e.g. Weddings, New Year, Sunday dinner') }}" class="mt-4" />
-
-            <div class="mt-4">
-                <flux:label>{{ __('Who are you inviting?') }}</flux:label>
-
-                @if ($partnerId)
-                    <div class="mt-2 flex items-center justify-between rounded-lg bg-white border border-stone-200 p-2 dark:bg-stone-900 dark:border-stone-800">
-                        <span class="text-sm font-medium">{{ $partnerName }}</span>
-                        <flux:button size="sm" variant="ghost" wire:click="clearPartner">{{ __('Change') }}</flux:button>
-                    </div>
-                @else
-                    <flux:input wire:model.live.debounce.300ms="partnerSearch" icon="magnifying-glass" placeholder="{{ __('Search by name…') }}" class="mt-2" />
-
-                    @if ($this->results->isNotEmpty())
-                        <div class="mt-2 space-y-1 rounded-lg bg-white border border-stone-200 p-2 dark:bg-stone-900 dark:border-stone-800">
-                            @foreach ($this->results as $candidate)
-                                <button
-                                    type="button"
-                                    wire:click="pickPartner({{ $candidate->id }}, '{{ addslashes($candidate->name) }}')"
-                                    class="block w-full rounded-md px-2 py-1.5 text-start text-sm hover:bg-stone-100 dark:hover:bg-stone-800"
-                                >
-                                    {{ $candidate->name }}
-                                </button>
-                            @endforeach
-                        </div>
-                    @endif
-                @endif
-
-                @error('partnerId') <p class="mt-1 text-sm text-red-600">{{ __('Pick someone to invite.') }}</p> @enderror
-            </div>
-
-            <div class="mt-4 flex gap-2">
-                <flux:button wire:click="send" variant="primary" color="cyan" wire:loading.attr="disabled">
-                    {{ __('Send invite') }}
-                </flux:button>
-                <flux:button wire:click="$set('open', false)" variant="ghost">
-                    {{ __('Cancel') }}
-                </flux:button>
-            </div>
         </div>
-    @endif
-</div>
+
+        <flux:input wire:model="theme" :label="__('Theme')" placeholder="{{ __('e.g. Weddings, New Year, Sunday dinner') }}" />
+
+        <div>
+            <flux:label>{{ __('Who are you inviting?') }}</flux:label>
+
+            @if ($partnerId)
+                <div class="mt-2 flex items-center justify-between rounded-lg bg-white border border-stone-200 p-2 dark:bg-stone-900 dark:border-stone-800">
+                    <span class="text-sm font-medium">{{ $partnerName }}</span>
+                    <flux:button size="sm" variant="ghost" wire:click="clearPartner">{{ __('Change') }}</flux:button>
+                </div>
+            @else
+                <flux:input wire:model.live.debounce.300ms="partnerSearch" icon="magnifying-glass" placeholder="{{ __('Search by name…') }}" class="mt-2" />
+
+                @if ($this->results->isNotEmpty())
+                    <div class="mt-2 space-y-1 rounded-lg bg-white border border-stone-200 p-2 dark:bg-stone-900 dark:border-stone-800">
+                        @foreach ($this->results as $candidate)
+                            <button
+                                type="button"
+                                wire:click="pickPartner({{ $candidate->id }}, '{{ addslashes($candidate->name) }}')"
+                                class="block w-full rounded-md px-2 py-1.5 text-start text-sm hover:bg-stone-100 dark:hover:bg-stone-800"
+                            >
+                                {{ $candidate->name }}
+                            </button>
+                        @endforeach
+                    </div>
+                @endif
+            @endif
+
+            @error('partnerId') <p class="mt-1 text-sm text-red-600">{{ __('Pick someone to invite.') }}</p> @enderror
+        </div>
+
+        <div class="flex items-center justify-end gap-2">
+            <flux:modal.close>
+                <flux:button variant="ghost">{{ __('Cancel') }}</flux:button>
+            </flux:modal.close>
+
+            <flux:button wire:click="send" variant="primary" color="cyan" wire:loading.attr="disabled">
+                {{ __('Send invite') }}
+            </flux:button>
+        </div>
+    </div>
+</flux:modal>
