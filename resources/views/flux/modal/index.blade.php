@@ -54,14 +54,21 @@ if ($flyout) {
         ->add(match ($variant) {
             // Full-screen edge-to-edge below `sm` (no card floating in a sea
             // of backdrop on a phone), the usual centered card from `sm` up.
-            // The `sm:` breakpoint is still wrapped in `:where()` so a
-            // caller's own size classes (e.g. `class="max-w-lg"`) continue
-            // to win the cascade at every screen size, same as upstream.
-            default => 'h-dvh w-full max-w-none rounded-none p-4 sm:h-auto sm:w-auto sm:[:where(&)]:max-w-xl sm:[:where(&)]:min-w-xs sm:rounded-xl sm:p-6 shadow-lg',
+            // `max-sm:` (a real media-query variant, not an unprefixed
+            // override fighting a `sm:`-scoped one for the same property —
+            // those are equal specificity, so whichever Tailwind happens to
+            // emit last silently wins regardless of override intent).
+            // Every desktop-default value here is `:where()`-wrapped
+            // (zero added specificity) specifically so max-sm:'s normal
+            // specificity beats it unambiguously below the breakpoint, and
+            // so a caller's own plain override (e.g. `class="max-w-lg"`)
+            // still wins the cascade at every screen size above it — the
+            // same reason Flux wraps max-w-xl/min-w-xs this way upstream.
+            default => 'max-sm:h-dvh max-sm:w-full max-sm:max-w-none max-sm:rounded-none max-sm:p-4 [:where(&)]:p-6 [:where(&)]:max-w-xl [:where(&)]:min-w-xs [:where(&)]:rounded-xl shadow-lg',
             'bare' => '',
         })
         ->add(match ($variant) {
-            default => 'bg-white dark:bg-zinc-800 ring ring-black/5 dark:ring-zinc-700 shadow-lg rounded-none sm:rounded-xl',
+            default => 'bg-white dark:bg-zinc-800 ring ring-black/5 dark:ring-zinc-700 shadow-lg max-sm:rounded-none [:where(&)]:rounded-xl',
             'bare' => 'bg-transparent',
         });
 } else {
@@ -69,14 +76,21 @@ if ($flyout) {
         ->add(match ($variant) {
             // Full-screen edge-to-edge below `sm` (no card floating in a sea
             // of backdrop on a phone), the usual centered card from `sm` up.
-            // The `sm:` breakpoint is still wrapped in `:where()` so a
-            // caller's own size classes (e.g. `class="max-w-lg"`) continue
-            // to win the cascade at every screen size, same as upstream.
-            default => 'h-dvh w-full max-w-none rounded-none p-4 sm:h-auto sm:w-auto sm:[:where(&)]:max-w-xl sm:[:where(&)]:min-w-xs sm:rounded-xl sm:p-6 shadow-lg',
+            // `max-sm:` (a real media-query variant, not an unprefixed
+            // override fighting a `sm:`-scoped one for the same property —
+            // those are equal specificity, so whichever Tailwind happens to
+            // emit last silently wins regardless of override intent).
+            // Every desktop-default value here is `:where()`-wrapped
+            // (zero added specificity) specifically so max-sm:'s normal
+            // specificity beats it unambiguously below the breakpoint, and
+            // so a caller's own plain override (e.g. `class="max-w-lg"`)
+            // still wins the cascade at every screen size above it — the
+            // same reason Flux wraps max-w-xl/min-w-xs this way upstream.
+            default => 'max-sm:h-dvh max-sm:w-full max-sm:max-w-none max-sm:rounded-none max-sm:p-4 [:where(&)]:p-6 [:where(&)]:max-w-xl [:where(&)]:min-w-xs [:where(&)]:rounded-xl shadow-lg',
             'bare' => '',
         })
         ->add(match ($variant) {
-            default => 'bg-white dark:bg-zinc-800 ring ring-black/5 dark:ring-zinc-700 shadow-lg rounded-none sm:rounded-xl',
+            default => 'bg-white dark:bg-zinc-800 ring ring-black/5 dark:ring-zinc-700 shadow-lg max-sm:rounded-none [:where(&)]:rounded-xl',
             'bare' => 'bg-transparent',
         });
 }
