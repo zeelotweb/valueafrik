@@ -107,7 +107,12 @@ new class extends Component {
                     </a>
                     <div>
                         <a href="{{ route('profile.show', $post->user) }}" wire:navigate class="font-medium text-stone-900 hover:underline dark:text-white">{{ $post->user->name }}</a>
-                        <div class="text-xs text-stone-500 dark:text-stone-400">{{ $post->created_at->diffForHumans() }}</div>
+                        <div class="text-xs text-stone-500 dark:text-stone-400">
+                            {{ $post->created_at->diffForHumans() }}
+                            @if ($post->edited_at)
+                                &middot; {{ __('edited') }}
+                            @endif
+                        </div>
                     </div>
                 </div>
 
@@ -115,6 +120,16 @@ new class extends Component {
                     @if (! $isMine)
                         <flux:button size="sm" variant="ghost" wire:click="startReport({{ $post->id }})">
                             <flux:icon.flag class="size-4" />
+                        </flux:button>
+                    @endif
+
+                    @if ($isMine)
+                        <flux:button
+                            size="sm"
+                            variant="ghost"
+                            wire:click="$dispatch('edit-community-post', { postId: {{ $post->id }} })"
+                        >
+                            <flux:icon.pencil class="size-4" />
                         </flux:button>
                     @endif
 

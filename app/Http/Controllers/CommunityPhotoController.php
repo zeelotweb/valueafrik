@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Community;
+use App\Services\ImageOptimizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -12,15 +13,15 @@ class CommunityPhotoController extends Controller
 {
     public function updateAvatar(Request $request, Community $community): JsonResponse
     {
-        return $this->update($request, $community, 'avatar_path', 'community-avatars', maxKilobytes: 5120);
+        return $this->update($request, $community, 'avatar_path', 'community-avatars', maxKilobytes: 5120, maxDimension: 1024);
     }
 
     public function updateCover(Request $request, Community $community): JsonResponse
     {
-        return $this->update($request, $community, 'cover_path', 'community-covers', maxKilobytes: 8192);
+        return $this->update($request, $community, 'cover_path', 'community-covers', maxKilobytes: 8192, maxDimension: 2048);
     }
 
-    private function update(Request $request, Community $community, string $column, string $directory, int $maxKilobytes): JsonResponse
+    private function update(Request $request, Community $community, string $column, string $directory, int $maxKilobytes, int $maxDimension): JsonResponse
     {
         abort_unless($request->user()->id === $community->owner_id, 403);
 
@@ -37,12 +38,12 @@ class CommunityPhotoController extends Controller
             Storage::disk('public')->delete($community->{$column});
         }
 
-        $path = $request->file('photo')->store($directory, 'public');
+        $optimized = ImageOptimizer::store($request->file('photo'), $directory, 'public', $maxDimension);
 
-        $community->update([$column => $path]);
+        $community->update([$column => $optimized['path']]);
 
         return response()->json([
-            'url' => Storage::disk('public')->url($path),
+            'url' => Storage::disk('public')->url($optimized['path']),
         ]);
     }
 }

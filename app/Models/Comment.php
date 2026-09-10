@@ -11,7 +11,15 @@ class Comment extends Model
     protected $fillable = [
         'user_id',
         'body',
+        'edited_at',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'edited_at' => 'datetime',
+        ];
+    }
 
     public function user(): BelongsTo
     {

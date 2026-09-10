@@ -8,6 +8,8 @@ Route::middleware(['auth'])->group(function () {
 
     Route::livewire('settings/profile', 'pages::settings.profile')->name('profile.edit');
     Route::livewire('settings/roots', 'pages::settings.roots')->name('roots.edit');
+    Route::livewire('settings/blocked', 'pages::settings.blocked')->name('blocked.edit');
+    Route::livewire('settings/notifications', 'pages::settings.notifications')->name('notifications.edit');
 
     Route::post('settings/profile/avatar', [ProfilePhotoController::class, 'updateAvatar'])->name('profile.avatar');
     Route::post('settings/profile/cover', [ProfilePhotoController::class, 'updateCover'])->name('profile.cover');

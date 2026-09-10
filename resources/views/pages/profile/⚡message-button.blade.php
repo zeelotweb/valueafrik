@@ -14,6 +14,7 @@ new class extends Component {
         $viewer = Auth::user();
 
         abort_if($viewer->id === $this->user->id, 403);
+        abort_if($viewer->hasBlockRelationWith($this->user), 403);
 
         $conversation = Conversation::between($viewer, $this->user);
 

@@ -70,6 +70,7 @@ test('a google user signed in this way can call another user without being block
     Socialite::shouldReceive('driver->user')->andReturn(fakeGoogleUser());
     $this->get(route('social.callback', 'google'));
     $googleUser = auth()->user();
+    $googleUser->completeOnboarding();
 
     $invitee = User::factory()->create(['last_seen_at' => now()]);
 

@@ -165,7 +165,7 @@ test('every notification broadcasts on the same event over the users private cha
 
     $notification = new NewFollower($actor);
 
-    expect($notification->via($user))->toBe(['database', 'broadcast']);
+    expect($notification->via($user))->toBe(['database', 'broadcast', \NotificationChannels\WebPush\WebPushChannel::class]);
 
     // broadcastType() only labels the payload's "type" field — the actual wire
     // event name Echo has to match against comes from broadcastAs(). Missing

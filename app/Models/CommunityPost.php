@@ -18,7 +18,15 @@ class CommunityPost extends Model
         'community_id',
         'user_id',
         'body',
+        'edited_at',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'edited_at' => 'datetime',
+        ];
+    }
 
     public function community(): BelongsTo
     {

@@ -54,8 +54,12 @@ class CultureSprintPool extends Model
     {
         $onlineSince = now()->subSeconds((int) config('calls.online_threshold_seconds'));
 
+        $blockedUserIds = $user->blocking()->pluck('users.id')
+            ->merge($user->blockedBy()->pluck('users.id'));
+
         return self::query()
             ->where('user_id', '!=', $user->id)
+            ->whereNotIn('user_id', $blockedUserIds)
             ->where('topic', $topic)
             ->whereHas('user', fn ($q) => $q->where('last_seen_at', '>', $onlineSince))
             ->when($region, fn ($q) => $q->where(

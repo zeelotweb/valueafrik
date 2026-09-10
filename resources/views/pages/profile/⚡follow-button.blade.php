@@ -37,6 +37,8 @@ new class extends Component {
 
             Flux::toast(text: __('You unfollowed :name.', ['name' => $this->user->name]));
         } else {
+            abort_if($viewer->hasBlockRelationWith($this->user), 403);
+
             $viewer->following()->attach($this->user->id);
 
             $viewer->awardBridgeScore('follow', $this->user);

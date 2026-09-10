@@ -6,6 +6,7 @@ use App\Models\LiveSession;
 use App\Models\Message;
 use App\Models\User;
 use App\Notifications\NewMessageReceived;
+use App\Services\ImageOptimizer;
 use App\Support\SafeNotifier;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Title;
@@ -20,6 +21,7 @@ new #[Title('Messages')] class extends Component {
     public array $messages = [];
     public string $body = '';
     public $photo = null;
+    public bool $canMessage = true;
 
     public function mount(Conversation $conversation): void
     {
@@ -29,6 +31,7 @@ new #[Title('Messages')] class extends Component {
 
         $this->conversation = $conversation;
         $this->otherParticipant = $conversation->participants->firstWhere('id', '!=', Auth::id());
+        $this->canMessage = ! $this->otherParticipant || ! Auth::user()->hasBlockRelationWith($this->otherParticipant);
 
         $this->messages = $conversation->messages()
             ->with(['user.profile', 'media'])
@@ -61,6 +64,8 @@ new #[Title('Messages')] class extends Component {
 
     public function send(): void
     {
+        abort_unless($this->canMessage, 403);
+
         $this->validate([
             'body' => ['nullable', 'string', 'max:5000'],
             'photo' => ['nullable', 'image', 'max:8192'],
@@ -78,13 +83,13 @@ new #[Title('Messages')] class extends Component {
         ]);
 
         if ($this->photo) {
+            $optimized = ImageOptimizer::store($this->photo, 'message-media', 'public');
+
             $message->media()->create([
                 'user_id' => Auth::id(),
                 'disk' => 'public',
-                'path' => $this->photo->store('message-media', 'public'),
-                'mime_type' => $this->photo->getMimeType(),
                 'type' => 'image',
-                'size' => $this->photo->getSize(),
+                ...$optimized,
             ]);
         }
 
@@ -110,6 +115,7 @@ new #[Title('Messages')] class extends Component {
     public function startCall()
     {
         abort_unless($this->otherParticipant, 404);
+        abort_unless($this->canMessage, 403);
 
         $session = LiveSession::startCallWith(Auth::user(), $this->otherParticipant);
 
@@ -159,9 +165,11 @@ new #[Title('Messages')] class extends Component {
             <span class="min-w-0 flex-1 truncate font-medium text-stone-900 dark:text-white">{{ __('Unknown') }}</span>
         @endif
 
-        <flux:button wire:click="startCall" wire:loading.attr="disabled" size="sm" variant="ghost" icon="video-camera" data-test="start-call-button">
-            <span class="hidden sm:inline">{{ __('Call') }}</span>
-        </flux:button>
+        @if ($canMessage)
+            <flux:button wire:click="startCall" wire:loading.attr="disabled" size="sm" variant="ghost" icon="video-camera" data-test="start-call-button">
+                <span class="hidden sm:inline">{{ __('Call') }}</span>
+            </flux:button>
+        @endif
     </div>
 
     <div
@@ -197,6 +205,11 @@ new #[Title('Messages')] class extends Component {
         @endforeach
     </div>
 
+    @if (! $canMessage)
+        <div class="border-t border-stone-200 pt-4 text-center text-sm text-stone-500 dark:border-stone-800 dark:text-stone-400">
+            {{ __('You can no longer message each other.') }}
+        </div>
+    @else
     <form
         wire:submit="send"
         class="border-t border-stone-200 pt-4 dark:border-stone-800"
@@ -247,4 +260,5 @@ new #[Title('Messages')] class extends Component {
         @error('body') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
         @error('photo') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
     </form>
+    @endif
 </div>

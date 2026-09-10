@@ -4,6 +4,8 @@ namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
+use NotificationChannels\WebPush\WebPushChannel;
+use NotificationChannels\WebPush\WebPushMessage;
 
 abstract class AppNotification extends Notification
 {
@@ -11,7 +13,23 @@ abstract class AppNotification extends Notification
 
     public function via(object $notifiable): array
     {
-        return ['database', 'broadcast'];
+        return ['database', 'broadcast', WebPushChannel::class];
+    }
+
+    /**
+     * Every notification here already shapes itself as {message, url} for
+     * toArray() — reuse that instead of making each subclass repeat itself
+     * for the push payload too.
+     */
+    public function toWebPush(object $notifiable, self $notification): WebPushMessage
+    {
+        $data = $this->toArray($notifiable);
+
+        return (new WebPushMessage)
+            ->title(config('app.name'))
+            ->body($data['message'])
+            ->icon('/favicon-48x48.png')
+            ->data(['url' => $data['url'] ?? null]);
     }
 
     /**

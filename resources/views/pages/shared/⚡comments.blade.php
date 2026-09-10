@@ -17,6 +17,9 @@ new class extends Component {
     public bool $open = false;
     public string $body = '';
 
+    public ?int $editingCommentId = null;
+    public string $editBody = '';
+
     #[Computed]
     public function count(): int
     {
@@ -53,6 +56,39 @@ new class extends Component {
         $this->open = true;
 
         unset($this->count, $this->comments);
+    }
+
+    public function startEdit(int $commentId): void
+    {
+        $comment = Comment::findOrFail($commentId);
+
+        abort_if($comment->user_id !== Auth::id(), 403);
+
+        $this->editingCommentId = $comment->id;
+        $this->editBody = $comment->body;
+    }
+
+    public function cancelEdit(): void
+    {
+        $this->reset(['editingCommentId', 'editBody']);
+    }
+
+    public function update(): void
+    {
+        $comment = Comment::findOrFail($this->editingCommentId);
+
+        abort_if($comment->user_id !== Auth::id(), 403);
+
+        $this->validate(['editBody' => ['required', 'string', 'max:2000']]);
+
+        $comment->update([
+            'body' => $this->editBody,
+            'edited_at' => now(),
+        ]);
+
+        $this->reset(['editingCommentId', 'editBody']);
+
+        unset($this->comments);
     }
 
     public function delete(int $commentId): void
@@ -96,8 +132,20 @@ new class extends Component {
                         <div class="flex items-center justify-between gap-2">
                             <a href="{{ route('profile.show', $comment->user) }}" wire:navigate class="truncate text-sm font-medium text-stone-900 hover:underline dark:text-white">{{ $comment->user->name }}</a>
                             <div class="flex shrink-0 items-center gap-2">
-                                <span class="text-xs text-stone-400 dark:text-stone-500">{{ $comment->created_at->diffForHumans(null, true) }}</span>
-                                @if ($comment->user_id === Auth::id())
+                                <span class="text-xs text-stone-400 dark:text-stone-500">
+                                    {{ $comment->created_at->diffForHumans(null, true) }}
+                                    @if ($comment->edited_at)
+                                        &middot; {{ __('edited') }}
+                                    @endif
+                                </span>
+                                @if ($comment->user_id === Auth::id() && $editingCommentId !== $comment->id)
+                                    <button
+                                        type="button"
+                                        wire:click="startEdit({{ $comment->id }})"
+                                        class="text-stone-400 hover:text-cyan-600 dark:hover:text-cyan-400"
+                                    >
+                                        <flux:icon.pencil class="size-3.5" />
+                                    </button>
                                     <button
                                         type="button"
                                         wire:click="delete({{ $comment->id }})"
@@ -109,7 +157,19 @@ new class extends Component {
                                 @endif
                             </div>
                         </div>
-                        <p class="mt-0.5 whitespace-pre-line text-sm text-stone-700 dark:text-stone-300">{{ $comment->body }}</p>
+
+                        @if ($editingCommentId === $comment->id)
+                            <form wire:submit="update" class="mt-1 space-y-1.5">
+                                <flux:textarea wire:model="editBody" rows="1" />
+                                @error('editBody') <p class="text-xs text-red-600">{{ $message }}</p> @enderror
+                                <div class="flex items-center justify-end gap-2">
+                                    <flux:button type="button" size="sm" variant="ghost" wire:click="cancelEdit">{{ __('Cancel') }}</flux:button>
+                                    <flux:button type="submit" size="sm" variant="primary" color="cyan" wire:loading.attr="disabled" wire:target="update">{{ __('Save') }}</flux:button>
+                                </div>
+                            </form>
+                        @else
+                            <p class="mt-0.5 whitespace-pre-line text-sm text-stone-700 dark:text-stone-300">{{ $comment->body }}</p>
+                        @endif
                     </div>
                 </div>
             @empty

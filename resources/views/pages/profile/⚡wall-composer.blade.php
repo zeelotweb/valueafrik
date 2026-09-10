@@ -1,6 +1,9 @@
 <?php
 
+use App\Models\WallPost;
+use App\Services\ImageOptimizer;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -8,6 +11,8 @@ new class extends Component {
     use WithFileUploads;
 
     public string $body = '';
+
+    public ?int $editingPostId = null;
 
     /** @var \Livewire\Features\SupportFileUploads\TemporaryUploadedFile[] */
     public array $photos = [];
@@ -19,6 +24,36 @@ new class extends Component {
         $this->photos = array_values($this->photos);
     }
 
+    /**
+     * Requested from the wall post list — scoping the lookup to the
+     * authenticated user's own posts is the authorization check: a
+     * mismatched ID 404s rather than silently loading someone else's post.
+     */
+    #[On('edit-wall-post')]
+    public function loadForEdit(int $postId): void
+    {
+        $post = Auth::user()->wallPosts()->findOrFail($postId);
+
+        $this->editingPostId = $post->id;
+        $this->body = $post->body ?? '';
+        $this->photos = [];
+
+        $this->modal('wall-composer')->show();
+    }
+
+    /**
+     * Wired to the modal's own wire:close, so every way of dismissing it
+     * (Cancel, the built-in ✕, Escape, backdrop click) resets state the
+     * same way — otherwise a stale editingPostId/body could leak into the
+     * next time this same component is opened to create a new post.
+     */
+    public function cancel(): void
+    {
+        $this->reset(['body', 'photos', 'editingPostId']);
+
+        $this->modal('wall-composer')->close();
+    }
+
     public function post(): void
     {
         $this->validate([
@@ -26,6 +61,29 @@ new class extends Component {
             'photos' => ['array', 'max:4'],
             'photos.*' => ['image', 'max:8192'],
         ]);
+
+        if ($this->editingPostId) {
+            $post = Auth::user()->wallPosts()->findOrFail($this->editingPostId);
+
+            if (blank($this->body) && $post->media->isEmpty()) {
+                $this->addError('body', __('Write something or add a photo.'));
+
+                return;
+            }
+
+            $post->update([
+                'body' => $this->body !== '' ? $this->body : null,
+                'edited_at' => now(),
+            ]);
+
+            $this->reset(['body', 'photos', 'editingPostId']);
+
+            $this->modal('wall-composer')->close();
+
+            $this->dispatch('wall-post-created');
+
+            return;
+        }
 
         if (blank($this->body) && empty($this->photos)) {
             $this->addError('body', __('Write something or add a photo.'));
@@ -40,13 +98,13 @@ new class extends Component {
         Auth::user()->awardBridgeScore('wall_post', $post);
 
         foreach ($this->photos as $photo) {
+            $optimized = ImageOptimizer::store($photo, 'wall-media', 'public');
+
             $post->media()->create([
                 'user_id' => Auth::id(),
                 'disk' => 'public',
-                'path' => $photo->store('wall-media', 'public'),
-                'mime_type' => $photo->getMimeType(),
                 'type' => 'image',
-                'size' => $photo->getSize(),
+                ...$optimized,
             ]);
         }
 
@@ -58,9 +116,9 @@ new class extends Component {
     }
 }; ?>
 
-<flux:modal name="wall-composer" class="max-w-lg">
+<flux:modal name="wall-composer" class="max-w-lg" wire:close="cancel">
     <form wire:submit="post" class="space-y-4">
-        <flux:heading size="lg">{{ __('Post to your wall') }}</flux:heading>
+        <flux:heading size="lg">{{ $editingPostId ? __('Edit post') : __('Post to your wall') }}</flux:heading>
 
         <flux:textarea
             wire:model="body"
@@ -68,17 +126,17 @@ new class extends Component {
             rows="4"
         />
 
-        @include('partials.photo-picker', ['photos' => $photos, 'property' => 'photos', 'removeMethod' => 'removePhoto', 'max' => 4])
+        @if (! $editingPostId)
+            @include('partials.photo-picker', ['photos' => $photos, 'property' => 'photos', 'removeMethod' => 'removePhoto', 'max' => 4])
+        @endif
 
         @error('body') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 
         <div class="flex items-center justify-end gap-2">
-            <flux:modal.close>
-                <flux:button variant="ghost">{{ __('Cancel') }}</flux:button>
-            </flux:modal.close>
+            <flux:button type="button" wire:click="cancel" variant="ghost">{{ __('Cancel') }}</flux:button>
 
             <flux:button type="submit" variant="primary" color="cyan" wire:loading.attr="disabled" wire:target="post">
-                {{ __('Post') }}
+                {{ $editingPostId ? __('Save') : __('Post') }}
             </flux:button>
         </div>
     </form>

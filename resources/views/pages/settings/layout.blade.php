@@ -24,6 +24,8 @@
             @foreach ([
                 ['route' => 'profile.edit', 'label' => __('Profile'), 'icon' => 'user'],
                 ['route' => 'roots.edit', 'label' => __('Roots'), 'icon' => 'identification'],
+                ['route' => 'blocked.edit', 'label' => __('Blocked users'), 'icon' => 'no-symbol'],
+                ['route' => 'notifications.edit', 'label' => __('Notifications'), 'icon' => 'bell'],
                 ['route' => 'security.edit', 'label' => __('Security'), 'icon' => 'shield-check'],
                 ['route' => 'appearance.edit', 'label' => __('Appearance'), 'icon' => 'swatch'],
             ] as $item)

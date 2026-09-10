@@ -3,6 +3,7 @@
 use App\Models\BridgePost;
 use App\Models\User;
 use App\Notifications\BridgePostCompleted;
+use App\Services\ImageOptimizer;
 use App\Support\SafeNotifier;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
@@ -60,13 +61,13 @@ new class extends Component {
         $bridgePost->update(["{$side}_body" => $this->sideBody]);
 
         foreach ($this->sidePhotos as $photo) {
+            $optimized = ImageOptimizer::store($photo, 'bridge-post-media', 'public');
+
             $bridgePost->media()->create([
                 'user_id' => Auth::id(),
                 'disk' => 'public',
-                'path' => $photo->store('bridge-post-media', 'public'),
-                'mime_type' => $photo->getMimeType(),
                 'type' => 'image',
-                'size' => $photo->getSize(),
+                ...$optimized,
             ]);
         }
 

@@ -20,6 +20,7 @@ use Laravel\Fortify\Contracts\PasskeyUser;
 use Laravel\Fortify\PasskeyAuthenticatable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Sanctum\HasApiTokens;
+use NotificationChannels\WebPush\HasPushSubscriptions;
 
 /**
  * @property int $id
@@ -39,7 +40,7 @@ use Laravel\Sanctum\HasApiTokens;
 class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
-    use Billable, HasApiTokens, HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
+    use Billable, HasApiTokens, HasFactory, HasPushSubscriptions, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
 
     /**
      * Get the attributes that should be cast.
@@ -51,8 +52,19 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
         return [
             'email_verified_at' => 'datetime',
             'last_seen_at' => 'datetime',
+            'onboarded_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function hasCompletedOnboarding(): bool
+    {
+        return $this->onboarded_at !== null;
+    }
+
+    public function completeOnboarding(): void
+    {
+        $this->forceFill(['onboarded_at' => now()])->save();
     }
 
     /**
@@ -110,6 +122,61 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     public function isFollowing(User $user): bool
     {
         return $this->following()->whereKey($user->id)->exists();
+    }
+
+    /**
+     * Users this user has blocked.
+     */
+    public function blocking(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'blocks', 'blocker_id', 'blocked_id')->withTimestamps();
+    }
+
+    /**
+     * Users who have blocked this user.
+     */
+    public function blockedBy(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'blocks', 'blocked_id', 'blocker_id')->withTimestamps();
+    }
+
+    public function hasBlocked(User $user): bool
+    {
+        return $this->blocking()->whereKey($user->id)->exists();
+    }
+
+    public function isBlockedBy(User $user): bool
+    {
+        return $this->blockedBy()->whereKey($user->id)->exists();
+    }
+
+    /**
+     * True if either side has blocked the other — the check every
+     * enforcement point (follow, message, Culture Sprint matching) uses,
+     * since a block is meant to cut off contact in both directions.
+     */
+    public function hasBlockRelationWith(User $user): bool
+    {
+        return $this->hasBlocked($user) || $this->isBlockedBy($user);
+    }
+
+    /**
+     * Blocking also severs any existing follow in both directions — it
+     * would defeat the point of a block to let it coexist with a follow.
+     */
+    public function block(User $user): void
+    {
+        abort_if($this->id === $user->id, 403);
+
+        $this->blocking()->syncWithoutDetaching($user->id);
+
+        $this->following()->detach($user->id);
+        $this->followers()->detach($user->id);
+    }
+
+    public function unblock(User $user): void
+    {
+        $this->blocking()->detach($user->id);
     }
 
     public function wallPosts(): HasMany

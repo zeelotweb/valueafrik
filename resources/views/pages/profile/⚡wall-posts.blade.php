@@ -67,19 +67,34 @@ new class extends Component {
                     </a>
                     <div>
                         <a href="{{ route('profile.show', $post->user) }}" wire:navigate class="font-medium text-stone-900 hover:underline dark:text-white">{{ $post->user->name }}</a>
-                        <div class="text-xs text-stone-500 dark:text-stone-400">{{ $post->created_at->diffForHumans() }}</div>
+                        <div class="text-xs text-stone-500 dark:text-stone-400">
+                            {{ $post->created_at->diffForHumans() }}
+                            @if ($post->edited_at)
+                                &middot; {{ __('edited') }}
+                            @endif
+                        </div>
                     </div>
                 </div>
 
                 @if (Auth::id() === $post->user_id)
-                    <flux:button
-                        size="sm"
-                        variant="ghost"
-                        wire:click="delete({{ $post->id }})"
-                        wire:confirm="{{ __('Delete this post?') }}"
-                    >
-                        <flux:icon.trash class="size-4" />
-                    </flux:button>
+                    <div class="flex items-center gap-1">
+                        <flux:button
+                            size="sm"
+                            variant="ghost"
+                            wire:click="$dispatch('edit-wall-post', { postId: {{ $post->id }} })"
+                        >
+                            <flux:icon.pencil class="size-4" />
+                        </flux:button>
+
+                        <flux:button
+                            size="sm"
+                            variant="ghost"
+                            wire:click="delete({{ $post->id }})"
+                            wire:confirm="{{ __('Delete this post?') }}"
+                        >
+                            <flux:icon.trash class="size-4" />
+                        </flux:button>
+                    </div>
                 @endif
             </div>
 

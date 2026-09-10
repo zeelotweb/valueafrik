@@ -3,6 +3,8 @@
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\CommunityPhotoController;
 use App\Http\Controllers\ProfileShowController;
+use App\Http\Controllers\PushSubscriptionController;
+use App\Http\Middleware\EnsureOnboardingComplete;
 use App\Livewire\Actions\Logout;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -13,6 +15,10 @@ Route::view('legal/privacy', 'legal.privacy')->name('legal.privacy');
 Route::view('legal/terms', 'legal.terms')->name('legal.terms');
 
 Route::middleware(['auth', 'verified'])->group(function () {
+    Route::livewire('onboarding', 'pages::onboarding.index')->name('onboarding.index');
+});
+
+Route::middleware(['auth', 'verified', EnsureOnboardingComplete::class])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
 
     Route::get('profile', fn () => redirect()->route('profile.show', Auth::user()));
@@ -40,6 +46,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('live/{liveSession}', 'pages::live.show')->name('live.show');
 
     Route::livewire('culture-sprint', 'pages::culture-sprint.index')->name('culture-sprint.index');
+
+    Route::post('push-subscriptions', [PushSubscriptionController::class, 'store'])->name('push-subscriptions.store');
+    Route::delete('push-subscriptions', [PushSubscriptionController::class, 'destroy'])->name('push-subscriptions.destroy');
 });
 
 Route::post('logout', Logout::class)

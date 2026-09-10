@@ -32,9 +32,15 @@ $countryFlag = \App\Support\Countries::flag($profile?->country);
                         </flux:button>
                     </a>
                 @else
-                    <livewire:pages::profile.start-call-button :user="$user" :key="'call-'.$user->id" :overlay="true" />
-                    <livewire:pages::profile.message-button :user="$user" :key="'message-'.$user->id" :overlay="true" />
-                    <livewire:pages::profile.follow-button :user="$user" :key="'follow-'.$user->id" :overlay="true" />
+                    @php $viewerHasBlockRelation = auth()->user()->hasBlockRelationWith($user); @endphp
+
+                    @unless ($viewerHasBlockRelation)
+                        <livewire:pages::profile.start-call-button :user="$user" :key="'call-'.$user->id" :overlay="true" />
+                        <livewire:pages::profile.message-button :user="$user" :key="'message-'.$user->id" :overlay="true" />
+                        <livewire:pages::profile.follow-button :user="$user" :key="'follow-'.$user->id" :overlay="true" />
+                    @endunless
+
+                    <livewire:pages::profile.block-button :user="$user" :key="'block-'.$user->id" :overlay="true" />
                 @endif
             </div>
         </div>
