@@ -81,6 +81,81 @@ test('a user can delete their own comment but not someone elses', function () {
     expect($post->fresh()->commentsCount())->toBe(0);
 });
 
+test('a user can reply to a comment and the reply shows up scoped to that comment only', function () {
+    $author = User::factory()->create();
+    $post = $author->wallPosts()->create(['body' => 'Hello wall.']);
+    $commenter = User::factory()->create();
+    $comment = $post->comments()->create(['user_id' => $commenter->id, 'body' => 'Nice post.']);
+
+    $replier = User::factory()->create();
+
+    $component = Livewire::actingAs($replier)
+        ->test('pages::shared.comments', ['commentable' => $post])
+        ->call('openReplies', $comment->id)
+        ->assertSet('viewingReplyFor', $comment->id)
+        ->set('replyBody', 'Totally agree!')
+        ->call('postReply')
+        ->assertSee('Totally agree!');
+
+    expect($comment->replies()->count())->toBe(1);
+    expect($comment->replies()->first()->body)->toBe('Totally agree!');
+    expect($replier->fresh()->bridgeScore())->toBe(2);
+
+    // The reply is attributed to the same post (for the total count) but
+    // must not leak into the top-level comments list.
+    $component->call('openModal');
+    expect($component->get('comments')->pluck('id')->all())->toBe([$comment->id]);
+
+    // The post's total comment count includes replies.
+    expect($post->fresh()->commentsCount())->toBe(2);
+});
+
+test('a user can edit and delete their own reply but not someone elses', function () {
+    $author = User::factory()->create();
+    $post = $author->wallPosts()->create(['body' => 'Hello wall.']);
+    $comment = $post->comments()->create(['user_id' => $author->id, 'body' => 'Top level.']);
+    $replier = User::factory()->create();
+    $reply = $post->comments()->create(['user_id' => $replier->id, 'parent_id' => $comment->id, 'body' => 'A reply.']);
+
+    $intruder = User::factory()->create();
+
+    Livewire::actingAs($intruder)
+        ->test('pages::shared.comments', ['commentable' => $post])
+        ->call('startEdit', $reply->id)
+        ->assertForbidden();
+
+    Livewire::actingAs($replier)
+        ->test('pages::shared.comments', ['commentable' => $post])
+        ->call('openReplies', $comment->id)
+        ->call('startEdit', $reply->id)
+        ->set('editBody', 'Edited reply.')
+        ->call('update')
+        ->assertSee('Edited reply.');
+
+    expect($reply->fresh()->body)->toBe('Edited reply.');
+    expect($reply->fresh()->edited_at)->not->toBeNull();
+
+    Livewire::actingAs($replier)
+        ->test('pages::shared.comments', ['commentable' => $post])
+        ->call('delete', $reply->id);
+
+    expect($comment->replies()->count())->toBe(0);
+});
+
+test('deleting a comment cascades to delete its replies', function () {
+    $author = User::factory()->create();
+    $post = $author->wallPosts()->create(['body' => 'Hello wall.']);
+    $comment = $post->comments()->create(['user_id' => $author->id, 'body' => 'Top level.']);
+    $post->comments()->create(['user_id' => $author->id, 'parent_id' => $comment->id, 'body' => 'A reply.']);
+
+    Livewire::actingAs($author)
+        ->test('pages::shared.comments', ['commentable' => $post])
+        ->call('delete', $comment->id);
+
+    expect(\App\Models\Comment::whereKey($comment->id)->exists())->toBeFalse();
+    expect($post->fresh()->commentsCount())->toBe(0);
+});
+
 test('reactions and comments work the same way on a community post', function () {
     $owner = User::factory()->create();
     $community = $owner->ownedCommunities()->create([
