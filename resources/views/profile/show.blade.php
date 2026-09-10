@@ -24,7 +24,7 @@ $countryFlag = \App\Support\Countries::flag($profile?->country);
                 </div>
             </div>
 
-            <div class="absolute top-3 end-3 flex items-center gap-1.5 sm:top-4 sm:end-4 sm:gap-2">
+            <div class="absolute top-3 end-3 flex w-fit items-center gap-1.5 sm:top-4 sm:end-4 sm:gap-2">
                 @if ($isOwnProfile)
                     <a href="{{ route('profile.edit') }}" wire:navigate>
                         <flux:button size="sm" variant="ghost" icon="pencil" class="!bg-white/90 !text-stone-900 shadow-sm backdrop-blur hover:!bg-white dark:!bg-stone-900/80 dark:!text-white dark:hover:!bg-stone-900">
