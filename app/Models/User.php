@@ -43,6 +43,35 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     use Billable, HasApiTokens, HasFactory, HasPushSubscriptions, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
 
     /**
+     * A username is assigned automatically at creation, never through mass
+     * assignment — this is the one place it happens, regardless of which
+     * path created the user (password registration, Google, Facebook, a
+     * factory in tests), so none of those call sites need to know about it.
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (User $user) {
+            if (! $user->username) {
+                $user->username = static::generateUniqueUsername($user->name);
+            }
+        });
+    }
+
+    private static function generateUniqueUsername(string $name): string
+    {
+        $base = Str::slug($name) ?: 'user';
+        $username = $base;
+        $suffix = 1;
+
+        while (static::where('username', $username)->exists()) {
+            $suffix++;
+            $username = "{$base}-{$suffix}";
+        }
+
+        return $username;
+    }
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -53,6 +82,7 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
             'email_verified_at' => 'datetime',
             'last_seen_at' => 'datetime',
             'onboarded_at' => 'datetime',
+            'banned_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
@@ -65,6 +95,36 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     public function completeOnboarding(): void
     {
         $this->forceFill(['onboarded_at' => now()])->save();
+    }
+
+    /**
+     * Platform-wide moderator — distinct from a community owner/monitor,
+     * which only has authority inside their own community. Granted via
+     * `php artisan admin:grant {email}`, never through any in-app UI.
+     */
+    public function isAdmin(): bool
+    {
+        return (bool) $this->is_admin;
+    }
+
+    /**
+     * A platform-wide suspension — separate from being removed from a
+     * single community. A banned user is signed out on their next request
+     * (see EnsureNotBanned) rather than merely hidden from feeds.
+     */
+    public function isBanned(): bool
+    {
+        return $this->banned_at !== null;
+    }
+
+    public function ban(string $reason): void
+    {
+        $this->forceFill(['banned_at' => now(), 'ban_reason' => $reason])->save();
+    }
+
+    public function unban(): void
+    {
+        $this->forceFill(['banned_at' => null, 'ban_reason' => null])->save();
     }
 
     /**

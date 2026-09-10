@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Concerns\HasHashtags;
+use App\Concerns\HasMentions;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -9,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Comment extends Model
 {
+    use HasHashtags, HasMentions;
+
     protected $fillable = [
         'user_id',
         'parent_id',

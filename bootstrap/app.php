@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureNotBanned;
 use App\Http\Middleware\TrackLastSeen;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -15,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->appendToGroup('web', EnsureNotBanned::class);
         $middleware->appendToGroup('web', TrackLastSeen::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

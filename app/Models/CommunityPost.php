@@ -4,6 +4,8 @@ namespace App\Models;
 
 use App\Concerns\HasBookmarks;
 use App\Concerns\HasComments;
+use App\Concerns\HasHashtags;
+use App\Concerns\HasMentions;
 use App\Concerns\HasReactions;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,7 +14,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CommunityPost extends Model
 {
-    use HasBookmarks, HasComments, HasReactions, SoftDeletes;
+    use HasBookmarks, HasComments, HasHashtags, HasMentions, HasReactions, SoftDeletes;
 
     protected $fillable = [
         'community_id',
@@ -41,5 +43,10 @@ class CommunityPost extends Model
     public function media(): MorphMany
     {
         return $this->morphMany(Media::class, 'mediable');
+    }
+
+    public function url(): string
+    {
+        return route('communities.show', $this->community);
     }
 }

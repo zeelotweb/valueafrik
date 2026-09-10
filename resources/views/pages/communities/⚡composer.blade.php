@@ -2,6 +2,7 @@
 
 use App\Models\Community;
 use App\Services\ImageOptimizer;
+use App\Support\RichText;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -78,6 +79,9 @@ new class extends Component {
                 'edited_at' => now(),
             ]);
 
+            RichText::syncHashtags($post, $this->body);
+            RichText::syncMentions($post, $this->body, Auth::user());
+
             $this->reset(['body', 'photos', 'editingPostId']);
 
             $this->modal('community-composer-'.$this->community->id)->close();
@@ -108,6 +112,9 @@ new class extends Component {
 
         Auth::user()->awardBridgeScore('community_post', $post);
 
+        RichText::syncHashtags($post, $this->body);
+        RichText::syncMentions($post, $this->body, Auth::user());
+
         foreach ($this->photos as $photo) {
             $optimized = ImageOptimizer::store($photo, 'community-media', 'public');
 
@@ -133,11 +140,7 @@ new class extends Component {
             <form wire:submit="post" class="space-y-4">
                 <flux:heading size="lg">{{ $editingPostId ? __('Edit post') : __('Post to :name', ['name' => $community->name]) }}</flux:heading>
 
-                <flux:textarea
-                    wire:model="body"
-                    placeholder="{{ __('Share something with the community...') }}"
-                    rows="4"
-                />
+                @include('partials.mention-textarea', ['wireModel' => 'body', 'placeholder' => __('Share something with the community...'), 'rows' => 4])
 
                 @if (! $editingPostId)
                     @include('partials.photo-picker', ['photos' => $photos, 'property' => 'photos', 'removeMethod' => 'removePhoto', 'max' => 4])

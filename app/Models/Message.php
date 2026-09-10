@@ -15,7 +15,15 @@ class Message extends Model
         'conversation_id',
         'user_id',
         'body',
+        'read_at',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'read_at' => 'datetime',
+        ];
+    }
 
     public function conversation(): BelongsTo
     {

@@ -1,6 +1,8 @@
 <?php
 
 use App\Events\MessageSent;
+use App\Events\MessagesRead;
+use App\Events\UserTyping;
 use App\Models\Conversation;
 use App\Models\LiveSession;
 use App\Models\Message;
@@ -33,6 +35,8 @@ new #[Title('Messages')] class extends Component {
         $this->otherParticipant = $conversation->participants->firstWhere('id', '!=', Auth::id());
         $this->canMessage = ! $this->otherParticipant || ! Auth::user()->hasBlockRelationWith($this->otherParticipant);
 
+        $this->markIncomingAsRead();
+
         $this->messages = $conversation->messages()
             ->with(['user.profile', 'media'])
             ->latest()
@@ -53,8 +57,30 @@ new #[Title('Messages')] class extends Component {
             'user_name' => $message->user->name,
             'avatar_url' => $message->user->profile?->avatarUrl(),
             'created_at' => $message->created_at->toIso8601String(),
+            'read_at' => $message->read_at?->toIso8601String(),
             'media' => $message->media->map(fn ($media) => ['url' => $media->url()])->all(),
         ];
+    }
+
+    /**
+     * Marks every message from the other participant as read and lets
+     * their own open thread know, if any of them actually were unread —
+     * avoids a pointless broadcast (and a "Seen" flicker) on every mount.
+     */
+    protected function markIncomingAsRead(): void
+    {
+        $marked = $this->conversation->messages()
+            ->where('user_id', '!=', Auth::id())
+            ->whereNull('read_at')
+            ->update(['read_at' => now()]);
+
+        if ($marked > 0) {
+            try {
+                broadcast(new MessagesRead($this->conversation, Auth::user()))->toOthers();
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
     }
 
     public function removePhoto(): void
@@ -126,6 +152,8 @@ new #[Title('Messages')] class extends Component {
     {
         return [
             "echo-private:conversation.{$this->conversation->id},.MessageSent" => 'onMessageReceived',
+            "echo-private:conversation.{$this->conversation->id},.MessagesRead" => 'onMessagesRead',
+            "echo-private:conversation.{$this->conversation->id},.UserTyping" => 'onTypingReceived',
         ];
     }
 
@@ -134,6 +162,46 @@ new #[Title('Messages')] class extends Component {
         $this->messages[] = $event;
 
         $this->conversation->participants()->updateExistingPivot(Auth::id(), ['last_read_at' => now()]);
+
+        // The thread is open right now, so this just-arrived message is
+        // seen immediately — mark it read and let the sender's own open
+        // thread know, same as markIncomingAsRead() does on mount.
+        $this->markIncomingAsRead();
+    }
+
+    /**
+     * The other participant just caught up — flip every message I sent to
+     * read so the checkmarks update without a reload.
+     */
+    public function onMessagesRead(): void
+    {
+        $this->messages = collect($this->messages)
+            ->map(function (array $message) {
+                if ($message['user_id'] === Auth::id() && ! $message['read_at']) {
+                    $message['read_at'] = now()->toIso8601String();
+                }
+
+                return $message;
+            })
+            ->all();
+    }
+
+    public function onTypingReceived(): void
+    {
+        $this->dispatch('other-typing');
+    }
+
+    public function notifyTyping(): void
+    {
+        if (! $this->otherParticipant || ! $this->canMessage) {
+            return;
+        }
+
+        try {
+            broadcast(new UserTyping($this->conversation, Auth::user()))->toOthers();
+        } catch (\Throwable $e) {
+            report($e);
+        }
     }
 }; ?>
 
@@ -173,7 +241,8 @@ new #[Title('Messages')] class extends Component {
     </div>
 
     <div
-        x-data
+        x-data="{ typing: false, timer: null }"
+        x-on:other-typing.window="typing = true; clearTimeout(timer); timer = setTimeout(() => typing = false, 3000)"
         x-init="$watch('$wire.messages', () => $nextTick(() => $el.scrollTop = $el.scrollHeight)); $el.scrollTop = $el.scrollHeight"
         class="flex-1 space-y-3 overflow-y-auto py-4"
     >
@@ -198,11 +267,27 @@ new #[Title('Messages')] class extends Component {
                     @endif
                 </div>
 
+                @if ($isMine)
+                    <span class="mt-0.5 flex items-center gap-0.5 text-xs {{ $message['read_at'] ? 'text-cyan-600 dark:text-cyan-400' : 'text-stone-400 dark:text-stone-500' }}" data-test="read-receipt">
+                        @if ($message['read_at'])
+                            <flux:icon.check-circle variant="solid" class="size-3.5" />
+                            {{ __('Seen') }}
+                        @else
+                            <flux:icon.check class="size-3.5" />
+                        @endif
+                    </span>
+                @endif
+
                 @if ($messageModel = \App\Models\Message::find($message['id']))
                     <livewire:pages::shared.reactions :reactable="$messageModel" :key="'message-reactions-'.$message['id']" />
                 @endif
             </div>
         @endforeach
+
+        <div x-show="typing" style="display: none;" class="flex items-center gap-1.5 px-1 text-xs text-stone-400 dark:text-stone-500" data-test="typing-indicator">
+            <flux:icon.loading variant="micro" class="size-3.5" />
+            {{ __(':name is typing…', ['name' => $otherParticipant?->name ?? __('They')]) }}
+        </div>
     </div>
 
     @if (! $canMessage)
@@ -247,6 +332,7 @@ new #[Title('Messages')] class extends Component {
 
             <flux:textarea
                 wire:model="body"
+                wire:keydown.debounce.500ms="notifyTyping"
                 placeholder="{{ __('Write a message...') }}"
                 rows="1"
                 class="flex-1"

@@ -2,6 +2,7 @@
 
 use App\Models\Comment;
 use App\Models\CommentVote;
+use App\Support\RichText;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
@@ -53,7 +54,7 @@ new class extends Component {
                 ->where('user_id', Auth::id())
                 ->limit(1),
             ])
-            ->with('user.profile')
+            ->with(['user.profile', 'hashtags', 'mentions.user'])
             ->get();
     }
 
@@ -61,7 +62,7 @@ new class extends Component {
     public function replyParent(): ?Comment
     {
         return $this->viewingReplyFor
-            ? Comment::with('user.profile')->find($this->viewingReplyFor)
+            ? Comment::with(['user.profile', 'hashtags', 'mentions.user'])->find($this->viewingReplyFor)
             : null;
     }
 
@@ -80,7 +81,7 @@ new class extends Component {
                 ->where('user_id', Auth::id())
                 ->limit(1),
             ])
-            ->with('user.profile')
+            ->with(['user.profile', 'hashtags', 'mentions.user'])
             ->latest()
             ->get();
     }
@@ -134,6 +135,9 @@ new class extends Component {
 
         Auth::user()->awardBridgeScore('comment_posted', $comment);
 
+        RichText::syncHashtags($comment, $this->body);
+        RichText::syncMentions($comment, $this->body, Auth::user());
+
         $this->reset('body');
 
         unset($this->count, $this->comments);
@@ -154,6 +158,9 @@ new class extends Component {
         ]);
 
         Auth::user()->awardBridgeScore('comment_posted', $reply);
+
+        RichText::syncHashtags($reply, $this->replyBody);
+        RichText::syncMentions($reply, $this->replyBody, Auth::user());
 
         $this->reset('replyBody');
 
@@ -187,6 +194,9 @@ new class extends Component {
             'body' => $this->editBody,
             'edited_at' => now(),
         ]);
+
+        RichText::syncHashtags($comment, $this->editBody);
+        RichText::syncMentions($comment, $this->editBody, Auth::user());
 
         $this->reset(['editingCommentId', 'editBody']);
 
@@ -261,7 +271,7 @@ new class extends Component {
                         </div>
 
                         @if ($commentable->body)
-                            @include('partials.clamped-text', ['text' => $commentable->body])
+                            @include('partials.clamped-text', ['html' => \App\Support\RichText::render($commentable->body, $commentable->hashtags, $commentable->mentions)])
                         @endif
                     </div>
                 </div>
@@ -312,7 +322,7 @@ new class extends Component {
                                         </div>
                                     </form>
                                 @else
-                                    <p class="mt-0.5 whitespace-pre-line text-sm text-stone-700 dark:text-stone-300">{{ $comment->body }}</p>
+                                    <p class="mt-0.5 whitespace-pre-line text-sm text-stone-700 dark:text-stone-300">{!! \App\Support\RichText::render($comment->body, $comment->hashtags, $comment->mentions) !!}</p>
                                 @endif
                             </div>
 
@@ -340,7 +350,7 @@ new class extends Component {
 
             <div class="shrink-0 border-t border-stone-200 p-3 dark:border-stone-800">
                 <form wire:submit="post" class="flex items-end gap-2">
-                    <flux:textarea wire:model="body" rows="1" placeholder="{{ __('Write a comment…') }}" class="flex-1" />
+                    @include('partials.mention-textarea', ['wireModel' => 'body', 'placeholder' => __('Write a comment…'), 'rows' => 1, 'class' => 'flex-1'])
                     <flux:button type="submit" icon="paper-airplane" variant="primary" color="cyan" wire:loading.attr="disabled" wire:target="post" aria-label="{{ __('Send') }}" data-test="send-comment" />
                 </form>
                 @error('body') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
@@ -372,7 +382,7 @@ new class extends Component {
                                 <span class="shrink-0 text-xs text-stone-400 dark:text-stone-500">{{ $this->replyParent->created_at->diffForHumans() }}</span>
                             </div>
 
-                            @include('partials.clamped-text', ['text' => $this->replyParent->body])
+                            @include('partials.clamped-text', ['html' => \App\Support\RichText::render($this->replyParent->body, $this->replyParent->hashtags, $this->replyParent->mentions)])
                         </div>
                     </div>
                 </div>
@@ -422,7 +432,7 @@ new class extends Component {
                                         </div>
                                     </form>
                                 @else
-                                    <p class="mt-0.5 whitespace-pre-line text-sm text-stone-700 dark:text-stone-300">{{ $reply->body }}</p>
+                                    <p class="mt-0.5 whitespace-pre-line text-sm text-stone-700 dark:text-stone-300">{!! \App\Support\RichText::render($reply->body, $reply->hashtags, $reply->mentions) !!}</p>
                                 @endif
                             </div>
 
@@ -438,7 +448,7 @@ new class extends Component {
 
                 <div class="shrink-0 border-t border-stone-200 p-3 dark:border-stone-800">
                     <form wire:submit="postReply" class="flex items-end gap-2">
-                        <flux:textarea wire:model="replyBody" rows="1" placeholder="{{ __('Write a reply…') }}" class="flex-1" />
+                        @include('partials.mention-textarea', ['wireModel' => 'replyBody', 'placeholder' => __('Write a reply…'), 'rows' => 1, 'class' => 'flex-1'])
                         <flux:button type="submit" icon="paper-airplane" variant="primary" color="cyan" wire:loading.attr="disabled" wire:target="postReply" aria-label="{{ __('Send') }}" data-test="send-reply" />
                     </form>
                     @error('replyBody') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror

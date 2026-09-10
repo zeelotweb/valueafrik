@@ -1,6 +1,8 @@
 <?php
 
 use App\Events\MessageSent;
+use App\Events\MessagesRead;
+use App\Events\UserTyping;
 use App\Models\Conversation;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
@@ -183,6 +185,112 @@ test('inbox lists conversations with the other participant and unread state', fu
         ->assertSee('Unread ping');
 
     expect($a->fresh()->unreadConversationsCount())->toBe(1);
+});
+
+test('opening a thread marks the other participants messages as read and broadcasts it', function () {
+    Event::fake([MessagesRead::class]);
+
+    $a = User::factory()->create();
+    $b = User::factory()->create();
+    $conversation = Conversation::between($a, $b);
+    $message = $conversation->messages()->create(['user_id' => $b->id, 'body' => 'hi']);
+
+    Livewire::actingAs($a)->test('pages::messages.show', ['conversation' => $conversation]);
+
+    expect($message->fresh()->read_at)->not->toBeNull();
+
+    Event::assertDispatched(MessagesRead::class, function (MessagesRead $event) use ($conversation, $a) {
+        return $event->conversation->id === $conversation->id && $event->reader->id === $a->id;
+    });
+});
+
+test('opening an already-read thread does not re-broadcast', function () {
+    Event::fake([MessagesRead::class]);
+
+    $a = User::factory()->create();
+    $b = User::factory()->create();
+    $conversation = Conversation::between($a, $b);
+    $conversation->messages()->create(['user_id' => $b->id, 'body' => 'hi', 'read_at' => now()]);
+
+    Livewire::actingAs($a)->test('pages::messages.show', ['conversation' => $conversation]);
+
+    Event::assertNotDispatched(MessagesRead::class);
+});
+
+test('a newly arrived message while the thread is open is marked read immediately', function () {
+    $a = User::factory()->create();
+    $b = User::factory()->create();
+    $conversation = Conversation::between($a, $b);
+    $incoming = $conversation->messages()->create(['user_id' => $b->id, 'body' => 'hi']);
+
+    Livewire::actingAs($a)
+        ->test('pages::messages.show', ['conversation' => $conversation])
+        ->call('onMessageReceived', [
+            'id' => $incoming->id,
+            'body' => $incoming->body,
+            'user_id' => $b->id,
+            'user_name' => $b->name,
+            'avatar_url' => null,
+            'created_at' => $incoming->created_at->toIso8601String(),
+            'read_at' => null,
+            'media' => [],
+        ]);
+
+    expect($incoming->fresh()->read_at)->not->toBeNull();
+});
+
+test('receiving a read receipt flips my own sent messages to read in the open thread', function () {
+    $a = User::factory()->create();
+    $b = User::factory()->create();
+    $conversation = Conversation::between($a, $b);
+    $conversation->messages()->create(['user_id' => $a->id, 'body' => 'seen me?']);
+
+    $component = Livewire::actingAs($a)
+        ->test('pages::messages.show', ['conversation' => $conversation]);
+
+    expect(collect($component->get('messages'))->first()['read_at'])->toBeNull();
+
+    $component->call('onMessagesRead');
+
+    expect(collect($component->get('messages'))->first()['read_at'])->not->toBeNull();
+});
+
+test('typing broadcasts to the other participant but not when messaging is blocked', function () {
+    Event::fake([UserTyping::class]);
+
+    $a = User::factory()->create();
+    $b = User::factory()->create();
+    $conversation = Conversation::between($a, $b);
+
+    Livewire::actingAs($a)
+        ->test('pages::messages.show', ['conversation' => $conversation])
+        ->call('notifyTyping');
+
+    Event::assertDispatched(UserTyping::class, fn (UserTyping $event) => $event->user->id === $a->id);
+
+    Event::fake([UserTyping::class]);
+    $a->block($b);
+
+    Livewire::actingAs($a)
+        ->test('pages::messages.show', ['conversation' => $conversation])
+        ->call('notifyTyping');
+
+    Event::assertNotDispatched(UserTyping::class);
+});
+
+test('the live listeners use the exact dot prefixed event names Echo requires for read receipts and typing', function () {
+    $a = User::factory()->create();
+    $b = User::factory()->create();
+    $conversation = Conversation::between($a, $b);
+
+    $listeners = Livewire::actingAs($a)
+        ->test('pages::messages.show', ['conversation' => $conversation])
+        ->instance()
+        ->getListeners();
+
+    expect(array_keys($listeners))
+        ->toContain("echo-private:conversation.{$conversation->id},.MessagesRead")
+        ->toContain("echo-private:conversation.{$conversation->id},.UserTyping");
 });
 
 test('the live message listener uses the exact dot prefixed event name Echo requires', function () {

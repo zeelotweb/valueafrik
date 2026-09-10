@@ -39,7 +39,7 @@ new class extends Component {
             // components don't each fire their own count/exists query per
             // post — see HasReactions/HasComments/HasBookmarks.
             'posts' => $this->user->wallPosts()
-                ->with(['user.profile', 'media'])
+                ->with(['user.profile', 'media', 'hashtags', 'mentions.user'])
                 ->withCount(['reactions', 'comments'])
                 ->withExists([
                     'reactions as user_reacted' => fn ($q) => $q->where('user_id', Auth::id()),
@@ -99,7 +99,7 @@ new class extends Component {
             </div>
 
             @if ($post->body)
-                <p class="mt-3 whitespace-pre-line text-stone-700 dark:text-stone-300">{{ $post->body }}</p>
+                <p class="mt-3 whitespace-pre-line text-stone-700 dark:text-stone-300">{!! \App\Support\RichText::render($post->body, $post->hashtags, $post->mentions) !!}</p>
             @endif
 
             @if ($post->media->isNotEmpty())

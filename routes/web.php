@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\CommunityPhotoController;
+use App\Http\Controllers\MentionSearchController;
 use App\Http\Controllers\ProfileShowController;
 use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Middleware\EnsureOnboardingComplete;
@@ -47,6 +48,9 @@ Route::middleware(['auth', 'verified', EnsureOnboardingComplete::class])->group(
 
     Route::livewire('culture-sprint', 'pages::culture-sprint.index')->name('culture-sprint.index');
 
+    Route::livewire('topics/{hashtag:slug}', 'pages::topics.show')->name('topics.show');
+    Route::get('mentions/search', MentionSearchController::class)->name('mentions.search');
+
     Route::post('push-subscriptions', [PushSubscriptionController::class, 'store'])->name('push-subscriptions.store');
     Route::delete('push-subscriptions', [PushSubscriptionController::class, 'destroy'])->name('push-subscriptions.destroy');
 });
@@ -63,3 +67,4 @@ Route::middleware(['guest'])->group(function () {
 });
 
 require __DIR__.'/settings.php';
+require __DIR__.'/admin.php';

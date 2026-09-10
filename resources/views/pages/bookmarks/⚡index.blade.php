@@ -24,8 +24,8 @@ new #[Title('Bookmarks')] class extends Component {
             ->where('user_id', Auth::id())
             ->with(['bookmarkable' => function ($morphTo) {
                 $morphTo->morphWith([
-                    WallPost::class => ['user.profile', 'media'],
-                    CommunityPost::class => ['user.profile', 'media', 'community'],
+                    WallPost::class => ['user.profile', 'media', 'hashtags', 'mentions.user'],
+                    CommunityPost::class => ['user.profile', 'media', 'community', 'hashtags', 'mentions.user'],
                 ]);
             }])
             ->latest()
@@ -91,7 +91,7 @@ new #[Title('Bookmarks')] class extends Component {
                 </div>
 
                 @if ($post->body)
-                    <p class="mt-3 whitespace-pre-line text-stone-700 dark:text-stone-300">{{ $post->body }}</p>
+                    <p class="mt-3 whitespace-pre-line text-stone-700 dark:text-stone-300">{!! \App\Support\RichText::render($post->body, $post->hashtags, $post->mentions) !!}</p>
                 @endif
 
                 @if ($post->media->isNotEmpty())

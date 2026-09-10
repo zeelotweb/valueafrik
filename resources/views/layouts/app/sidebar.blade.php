@@ -64,6 +64,18 @@
                         {{ __('Culture Sprint') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
+
+                @if (auth()->user()->isAdmin())
+                    <flux:sidebar.group :heading="$darkHeading('Admin')" class="grid">
+                        <flux:sidebar.item icon="flag" :href="route('admin.reports')" :current="request()->routeIs('admin.reports')" wire:navigate>
+                            {{ __('Reports') }}
+                        </flux:sidebar.item>
+
+                        <flux:sidebar.item icon="shield-exclamation" :href="route('admin.users')" :current="request()->routeIs('admin.users')" wire:navigate>
+                            {{ __('Users') }}
+                        </flux:sidebar.item>
+                    </flux:sidebar.group>
+                @endif
             </flux:sidebar.nav>
 
             <flux:spacer />
