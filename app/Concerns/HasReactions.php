@@ -43,4 +43,47 @@ trait HasReactions
 
         return $this->reactions()->where('user_id', $user->id)->exists();
     }
+
+    /**
+     * The specific type (Reaction::TYPE_LIKE or one of Reaction::EMOJIS) of
+     * this user's reaction, or null if they haven't reacted. Only queries
+     * when isReactedBy() is already true, so a feed of mostly-unreacted
+     * posts doesn't pay for this on every card.
+     */
+    public function myReactionType(?User $user): ?string
+    {
+        if (! $this->isReactedBy($user)) {
+            return null;
+        }
+
+        return $this->reactions()->where('user_id', $user->id)->value('type');
+    }
+
+    /**
+     * One reaction per user per item, enforced by a DB unique constraint —
+     * picking a new type replaces rather than stacks. Tapping the same
+     * type you already have removes it (a toggle), shared by both the
+     * heart button and the emoji picker so they can never disagree about
+     * what "your reaction" currently is.
+     */
+    public function reactAs(User $user, string $type): void
+    {
+        $existing = $this->reactions()->where('user_id', $user->id)->first();
+
+        if ($existing && $existing->type === $type) {
+            $existing->delete();
+
+            return;
+        }
+
+        if ($existing) {
+            $existing->update(['type' => $type]);
+
+            return;
+        }
+
+        $this->reactions()->create(['user_id' => $user->id, 'type' => $type]);
+
+        $user->awardBridgeScore('reaction_given', $this);
+    }
 }

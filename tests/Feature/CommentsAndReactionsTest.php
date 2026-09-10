@@ -48,7 +48,7 @@ test('a user can comment on a wall post and see it appear once the thread is ope
 
     Livewire::actingAs($commenter)
         ->test('pages::shared.comments', ['commentable' => $post])
-        ->call('toggle')
+        ->call('openModal')
         ->set('body', 'Great post!')
         ->call('post')
         ->assertSee('Great post!')
@@ -101,7 +101,7 @@ test('reactions and comments work the same way on a community post', function ()
 
     Livewire::actingAs($member)
         ->test('pages::shared.comments', ['commentable' => $post])
-        ->call('toggle')
+        ->call('openModal')
         ->set('body', 'Glad to be here.')
         ->call('post')
         ->assertSee('Glad to be here.');
@@ -148,6 +148,59 @@ test('bookmarked posts appear on the bookmarks page and stay private to the book
         ->test('pages::bookmarks.index')
         ->assertDontSee('A post worth saving.')
         ->assertSee("You haven't bookmarked anything yet.");
+});
+
+test('picking an emoji reaction replaces a heart, and picking the heart replaces an emoji', function () {
+    $author = User::factory()->create();
+    $post = $author->wallPosts()->create(['body' => 'Hello wall.']);
+    $viewer = User::factory()->create();
+
+    Livewire::actingAs($viewer)
+        ->test('pages::shared.reactions', ['reactable' => $post])
+        ->call('toggle')
+        ->assertSet('myType', Reaction::TYPE_LIKE);
+
+    Livewire::actingAs($viewer)
+        ->test('pages::shared.emoji-reactions', ['reactable' => $post])
+        ->call('react', '🔥')
+        ->assertSet('myEmoji', '🔥');
+
+    expect($post->fresh()->reactionsCount())->toBe(1);
+    expect($post->fresh()->myReactionType($viewer))->toBe('🔥');
+
+    Livewire::actingAs($viewer)
+        ->test('pages::shared.reactions', ['reactable' => $post])
+        ->call('toggle')
+        ->assertSet('myType', Reaction::TYPE_LIKE);
+
+    expect($post->fresh()->reactionsCount())->toBe(1);
+    expect($post->fresh()->myReactionType($viewer))->toBe(Reaction::TYPE_LIKE);
+});
+
+test('picking the same emoji again removes the reaction', function () {
+    $author = User::factory()->create();
+    $post = $author->wallPosts()->create(['body' => 'Hello wall.']);
+    $viewer = User::factory()->create();
+
+    Livewire::actingAs($viewer)
+        ->test('pages::shared.emoji-reactions', ['reactable' => $post])
+        ->call('react', '😂')
+        ->assertSet('myEmoji', '😂')
+        ->call('react', '😂')
+        ->assertSet('myEmoji', null);
+
+    expect($post->fresh()->reactionsCount())->toBe(0);
+});
+
+test('an unlisted emoji is rejected', function () {
+    $author = User::factory()->create();
+    $post = $author->wallPosts()->create(['body' => 'Hello wall.']);
+    $viewer = User::factory()->create();
+
+    Livewire::actingAs($viewer)
+        ->test('pages::shared.emoji-reactions', ['reactable' => $post])
+        ->call('react', '💀')
+        ->assertStatus(422);
 });
 
 test('a message can be reacted to', function () {

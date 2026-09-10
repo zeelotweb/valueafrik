@@ -105,10 +105,15 @@ new #[Title('Bookmarks')] class extends Component {
                     </div>
                 @endif
 
-                <div class="mt-3 flex items-start gap-1 border-t border-stone-200 pt-2 dark:border-stone-800">
-                    <livewire:pages::shared.reactions :reactable="$post" :key="'bookmarked-reactions-'.get_class($post).'-'.$post->id" />
-                    <livewire:pages::shared.comments :commentable="$post" :key="'bookmarked-comments-'.get_class($post).'-'.$post->id" />
-                    <livewire:pages::shared.bookmark :bookmarkable="$post" :key="'bookmarked-bookmark-'.get_class($post).'-'.$post->id" />
+                <div class="mt-3 flex items-center justify-between border-t border-stone-200 pt-2 dark:border-stone-800">
+                    <div class="flex items-center gap-1">
+                        <livewire:pages::shared.emoji-reactions :reactable="$post" :key="'bookmarked-emoji-'.get_class($post).'-'.$post->id" />
+                        <livewire:pages::shared.comments :commentable="$post" :key="'bookmarked-comments-'.get_class($post).'-'.$post->id" />
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <livewire:pages::shared.bookmark :bookmarkable="$post" :key="'bookmarked-bookmark-'.get_class($post).'-'.$post->id" />
+                        <livewire:pages::shared.reactions :reactable="$post" :key="'bookmarked-reactions-'.get_class($post).'-'.$post->id" />
+                    </div>
                 </div>
             </div>
         @empty
