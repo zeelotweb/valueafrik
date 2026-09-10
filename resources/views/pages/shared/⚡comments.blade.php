@@ -201,8 +201,8 @@ new class extends Component {
     </button>
 
     {{-- Main thread: post preview pinned top, comments scroll in the middle, composer pinned bottom. --}}
-    <flux:modal name="{{ $this->modalName() }}" class="max-w-lg p-0 max-sm:p-0" wire:close="closeModal">
-        <div class="flex max-h-[85vh] flex-col">
+    <flux:modal name="{{ $this->modalName() }}" class="max-w-lg p-0! max-lg:m-0! max-lg:h-dvh! max-lg:max-h-dvh! max-lg:w-full! max-lg:max-w-none! max-lg:rounded-none!" wire:close="closeModal">
+        <div class="flex max-lg:h-full lg:max-h-[85vh] flex-col">
             <div class="shrink-0 border-b border-stone-200 p-4 pe-12 dark:border-stone-800">
                 <flux:heading size="lg" class="mb-3">{{ __('Comments') }}</flux:heading>
 
@@ -308,9 +308,9 @@ new class extends Component {
     </flux:modal>
 
     {{-- Replies: the parent comment pinned top (same treatment as the post above), replies scroll in the middle, composer pinned bottom. --}}
-    <flux:modal name="{{ $this->repliesModalName() }}" class="max-w-lg p-0 max-sm:p-0" wire:close="closeReplies">
+    <flux:modal name="{{ $this->repliesModalName() }}" class="max-w-lg p-0! max-lg:m-0! max-lg:h-dvh! max-lg:max-h-dvh! max-lg:w-full! max-lg:max-w-none! max-lg:rounded-none!" wire:close="closeReplies">
         @if ($this->replyParent)
-            <div class="flex max-h-[85vh] flex-col">
+            <div class="flex max-lg:h-full lg:max-h-[85vh] flex-col">
                 <div class="shrink-0 border-b border-stone-200 p-4 pe-12 dark:border-stone-800">
                     <flux:heading size="lg" class="mb-3">{{ __('Replies') }}</flux:heading>
 
