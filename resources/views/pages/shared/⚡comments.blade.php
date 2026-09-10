@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Comment;
+use App\Models\CommentVote;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
@@ -45,6 +46,13 @@ new class extends Component {
         return $this->commentable->comments()
             ->whereNull('parent_id')
             ->withCount('replies')
+            ->withCount(['votes as upvotes_count' => fn ($query) => $query->where('type', CommentVote::TYPE_UP)])
+            ->withCount(['votes as downvotes_count' => fn ($query) => $query->where('type', CommentVote::TYPE_DOWN)])
+            ->addSelect(['my_vote_type' => CommentVote::select('type')
+                ->whereColumn('comment_id', 'comments.id')
+                ->where('user_id', Auth::id())
+                ->limit(1),
+            ])
             ->with('user.profile')
             ->get();
     }
@@ -64,7 +72,17 @@ new class extends Component {
             return collect();
         }
 
-        return Comment::where('parent_id', $this->viewingReplyFor)->with('user.profile')->latest()->get();
+        return Comment::where('parent_id', $this->viewingReplyFor)
+            ->withCount(['votes as upvotes_count' => fn ($query) => $query->where('type', CommentVote::TYPE_UP)])
+            ->withCount(['votes as downvotes_count' => fn ($query) => $query->where('type', CommentVote::TYPE_DOWN)])
+            ->addSelect(['my_vote_type' => CommentVote::select('type')
+                ->whereColumn('comment_id', 'comments.id')
+                ->where('user_id', Auth::id())
+                ->limit(1),
+            ])
+            ->with('user.profile')
+            ->latest()
+            ->get();
     }
 
     public function modalName(): string
@@ -185,6 +203,25 @@ new class extends Component {
 
         unset($this->count, $this->comments, $this->replies);
     }
+
+    public function voteUp(int $commentId): void
+    {
+        $this->vote($commentId, CommentVote::TYPE_UP);
+    }
+
+    public function voteDown(int $commentId): void
+    {
+        $this->vote($commentId, CommentVote::TYPE_DOWN);
+    }
+
+    private function vote(int $commentId, string $type): void
+    {
+        $comment = Comment::findOrFail($commentId);
+
+        $comment->voteAs(Auth::user(), $type);
+
+        unset($this->comments, $this->replies);
+    }
 }; ?>
 
 <div class="min-w-0" wire:key="comments-{{ get_class($commentable) }}-{{ $commentable->id }}">
@@ -279,17 +316,21 @@ new class extends Component {
                                 @endif
                             </div>
 
-                            <button
-                                type="button"
-                                wire:click="openReplies({{ $comment->id }})"
-                                class="mt-1 ms-1 text-xs font-medium text-stone-500 transition hover:text-cyan-600 dark:text-stone-400 dark:hover:text-cyan-400"
-                                data-test="reply-button"
-                            >
-                                {{ __('Reply') }}
-                                @if ($comment->replies_count > 0)
-                                    &middot; {{ trans_choice('1 reply|:count replies', $comment->replies_count) }}
-                                @endif
-                            </button>
+                            <div class="mt-1 ms-1 flex items-center gap-3">
+                                @include('partials.comment-votes', ['comment' => $comment])
+
+                                <button
+                                    type="button"
+                                    wire:click="openReplies({{ $comment->id }})"
+                                    class="text-xs font-medium text-stone-500 transition hover:text-cyan-600 dark:text-stone-400 dark:hover:text-cyan-400"
+                                    data-test="reply-button"
+                                >
+                                    {{ __('Reply') }}
+                                    @if ($comment->replies_count > 0)
+                                        &middot; {{ trans_choice('1 reply|:count replies', $comment->replies_count) }}
+                                    @endif
+                                </button>
+                            </div>
                         </div>
                     </div>
                 @empty
@@ -349,9 +390,10 @@ new class extends Component {
                                 @endif
                             </a>
 
-                            <div class="min-w-0 flex-1 rounded-lg bg-stone-100 px-3 py-2 dark:bg-stone-800">
-                                <div class="flex items-center justify-between gap-2">
-                                    <a href="{{ route('profile.show', $reply->user) }}" wire:navigate class="truncate text-sm font-medium text-stone-900 hover:underline dark:text-white">{{ $reply->user->name }}</a>
+                            <div class="min-w-0 flex-1">
+                                <div class="rounded-lg bg-stone-100 px-3 py-2 dark:bg-stone-800">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <a href="{{ route('profile.show', $reply->user) }}" wire:navigate class="truncate text-sm font-medium text-stone-900 hover:underline dark:text-white">{{ $reply->user->name }}</a>
                                     <div class="flex shrink-0 items-center gap-2">
                                         <span class="text-xs text-stone-400 dark:text-stone-500">
                                             {{ $reply->created_at->diffForHumans(null, true) }}
@@ -383,7 +425,12 @@ new class extends Component {
                                     <p class="mt-0.5 whitespace-pre-line text-sm text-stone-700 dark:text-stone-300">{{ $reply->body }}</p>
                                 @endif
                             </div>
+
+                            <div class="mt-1 ms-1">
+                                @include('partials.comment-votes', ['comment' => $reply])
+                            </div>
                         </div>
+                    </div>
                     @empty
                         <p class="text-sm text-stone-400 dark:text-stone-500">{{ __('No replies yet — be the first.') }}</p>
                     @endforelse

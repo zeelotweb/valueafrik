@@ -279,6 +279,64 @@ test('an unlisted emoji is rejected', function () {
         ->assertStatus(422);
 });
 
+test('a user can upvote a comment, and upvoting again removes it', function () {
+    $author = User::factory()->create();
+    $post = $author->wallPosts()->create(['body' => 'Hello wall.']);
+    $comment = $post->comments()->create(['user_id' => $author->id, 'body' => 'Top level.']);
+    $voter = User::factory()->create();
+
+    Livewire::actingAs($voter)
+        ->test('pages::shared.comments', ['commentable' => $post])
+        ->call('openModal')
+        ->call('voteUp', $comment->id);
+
+    expect($comment->fresh()->upvotesCount())->toBe(1);
+    expect($comment->fresh()->downvotesCount())->toBe(0);
+    expect($comment->fresh()->myVote($voter))->toBe(\App\Models\CommentVote::TYPE_UP);
+
+    Livewire::actingAs($voter)
+        ->test('pages::shared.comments', ['commentable' => $post])
+        ->call('openModal')
+        ->call('voteUp', $comment->id);
+
+    expect($comment->fresh()->upvotesCount())->toBe(0);
+    expect($comment->fresh()->myVote($voter))->toBeNull();
+});
+
+test('downvoting a comment a user already upvoted switches the vote instead of stacking', function () {
+    $author = User::factory()->create();
+    $post = $author->wallPosts()->create(['body' => 'Hello wall.']);
+    $comment = $post->comments()->create(['user_id' => $author->id, 'body' => 'Top level.']);
+    $voter = User::factory()->create();
+
+    Livewire::actingAs($voter)
+        ->test('pages::shared.comments', ['commentable' => $post])
+        ->call('openModal')
+        ->call('voteUp', $comment->id)
+        ->call('voteDown', $comment->id);
+
+    expect($comment->fresh()->upvotesCount())->toBe(0);
+    expect($comment->fresh()->downvotesCount())->toBe(1);
+    expect($comment->fresh()->myVote($voter))->toBe(\App\Models\CommentVote::TYPE_DOWN);
+    expect(\App\Models\CommentVote::where('comment_id', $comment->id)->count())->toBe(1);
+});
+
+test('a reply can be voted on independently of its parent comment', function () {
+    $author = User::factory()->create();
+    $post = $author->wallPosts()->create(['body' => 'Hello wall.']);
+    $comment = $post->comments()->create(['user_id' => $author->id, 'body' => 'Top level.']);
+    $reply = $post->comments()->create(['user_id' => $author->id, 'parent_id' => $comment->id, 'body' => 'A reply.']);
+    $voter = User::factory()->create();
+
+    Livewire::actingAs($voter)
+        ->test('pages::shared.comments', ['commentable' => $post])
+        ->call('openReplies', $comment->id)
+        ->call('voteUp', $reply->id);
+
+    expect($reply->fresh()->upvotesCount())->toBe(1);
+    expect($comment->fresh()->upvotesCount())->toBe(0);
+});
+
 test('a message can be reacted to', function () {
     $a = User::factory()->create();
     $b = User::factory()->create();
