@@ -32,7 +32,7 @@ new class extends Component {
     size="sm"
     variant="ghost"
     icon="chat-bubble-left-right"
-    class="{{ $overlay ? '!bg-white/90 !text-stone-900 shadow-sm backdrop-blur hover:!bg-white dark:!bg-stone-900/80 dark:!text-white dark:hover:!bg-stone-900' : '' }}"
+    class="{{ $overlay ? '!bg-white/90 !text-stone-900 shadow-sm backdrop-blur hover:!bg-white dark:!bg-stone-900/80 dark:!text-white dark:hover:!bg-stone-900' : '' }} max-sm:w-8! max-sm:ps-0! max-sm:pe-0!"
     data-test="message-button"
 >
     <span class="hidden sm:inline">{{ __('Message') }}</span>

@@ -71,6 +71,11 @@ new class extends Component {
         $class = $this->isFollowing
             ? ($overlay ? '!bg-white/90 !text-stone-900 shadow-sm backdrop-blur hover:!bg-white dark:!bg-stone-900/80 dark:!text-white dark:hover:!bg-stone-900' : '')
             : '';
+        // The trailing text is only hidden via CSS at sm+ ("hidden sm:inline"),
+        // not actually removed from the slot — Flux only treats a button as
+        // square (icon centered, no text padding) when the slot is truly
+        // empty, so without this the icon sits off-center below sm.
+        $class .= ' max-sm:w-8! max-sm:ps-0! max-sm:pe-0!';
     }
 ?>
 <flux:button
