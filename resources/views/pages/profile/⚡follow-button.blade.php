@@ -75,7 +75,7 @@ new class extends Component {
         // not actually removed from the slot — Flux only treats a button as
         // square (icon centered, no text padding) when the slot is truly
         // empty, so without this the icon sits off-center below sm.
-        $class .= ' max-sm:w-8! max-sm:ps-0! max-sm:pe-0!';
+        $class .= ' max-sm:w-8! max-sm:gap-0! max-sm:ps-0! max-sm:pe-0!';
     }
 ?>
 <flux:button

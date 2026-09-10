@@ -234,7 +234,7 @@ new #[Title('Messages')] class extends Component {
         @endif
 
         @if ($canMessage)
-            <flux:button wire:click="startCall" wire:loading.attr="disabled" size="sm" variant="ghost" icon="video-camera" data-test="start-call-button">
+            <flux:button wire:click="startCall" wire:loading.attr="disabled" size="sm" variant="ghost" icon="video-camera" class="max-sm:w-8! max-sm:gap-0! max-sm:ps-0! max-sm:pe-0!" data-test="start-call-button">
                 <span class="hidden sm:inline">{{ __('Call') }}</span>
             </flux:button>
         @endif
