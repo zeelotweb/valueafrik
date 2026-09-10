@@ -17,6 +17,12 @@ new class extends Component {
     public Model $reactable;
 
     #[Computed]
+    public function count(): int
+    {
+        return $this->reactable->reactionsCount();
+    }
+
+    #[Computed]
     public function myType(): ?string
     {
         return $this->reactable->myReactionType(Auth::user());
@@ -37,7 +43,7 @@ new class extends Component {
     #[On('reaction-changed')]
     public function refresh(): void
     {
-        unset($this->myType, $this->myEmoji);
+        unset($this->count, $this->myType, $this->myEmoji);
     }
 
     public function react(string $emoji): void
@@ -59,10 +65,12 @@ new class extends Component {
         data-test="emoji-reaction-trigger"
         class="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm font-medium transition {{ $this->myEmoji ? '!text-amber-600 dark:!text-amber-400' : 'text-stone-500 hover:text-amber-600 dark:text-stone-400 dark:hover:text-amber-400' }}"
     >
+        <flux:icon.face-smile variant="outline" class="size-4" />
+        @if ($this->count > 0)
+            <span>{{ $this->count }}</span>
+        @endif
         @if ($this->myEmoji)
             <span class="text-base leading-none">{{ $this->myEmoji }}</span>
-        @else
-            <flux:icon.face-smile variant="outline" class="size-4" />
         @endif
     </button>
 

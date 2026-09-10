@@ -163,7 +163,8 @@ test('picking an emoji reaction replaces a heart, and picking the heart replaces
     Livewire::actingAs($viewer)
         ->test('pages::shared.emoji-reactions', ['reactable' => $post])
         ->call('react', '🔥')
-        ->assertSet('myEmoji', '🔥');
+        ->assertSet('myEmoji', '🔥')
+        ->assertSet('count', 1);
 
     expect($post->fresh()->reactionsCount())->toBe(1);
     expect($post->fresh()->myReactionType($viewer))->toBe('🔥');
