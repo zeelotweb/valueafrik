@@ -13,11 +13,19 @@ class ProfilePhotoController extends Controller
 {
     public function updateAvatar(Request $request): JsonResponse
     {
-        return $this->update($request, 'avatar_path', 'avatars', maxKilobytes: 5120, maxDimension: 1024);
+        // The largest avatar ever rendered anywhere in the app is a 112px
+        // circle on the profile page — 400px comfortably covers that at
+        // 3x retina with no real quality difference from 1024px, at a
+        // fraction of the file size. It never needs its own thumbnail
+        // tier the way post media does: there's no "shown huge" context
+        // to serve a bigger derivative for.
+        return $this->update($request, 'avatar_path', 'avatars', maxKilobytes: 5120, maxDimension: 400);
     }
 
     public function updateCover(Request $request): JsonResponse
     {
+        // Covers genuinely render near full card width (up to ~768px),
+        // so they keep the same ceiling post media uses.
         return $this->update($request, 'cover_path', 'covers', maxKilobytes: 8192, maxDimension: 2048);
     }
 
@@ -38,7 +46,7 @@ class ProfilePhotoController extends Controller
             Storage::disk('public')->delete($profile->{$column});
         }
 
-        $optimized = ImageOptimizer::store($request->file('photo'), $directory, 'public', $maxDimension);
+        $optimized = ImageOptimizer::store($request->file('photo'), $directory, 'public', $maxDimension, generateThumbnail: false);
 
         $profile->update([$column => $optimized['path']]);
 

@@ -13,7 +13,10 @@ class CommunityPhotoController extends Controller
 {
     public function updateAvatar(Request $request, Community $community): JsonResponse
     {
-        return $this->update($request, $community, 'avatar_path', 'community-avatars', maxKilobytes: 5120, maxDimension: 1024);
+        // Same reasoning as ProfilePhotoController — the largest community
+        // avatar shown anywhere is an 80px circle, so 400px is generous
+        // headroom, not a compromise.
+        return $this->update($request, $community, 'avatar_path', 'community-avatars', maxKilobytes: 5120, maxDimension: 400);
     }
 
     public function updateCover(Request $request, Community $community): JsonResponse
@@ -38,7 +41,7 @@ class CommunityPhotoController extends Controller
             Storage::disk('public')->delete($community->{$column});
         }
 
-        $optimized = ImageOptimizer::store($request->file('photo'), $directory, 'public', $maxDimension);
+        $optimized = ImageOptimizer::store($request->file('photo'), $directory, 'public', $maxDimension, generateThumbnail: false);
 
         $community->update([$column => $optimized['path']]);
 

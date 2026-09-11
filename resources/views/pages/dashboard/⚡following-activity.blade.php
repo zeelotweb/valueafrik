@@ -45,7 +45,7 @@ new class extends Component {
                 'type' => 'wall_post',
                 'timestamp' => $post->created_at,
                 'user' => $post->user,
-                'photo' => $post->media->first()?->url(),
+                'photo' => $post->media->first()?->thumbnailUrl(),
                 // The card only ever shows the first photo as a thumbnail,
                 // but the lightbox opened from it should let you browse
                 // every photo actually on the post, not just that one.
@@ -73,7 +73,7 @@ new class extends Component {
                 'timestamp' => $post->created_at,
                 'user' => $post->user,
                 'community' => $post->community,
-                'photo' => $post->media->first()?->url(),
+                'photo' => $post->media->first()?->thumbnailUrl(),
                 'photos' => $post->media->map->url()->all(),
                 'excerpt' => $post->body ? Str::limit($post->body, 110) : __('Shared a photo.'),
                 'url' => route('communities.show', $post->community),

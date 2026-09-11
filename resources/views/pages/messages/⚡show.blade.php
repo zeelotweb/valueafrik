@@ -58,7 +58,7 @@ new #[Title('Messages')] class extends Component {
             'avatar_url' => $message->user->profile?->avatarUrl(),
             'created_at' => $message->created_at->toIso8601String(),
             'read_at' => $message->read_at?->toIso8601String(),
-            'media' => $message->media->map(fn ($media) => ['url' => $media->url()])->all(),
+            'media' => $message->media->map(fn ($media) => ['url' => $media->url(), 'thumbnail_url' => $media->thumbnailUrl()])->all(),
         ];
     }
 
@@ -256,7 +256,7 @@ new #[Title('Messages')] class extends Component {
                         <div class="mb-1 grid gap-1 {{ count($message['media']) > 1 ? 'grid-cols-2' : '' }}" x-data>
                             @foreach ($message['media'] as $index => $media)
                                 <button type="button" x-on:click="window.dispatchEvent(new CustomEvent('media-viewer:show', { detail: { images: @js($mediaUrls), index: {{ $index }} } }))" class="block">
-                                    <img src="{{ $media['url'] }}" class="max-h-64 w-full rounded-lg object-cover">
+                                    <img src="{{ $media['thumbnail_url'] }}" class="max-h-64 w-full rounded-lg object-cover">
                                 </button>
                             @endforeach
                         </div>

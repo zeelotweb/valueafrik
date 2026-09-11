@@ -135,16 +135,7 @@ new class extends Component {
                         @if ($column['body'])
                             <p class="mt-3 whitespace-pre-line text-sm text-stone-700 dark:text-stone-300">{{ $column['body'] }}</p>
 
-                            @if ($column['media']->isNotEmpty())
-                                @php $mediaUrls = $column['media']->map->url()->values()->all(); @endphp
-                                <div class="mt-3 grid grid-cols-2 gap-2" x-data>
-                                    @foreach ($column['media']->values() as $index => $media)
-                                        <button type="button" x-on:click="window.dispatchEvent(new CustomEvent('media-viewer:show', { detail: { images: @js($mediaUrls), index: {{ $index }} } }))" class="block">
-                                            <img src="{{ $media->url() }}" class="aspect-square w-full rounded-lg object-cover">
-                                        </button>
-                                    @endforeach
-                                </div>
-                            @endif
+                            @include('partials.media-grid', ['media' => $column['media']])
                         @elseif ($viewerSide === $column['side'])
                             <flux:button size="sm" variant="ghost" class="mt-3" wire:click="startSide({{ $post->id }})">
                                 {{ __('Add your side') }}

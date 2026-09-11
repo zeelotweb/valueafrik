@@ -1,5 +1,9 @@
 @php
-    $media ??= collect();
+    // Re-indexed defensively — a caller that filtered the collection first
+    // (e.g. ->where('user_id', ...)) keeps its original, non-sequential
+    // keys, which would desync the $index passed to the lightbox from the
+    // $mediaUrls array's own positions.
+    $media = ($media ?? collect())->values();
 @endphp
 
 @if ($media->isNotEmpty())
@@ -16,7 +20,7 @@
                 x-on:click="window.dispatchEvent(new CustomEvent('media-viewer:show', { detail: { images: @js($mediaUrls), index: 0 } }))"
                 class="block w-full"
             >
-                <img src="{{ $media->first()->url() }}" class="aspect-video w-full rounded-lg object-cover">
+                <img src="{{ $media->first()->thumbnailUrl() }}" class="aspect-video w-full rounded-lg object-cover">
             </button>
         </div>
     @else
@@ -27,7 +31,7 @@
                     x-on:click="window.dispatchEvent(new CustomEvent('media-viewer:show', { detail: { images: @js($mediaUrls), index: {{ $index }} } }))"
                     class="relative block"
                 >
-                    <img src="{{ $item->url() }}" class="aspect-square w-full rounded-lg object-cover">
+                    <img src="{{ $item->thumbnailUrl() }}" class="aspect-square w-full rounded-lg object-cover">
 
                     @if ($loop->last && $remaining > 0)
                         <div class="absolute inset-0 flex items-center justify-center rounded-lg bg-black/60 text-lg font-semibold text-white">
