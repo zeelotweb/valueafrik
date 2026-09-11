@@ -296,6 +296,13 @@ new #[Title('Live')] class extends Component {
                 reactions: [],
                 nextReactionId: 0,
                 fullscreen: false,
+                // iOS Safari (and any WebKit-based browser there, since
+                // they all share it) has no Fullscreen API for anything but
+                // a bare <video> element — requestFullscreen() on the stage
+                // div just silently rejects. This is a CSS-only stand-in
+                // for that case: a fixed overlay instead of a real
+                // fullscreen transition.
+                cssFullscreen: false,
 
                 init() {
                     this.liveRoom = window.createLiveRoom({
@@ -334,10 +341,20 @@ new #[Title('Live')] class extends Component {
                 },
 
                 toggleFullscreen() {
+                    const supportsFullscreenApi = document.fullscreenEnabled
+                        && typeof this.$refs.stage.requestFullscreen === 'function';
+
+                    if (!supportsFullscreenApi) {
+                        this.cssFullscreen = !this.cssFullscreen;
+                        return;
+                    }
+
                     if (document.fullscreenElement) {
                         document.exitFullscreen().catch(() => {});
                     } else {
-                        this.$refs.stage.requestFullscreen().catch(() => {});
+                        this.$refs.stage.requestFullscreen().catch(() => {
+                            this.cssFullscreen = true;
+                        });
                     }
                 },
 
@@ -368,7 +385,8 @@ new #[Title('Live')] class extends Component {
 
             <div
                 x-ref="stage"
-                class="relative isolate flex min-h-[60vh] flex-col overflow-hidden rounded-2xl bg-zinc-900"
+                class="relative isolate flex min-h-[60vh] flex-col overflow-hidden bg-zinc-900"
+                :class="cssFullscreen ? 'fixed inset-0 z-50' : 'rounded-2xl'"
             >
                 <p class="p-6 text-sm text-zinc-400" x-show="!connected && !error">{{ __('Connecting…') }}</p>
 
@@ -456,10 +474,10 @@ new #[Title('Live')] class extends Component {
                                 type="button"
                                 x-on:click="toggleFullscreen"
                                 class="flex size-10 items-center justify-center rounded-md bg-white/10 text-white hover:bg-white/20"
-                                :aria-label="fullscreen ? '{{ __('Exit full screen') }}' : '{{ __('Full screen') }}'"
+                                :aria-label="(fullscreen || cssFullscreen) ? '{{ __('Exit full screen') }}' : '{{ __('Full screen') }}'"
                             >
-                                <flux:icon x-show="!fullscreen" icon="arrows-pointing-out" class="size-5" />
-                                <flux:icon x-show="fullscreen" icon="arrows-pointing-in" class="size-5" x-cloak />
+                                <flux:icon x-show="!(fullscreen || cssFullscreen)" icon="arrows-pointing-out" class="size-5" />
+                                <flux:icon x-show="fullscreen || cssFullscreen" icon="arrows-pointing-in" class="size-5" x-cloak />
                             </button>
 
                             <button
