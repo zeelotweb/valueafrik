@@ -155,6 +155,29 @@ test('requesting a rematch from the ended screen switches to the new session pre
     expect($rematch->host_accepted_at)->not->toBeNull();
 });
 
+test('the matched screen after a rematch is keyed on the new session, not the old one', function () {
+    // Regression guard: this div's wire:key is what forces Livewire to
+    // mount a genuinely fresh Alpine component (with a fresh countdown
+    // timer) on rematch instead of morphing the existing DOM node in
+    // place and leaving the PREVIOUS match's stale x-data behind.
+    $a = readyForSprint('Host Person');
+    $b = readyForSprint('Callee Person');
+    $session = LiveSession::startSprintMatch($a, $b, 'Food');
+    $session->respondToSprint($a, true);
+    $session->respondToSprint($b, true);
+    $session->completeSprint($a);
+
+    $component = Livewire::actingAs($a)
+        ->test('pages::culture-sprint.index')
+        ->set('activeSessionId', $session->id)
+        ->call('requestRematch');
+
+    $newId = $component->get('activeSessionId');
+
+    $component->assertSeeHtml('wire:key="culture-sprint-'.$newId.'-matched"')
+        ->assertDontSeeHtml('wire:key="culture-sprint-'.$session->id.'-matched"');
+});
+
 test('requestRematch does nothing if the current session has not ended', function () {
     $a = readyForSprint('Host Person');
     $b = readyForSprint('Callee Person');

@@ -337,8 +337,13 @@ new #[Title('Culture Sprint')] class extends Component {
                 <flux:button wire:click="leavePool" size="sm" variant="ghost">{{ __('Cancel') }}</flux:button>
             </div>
         @elseif ($this->session?->isRinging())
-            {{-- Matched — both sides must accept --}}
+            {{-- Matched — both sides must accept. Keyed on the session id so
+                 a rematch (a brand new session) gets a genuinely fresh
+                 Alpine component instead of Livewire morphing this element
+                 in place and leaving stale x-data (deadline, secondsLeft)
+                 from the previous match behind. --}}
             <div
+                wire:key="culture-sprint-{{ $this->session->id }}-matched"
                 x-data="{ deadline: @js($this->acceptDeadline), secondsLeft: 0, tick() { this.secondsLeft = Math.max(0, Math.round((new Date(this.deadline) - new Date()) / 1000)); } }"
                 x-init="tick(); let i = setInterval(tick, 1000); $cleanup(() => clearInterval(i))"
                 class="flex flex-col items-center gap-4 rounded-xl border border-cyan-200 bg-white p-10 text-center dark:border-cyan-900 dark:bg-stone-900"
@@ -475,6 +480,14 @@ new #[Title('Culture Sprint')] class extends Component {
                         },
                     }"
                     x-on:beforeunload.window="liveRoom?.disconnect()"
+                    {{-- Keyed on the session id — same reasoning as the
+                         "matched" screen above. Without this, a rematch
+                         reuses this exact DOM node instead of remounting,
+                         which means init() never re-runs: the old (now
+                         stale) liveRoom connection and turn-timer state
+                         from the PREVIOUS sprint just sit there instead of
+                         connecting fresh to the new one. --}}
+                    wire:key="culture-sprint-{{ $this->session->id }}-live"
                 >
                     <template x-if="error">
                         <div class="rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300" x-text="error"></div>

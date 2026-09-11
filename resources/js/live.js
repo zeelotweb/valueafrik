@@ -195,7 +195,14 @@ function createLiveRoom({ wsUrl, token, canPublish }) {
         // join would fill the grid with empty boxes as the audience grows.
         // Callers pass false there — a tile only ever appears for someone
         // who actually has a track to show.
-        async connect(gridEl, { onReaction, showPlaceholderTiles = true } = {}) {
+        async connect(gridEl, { onReaction, showPlaceholderTiles = true, onParticipantCountChanged } = {}) {
+            // +1 for yourself — LiveKit's own roster is remote participants
+            // only. This is genuinely how many people are in the room right
+            // now (a stream viewer counts here even though they never
+            // publish anything), derived straight from the roster rather
+            // than a separate server-tracked counter that could drift.
+            const reportCount = () => onParticipantCountChanged?.(room.remoteParticipants.size + 1);
+
             // A participant gets a tile the moment they join — waiting for
             // their first published track would leave anyone with camera
             // and mic both off invisible in the grid, as if they weren't
@@ -204,10 +211,12 @@ function createLiveRoom({ wsUrl, token, canPublish }) {
                 if (showPlaceholderTiles) {
                     tileFor(participant.identity, participant.name || 'Someone', gridEl);
                 }
+                reportCount();
             });
 
             room.on(RoomEvent.ParticipantDisconnected, (participant) => {
                 removeTile(participant.identity, gridEl);
+                reportCount();
             });
 
             room.on(RoomEvent.TrackSubscribed, (track, _publication, participant) => {
@@ -262,6 +271,8 @@ function createLiveRoom({ wsUrl, token, canPublish }) {
                     tileFor(participant.identity, participant.name || 'Someone', gridEl);
                 });
             }
+
+            reportCount();
 
             let mediaError = null;
 

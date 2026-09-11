@@ -266,6 +266,19 @@ new #[Title('Live')] class extends Component {
     }
 }; ?>
 
+<style>
+    /* A stream's tiles (not the spotlight layout calls/sprints use) keep a
+       fixed 16:9 shape via aspect-video normally — right for a card in the
+       page, but it leaves the tile the same size while the stage around it
+       balloons to fill the whole screen in fullscreen. Dropping the ratio
+       there lets the tile (and the object-cover video inside it) actually
+       fill the available height instead of just the width. */
+    .stage-fullscreen [data-tile] {
+        aspect-ratio: auto;
+        height: 100%;
+    }
+</style>
+
 <div class="mx-auto w-full max-w-4xl">
     <div class="flex items-center justify-between">
         <div>
@@ -397,6 +410,7 @@ new #[Title('Live')] class extends Component {
                 showReactions: false,
                 reactions: [],
                 nextReactionId: 0,
+                viewerCount: 1,
                 fullscreen: false,
                 // iOS Safari (and any WebKit-based browser there, since
                 // they all share it) has no Fullscreen API for anything but
@@ -415,6 +429,7 @@ new #[Title('Live')] class extends Component {
 
                     this.liveRoom.connect(this.$refs.grid, {
                         onReaction: (emoji) => this.spawnReaction(emoji),
+                        onParticipantCountChanged: (count) => this.viewerCount = count,
                         showPlaceholderTiles: @js($session->type !== LiveSession::TYPE_STREAM),
                     })
                         .then((result) => {
@@ -496,6 +511,7 @@ new #[Title('Live')] class extends Component {
 
                     this.liveRoom.connect(this.$refs.grid, {
                         onReaction: (emoji) => this.spawnReaction(emoji),
+                        onParticipantCountChanged: (count) => this.viewerCount = count,
                         showPlaceholderTiles: @js($session->type !== LiveSession::TYPE_STREAM),
                     })
                         .then((result) => {
@@ -564,10 +580,33 @@ new #[Title('Live')] class extends Component {
                     specificity, so whichever Tailwind happens to define later in
                     the stylesheet always wins the tie, regardless of source order
                     here. Keeping position entirely inside this one binding is what
-                    actually guarantees the switch takes effect. --}}
-                :class="cssFullscreen ? 'fixed inset-0 z-50' : 'relative rounded-2xl'"
+                    actually guarantees the switch takes effect.
+
+                    stage-fullscreen also fires for NATIVE fullscreen (not just
+                    the CSS fallback) — see the <style> block below for why a
+                    stream's video tile needs it: aspect-video keeps a stream
+                    tile at a fixed 16:9 shape, which looks right in the normal
+                    card but leaves black bars above/below once the stage
+                    itself expands to fill an entire (often taller) screen. --}}
+                :class="{
+                    'fixed inset-0 z-50': cssFullscreen,
+                    'relative rounded-2xl': !cssFullscreen,
+                    'stage-fullscreen': fullscreen || cssFullscreen,
+                }"
             >
                 <p class="p-6 text-sm text-zinc-400" x-show="!connected && !error">{{ __('Connecting…') }}</p>
+
+                @if ($session->type === LiveSession::TYPE_STREAM)
+                    <div
+                        x-show="connected"
+                        x-cloak
+                        class="absolute top-3 right-3 z-20 flex items-center gap-1.5 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm"
+                        data-test="viewer-count"
+                    >
+                        <flux:icon.eye class="size-4" />
+                        <span x-text="viewerCount"></span>
+                    </div>
+                @endif
 
                 {{-- wire:ignore (not .self — that only protects the element's
                     own attributes, not its children) — this div's children
