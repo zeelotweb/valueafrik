@@ -390,6 +390,15 @@ new #[Title('Culture Sprint')] class extends Component {
                         liveRoom: null,
                         connected: false,
                         error: null,
+                        mediaError: null,
+                        micOn: true,
+                        cameraOn: true,
+                        deafened: false,
+                        fullscreen: false,
+                        // See the call room's identical property for why this
+                        // fallback exists — iOS Safari has no Fullscreen API
+                        // for anything but a bare <video> element.
+                        cssFullscreen: false,
                         deadline: @js($this->liveDeadline),
                         turnSeconds: @js((int) config('culture_sprints.turn_seconds')),
                         isHost: @js($this->isHost),
@@ -404,8 +413,17 @@ new #[Title('Culture Sprint')] class extends Component {
                             });
 
                             this.liveRoom.connect(this.$refs.grid)
-                                .then(() => this.connected = true)
+                                .then((result) => {
+                                    this.connected = true;
+                                    this.mediaError = result.mediaError;
+                                    if (this.mediaError) {
+                                        this.micOn = false;
+                                        this.cameraOn = false;
+                                    }
+                                })
                                 .catch((e) => this.error = e.message);
+
+                            document.addEventListener('fullscreenchange', () => this.fullscreen = !!document.fullscreenElement);
 
                             this.tick();
                             let i = setInterval(() => this.tick(), 250);
@@ -422,6 +440,39 @@ new #[Title('Culture Sprint')] class extends Component {
                                 this.$wire.complete();
                             }
                         },
+
+                        async toggleMic() {
+                            this.micOn = !this.micOn;
+                            await this.liveRoom.setMicrophoneEnabled(this.micOn);
+                        },
+
+                        async toggleCamera() {
+                            this.cameraOn = !this.cameraOn;
+                            await this.liveRoom.setCameraEnabled(this.cameraOn);
+                        },
+
+                        toggleDeafen() {
+                            this.deafened = !this.deafened;
+                            this.liveRoom.setDeafened(this.deafened);
+                        },
+
+                        toggleFullscreen() {
+                            const supportsFullscreenApi = document.fullscreenEnabled
+                                && typeof this.$refs.stage.requestFullscreen === 'function';
+
+                            if (!supportsFullscreenApi) {
+                                this.cssFullscreen = !this.cssFullscreen;
+                                return;
+                            }
+
+                            if (document.fullscreenElement) {
+                                document.exitFullscreen().catch(() => {});
+                            } else {
+                                this.$refs.stage.requestFullscreen().catch(() => {
+                                    this.cssFullscreen = true;
+                                });
+                            }
+                        },
                     }"
                     x-on:beforeunload.window="liveRoom?.disconnect()"
                 >
@@ -429,7 +480,17 @@ new #[Title('Culture Sprint')] class extends Component {
                         <div class="rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300" x-text="error"></div>
                     </template>
 
-                    <div class="relative isolate flex min-h-[50vh] flex-col overflow-hidden rounded-2xl bg-zinc-900">
+                    <template x-if="connected && mediaError">
+                        <div class="mb-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-700 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300">
+                            {{ __("Connected, but your camera/mic couldn't be reached — you can still see and hear your match.") }}
+                        </div>
+                    </template>
+
+                    <div
+                        x-ref="stage"
+                        class="isolate flex min-h-[50vh] flex-col overflow-hidden bg-zinc-900"
+                        :class="cssFullscreen ? 'fixed inset-0 z-50' : 'relative rounded-2xl'"
+                    >
                         <div class="flex items-center justify-between p-4">
                             <div class="rounded-lg bg-white/10 px-3 py-1.5 text-sm font-semibold text-white">
                                 {{ $this->session->culture_word }}
@@ -442,16 +503,64 @@ new #[Title('Culture Sprint')] class extends Component {
 
                         <p class="px-4 text-sm text-zinc-400" x-show="!connected && !error">{{ __('Connecting…') }}</p>
 
-                        <div x-ref="grid" class="grid flex-1 auto-rows-fr grid-cols-1 gap-3 p-3 sm:grid-cols-2"></div>
+                        {{-- Same "you as a small draggable inset, your match fills
+                             the stage" layout the call room uses — a sprint is
+                             always exactly two people too. --}}
+                        <div x-ref="grid" data-layout="spotlight" class="relative flex-1"></div>
 
-                        <div class="flex justify-center p-4">
-                            <button
-                                type="button"
-                                wire:click="endEarly"
-                                class="rounded-md bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-500"
-                            >
-                                {{ __('Leave early') }}
-                            </button>
+                        <div class="absolute inset-x-0 bottom-4 flex justify-center">
+                            <div class="flex items-center gap-2 rounded-lg bg-black/70 p-2 backdrop-blur-sm">
+                                <button
+                                    type="button"
+                                    x-on:click="toggleMic"
+                                    :class="micOn ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-red-500 text-white hover:bg-red-600'"
+                                    class="flex size-10 items-center justify-center rounded-md"
+                                    :aria-label="micOn ? '{{ __('Mute') }}' : '{{ __('Unmute') }}'"
+                                >
+                                    <flux:icon icon="microphone" class="size-5" />
+                                </button>
+
+                                <button
+                                    type="button"
+                                    x-on:click="toggleCamera"
+                                    :class="cameraOn ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-red-500 text-white hover:bg-red-600'"
+                                    class="flex size-10 items-center justify-center rounded-md"
+                                    :aria-label="cameraOn ? '{{ __('Hide video') }}' : '{{ __('Show video') }}'"
+                                >
+                                    <flux:icon x-show="cameraOn" icon="video-camera" class="size-5" />
+                                    <flux:icon x-show="!cameraOn" icon="video-camera-slash" class="size-5" x-cloak />
+                                </button>
+
+                                <button
+                                    type="button"
+                                    x-on:click="toggleDeafen"
+                                    :class="deafened ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-white/10 text-white hover:bg-white/20'"
+                                    class="flex size-10 items-center justify-center rounded-md"
+                                    :aria-label="deafened ? '{{ __('Unmute speaker') }}' : '{{ __('Mute speaker') }}'"
+                                >
+                                    <flux:icon x-show="!deafened" icon="speaker-wave" class="size-5" />
+                                    <flux:icon x-show="deafened" icon="speaker-x-mark" class="size-5" x-cloak />
+                                </button>
+
+                                <button
+                                    type="button"
+                                    x-on:click="toggleFullscreen"
+                                    class="flex size-10 items-center justify-center rounded-md bg-white/10 text-white hover:bg-white/20"
+                                    :aria-label="(fullscreen || cssFullscreen) ? '{{ __('Exit full screen') }}' : '{{ __('Full screen') }}'"
+                                >
+                                    <flux:icon x-show="!(fullscreen || cssFullscreen)" icon="arrows-pointing-out" class="size-5" />
+                                    <flux:icon x-show="fullscreen || cssFullscreen" icon="arrows-pointing-in" class="size-5" x-cloak />
+                                </button>
+
+                                <button
+                                    type="button"
+                                    wire:click="endEarly"
+                                    class="flex size-10 items-center justify-center rounded-md bg-red-500 text-white hover:bg-red-600"
+                                    aria-label="{{ __('Leave early') }}"
+                                >
+                                    <flux:icon icon="phone-x-mark" class="size-5" />
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
