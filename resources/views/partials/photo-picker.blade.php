@@ -1,6 +1,6 @@
 @php
     $photos ??= [];
-    $max ??= 4;
+    $max ??= 5;
     $atLimit = count($photos) >= $max;
 @endphp
 
@@ -13,7 +13,7 @@
     x-on:livewire-upload-progress="progress = $event.detail.progress"
 >
     @if (count($photos) > 0)
-        <div class="mt-3 grid grid-cols-4 gap-2">
+        <div class="mt-3 grid grid-cols-5 gap-2">
             @foreach ($photos as $index => $photo)
                 <div class="group relative aspect-square overflow-hidden rounded-lg bg-stone-100 dark:bg-stone-800" wire:key="{{ $property }}-preview-{{ $index }}">
                     <img src="{{ $photo->temporaryUrl() }}" class="size-full object-cover">

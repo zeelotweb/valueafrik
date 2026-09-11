@@ -54,7 +54,7 @@ new class extends Component {
 
         $this->validate([
             'sideBody' => ['required', 'string', 'max:3000'],
-            'sidePhotos' => ['array', 'max:4'],
+            'sidePhotos' => ['array', 'max:5'],
             'sidePhotos.*' => ['image', 'max:8192'],
         ]);
 
@@ -167,7 +167,7 @@ new class extends Component {
 
                     <flux:textarea wire:model="sideBody" rows="4" placeholder="{{ __('Your side of the story…') }}" />
 
-                    @include('partials.photo-picker', ['photos' => $sidePhotos, 'property' => 'sidePhotos', 'removeMethod' => 'removeSidePhoto', 'max' => 4])
+                    @include('partials.photo-picker', ['photos' => $sidePhotos, 'property' => 'sidePhotos', 'removeMethod' => 'removeSidePhoto', 'max' => 5])
 
                     @error('sideBody') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 

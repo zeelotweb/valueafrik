@@ -95,7 +95,7 @@ new class extends Component {
 
         $this->validate([
             'body' => ['nullable', 'string', 'max:5000'],
-            'photos' => ['array', 'max:4'],
+            'photos' => ['array', 'max:5'],
             'photos.*' => ['image', 'max:8192'],
         ]);
 
@@ -143,7 +143,7 @@ new class extends Component {
                 @include('partials.mention-textarea', ['wireModel' => 'body', 'placeholder' => __('Share something with the community...'), 'rows' => 4])
 
                 @if (! $editingPostId)
-                    @include('partials.photo-picker', ['photos' => $photos, 'property' => 'photos', 'removeMethod' => 'removePhoto', 'max' => 4])
+                    @include('partials.photo-picker', ['photos' => $photos, 'property' => 'photos', 'removeMethod' => 'removePhoto', 'max' => 5])
                 @endif
 
                 @error('body') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
