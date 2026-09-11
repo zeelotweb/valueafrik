@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\LiveSession;
+use App\Models\User;
 use App\Services\LiveKitToken;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -104,6 +105,77 @@ new #[Title('Live')] class extends Component {
             : null;
     }
 
+    /**
+     * Host-only: viewers currently waiting on a collaborate decision.
+     */
+    #[Computed]
+    public function pendingCollaboratorRequests()
+    {
+        if ($this->session->type !== LiveSession::TYPE_STREAM || ! $this->isHost) {
+            return collect();
+        }
+
+        return $this->session->pendingCollaboratorRequests()->with('user')->get();
+    }
+
+    #[Computed]
+    public function approvedCollaborators()
+    {
+        if ($this->session->type !== LiveSession::TYPE_STREAM) {
+            return collect();
+        }
+
+        return $this->session->collaborators()->whereNotNull('approved_at')->with('user')->get();
+    }
+
+    /**
+     * 'none' | 'pending' | 'approved' — drives which button/state a viewer
+     * (never the host) sees for collaborating on this stream.
+     */
+    #[Computed]
+    public function myCollaborationStatus(): string
+    {
+        if ($this->session->type !== LiveSession::TYPE_STREAM || $this->isHost) {
+            return 'none';
+        }
+
+        $row = $this->session->collaborators()->where('user_id', Auth::id())->first();
+
+        if (! $row) {
+            return 'none';
+        }
+
+        return $row->isApproved() ? 'approved' : 'pending';
+    }
+
+    #[Computed]
+    public function canRequestCollaboration(): bool
+    {
+        return $this->session->type === LiveSession::TYPE_STREAM
+            && ! $this->isHost
+            && $this->session->isLive()
+            && $this->myCollaborationStatus === 'none'
+            && Auth::user()->canCollaborateOnStreams();
+    }
+
+    public function requestCollaboration(): void
+    {
+        $this->session->requestCollaboration(Auth::user());
+        unset($this->myCollaborationStatus, $this->canRequestCollaboration);
+    }
+
+    public function approveCollaborator(int $userId): void
+    {
+        $this->session->approveCollaborator(Auth::user(), User::findOrFail($userId));
+        unset($this->pendingCollaboratorRequests, $this->approvedCollaborators);
+    }
+
+    public function removeCollaborator(int $userId): void
+    {
+        $this->session->removeCollaborator(Auth::user(), User::findOrFail($userId));
+        unset($this->pendingCollaboratorRequests, $this->approvedCollaborators);
+    }
+
     public function respond(bool $accept): void
     {
         $this->session->respondToRing(Auth::user(), $accept);
@@ -149,7 +221,10 @@ new #[Title('Live')] class extends Component {
     public function getListeners(): array
     {
         return Auth::check()
-            ? ['echo-private:App.Models.User.'.Auth::id().',.CallStatusUpdated' => 'onCallStatusUpdated']
+            ? [
+                'echo-private:App.Models.User.'.Auth::id().',.CallStatusUpdated' => 'onCallStatusUpdated',
+                'echo-private:App.Models.User.'.Auth::id().',.StreamCollaborationUpdated' => 'onStreamCollaborationUpdated',
+            ]
             : [];
     }
 
@@ -161,6 +236,33 @@ new #[Title('Live')] class extends Component {
 
         $this->session->refresh();
         $this->issueTokenIfLive();
+    }
+
+    /**
+     * Reacts on both sides: the host's pending-requests list just needs a
+     * re-render (the computed props recompute fresh from the DB either
+     * way), but the specific collaborator whose access just changed needs
+     * an actual new token — canPublish flips server-side, and the browser
+     * has to disconnect/reconnect the LiveKit room to pick that up, since
+     * publish permissions are baked into the token at connect time.
+     */
+    public function onStreamCollaborationUpdated(array $event): void
+    {
+        if ((int) ($event['session_id'] ?? 0) !== $this->session->id) {
+            return;
+        }
+
+        $this->session->refresh();
+
+        $isMe = (int) ($event['collaborator_id'] ?? 0) === Auth::id();
+        $status = $event['status'] ?? null;
+
+        if ($isMe && in_array($status, ['approved', 'removed'], true)) {
+            $this->token = '';
+            $this->issueTokenIfLive();
+
+            $this->dispatch('live-permissions-changed', token: $this->token, canPublish: $this->session->canPublish(Auth::user()));
+        }
     }
 }; ?>
 
@@ -311,7 +413,10 @@ new #[Title('Live')] class extends Component {
                         canPublish: this.canPublish,
                     });
 
-                    this.liveRoom.connect(this.$refs.grid, { onReaction: (emoji) => this.spawnReaction(emoji) })
+                    this.liveRoom.connect(this.$refs.grid, {
+                        onReaction: (emoji) => this.spawnReaction(emoji),
+                        showPlaceholderTiles: @js($session->type !== LiveSession::TYPE_STREAM),
+                    })
                         .then((result) => {
                             this.connected = true;
                             this.mediaError = result.mediaError;
@@ -369,8 +474,43 @@ new #[Title('Live')] class extends Component {
                     this.reactions.push({ id, emoji, left: 10 + Math.random() * 75 });
                     setTimeout(() => { this.reactions = this.reactions.filter((r) => r.id !== id); }, 1600);
                 },
+
+                // A stream collaborator's publish permission is baked into
+                // their LiveKit token at connect time — there's no way to
+                // upgrade/downgrade an existing connection in place, so
+                // getting approved (or removed) means dropping the room and
+                // rejoining fresh with a token that reflects it.
+                async reconnectRoom(newToken, newCanPublish) {
+                    await this.liveRoom?.disconnect();
+                    this.$refs.grid.innerHTML = '';
+                    this.connected = false;
+                    this.canPublish = newCanPublish;
+                    this.micOn = newCanPublish;
+                    this.cameraOn = newCanPublish;
+
+                    this.liveRoom = window.createLiveRoom({
+                        wsUrl: @js($wsUrl),
+                        token: newToken,
+                        canPublish: newCanPublish,
+                    });
+
+                    this.liveRoom.connect(this.$refs.grid, {
+                        onReaction: (emoji) => this.spawnReaction(emoji),
+                        showPlaceholderTiles: @js($session->type !== LiveSession::TYPE_STREAM),
+                    })
+                        .then((result) => {
+                            this.connected = true;
+                            this.mediaError = result.mediaError;
+                            if (this.mediaError) {
+                                this.micOn = false;
+                                this.cameraOn = false;
+                            }
+                        })
+                        .catch((e) => this.error = e.message);
+                },
             }"
             x-on:beforeunload.window="liveRoom?.disconnect()"
+            x-on:live-permissions-changed.window="reconnectRoom($event.detail.token, $event.detail.canPublish)"
             class="mt-6"
         >
             <template x-if="error">
@@ -382,6 +522,40 @@ new #[Title('Live')] class extends Component {
                     {{ __("Connected, but your camera/mic couldn't be reached — you can still see and hear everyone else.") }}
                 </div>
             </template>
+
+            @if ($session->type === LiveSession::TYPE_STREAM)
+                @if ($this->isHost)
+                    @if ($this->pendingCollaboratorRequests->isNotEmpty() || $this->approvedCollaborators->isNotEmpty())
+                        <div class="mb-3 space-y-2">
+                            @foreach ($this->pendingCollaboratorRequests as $request)
+                                <div class="flex items-center justify-between gap-3 rounded-lg border border-cyan-200 bg-cyan-50 px-3 py-2 text-sm dark:border-cyan-900 dark:bg-cyan-950">
+                                    <span class="text-cyan-800 dark:text-cyan-300">{{ $request->user->name }} {{ __('wants to collaborate') }}</span>
+                                    <div class="flex items-center gap-2">
+                                        <flux:button size="sm" variant="ghost" wire:click="removeCollaborator({{ $request->user_id }})">{{ __('Deny') }}</flux:button>
+                                        <flux:button size="sm" variant="primary" color="cyan" wire:click="approveCollaborator({{ $request->user_id }})">{{ __('Approve') }}</flux:button>
+                                    </div>
+                                </div>
+                            @endforeach
+
+                            @foreach ($this->approvedCollaborators as $collaborator)
+                                <div class="flex items-center justify-between gap-3 rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm dark:border-stone-800 dark:bg-stone-900">
+                                    <span class="text-stone-700 dark:text-stone-300">{{ $collaborator->user->name }} {{ __('is collaborating') }}</span>
+                                    <flux:button size="sm" variant="ghost" wire:click="removeCollaborator({{ $collaborator->user_id }})">{{ __('Remove') }}</flux:button>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                @elseif ($this->myCollaborationStatus === 'pending')
+                    <div class="mb-3 rounded-lg border border-cyan-200 bg-cyan-50 px-3 py-2 text-sm text-cyan-700 dark:border-cyan-900 dark:bg-cyan-950 dark:text-cyan-300">
+                        {{ __('Waiting for the host to approve your request to collaborate…') }}
+                    </div>
+                @elseif ($this->canRequestCollaboration)
+                    <div class="mb-3 flex items-center justify-between gap-3 rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm dark:border-stone-800 dark:bg-stone-900">
+                        <span class="text-stone-600 dark:text-stone-400">{{ __('Want to join the broadcast?') }}</span>
+                        <flux:button size="sm" variant="primary" color="cyan" wire:click="requestCollaboration">{{ __('Request to collaborate') }}</flux:button>
+                    </div>
+                @endif
+            @endif
 
             <div
                 x-ref="stage"
@@ -395,8 +569,19 @@ new #[Title('Live')] class extends Component {
             >
                 <p class="p-6 text-sm text-zinc-400" x-show="!connected && !error">{{ __('Connecting…') }}</p>
 
+                {{-- wire:ignore (not .self — that only protects the element's
+                    own attributes, not its children) — this div's children
+                    are entirely JS-managed, live.js appends/removes video
+                    tiles directly. Without plain wire:ignore, any Livewire
+                    action fired while the room is open (e.g. approving a
+                    collaborator) re-renders this component and morphdom
+                    wipes the JS-injected tiles back to the empty div the
+                    server actually rendered. The class/data-layout below are
+                    only ever set once at initial render anyway — they never
+                    need to change again for the life of a given session. --}}
                 <div
                     x-ref="grid"
+                    wire:ignore
                     @if ($this->isSpotlightLayout) data-layout="spotlight" @endif
                     class="{{ $this->isSpotlightLayout ? 'relative flex-1' : 'grid flex-1 auto-rows-fr grid-cols-1 gap-3 p-3 sm:grid-cols-2' }}"
                 ></div>

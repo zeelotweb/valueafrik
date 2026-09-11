@@ -506,7 +506,11 @@ new #[Title('Culture Sprint')] class extends Component {
                         {{-- Same "you as a small draggable inset, your match fills
                              the stage" layout the call room uses — a sprint is
                              always exactly two people too. --}}
-                        <div x-ref="grid" data-layout="spotlight" class="relative flex-1"></div>
+                        {{-- wire:ignore (not .self) — see the call room's
+                            identical comment; this div's children are
+                            entirely JS-managed and must survive any Livewire
+                            re-render. --}}
+                        <div x-ref="grid" wire:ignore data-layout="spotlight" class="relative flex-1"></div>
 
                         <div class="absolute inset-x-0 bottom-4 flex justify-center">
                             <div class="flex items-center gap-2 rounded-lg bg-black/70 p-2 backdrop-blur-sm">

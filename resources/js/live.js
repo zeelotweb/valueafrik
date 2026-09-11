@@ -187,13 +187,23 @@ function createLiveRoom({ wsUrl, token, canPublish }) {
         // room join can succeed even when the local device grants can't.
         // Callers get both back separately so they can show "connected, but
         // your camera is blocked" instead of a blanket connection error.
-        async connect(gridEl, { onReaction } = {}) {
+        // showPlaceholderTiles is on by default — right for a call or sprint,
+        // always exactly 2 people, where seeing an empty tile for someone
+        // whose camera/mic are both off is the point. A stream is one host
+        // broadcasting to potentially many viewers who never publish
+        // anything; giving every viewer a placeholder tile the moment they
+        // join would fill the grid with empty boxes as the audience grows.
+        // Callers pass false there — a tile only ever appears for someone
+        // who actually has a track to show.
+        async connect(gridEl, { onReaction, showPlaceholderTiles = true } = {}) {
             // A participant gets a tile the moment they join — waiting for
             // their first published track would leave anyone with camera
             // and mic both off invisible in the grid, as if they weren't
             // there at all.
             room.on(RoomEvent.ParticipantConnected, (participant) => {
-                tileFor(participant.identity, participant.name || 'Someone', gridEl);
+                if (showPlaceholderTiles) {
+                    tileFor(participant.identity, participant.name || 'Someone', gridEl);
+                }
             });
 
             room.on(RoomEvent.ParticipantDisconnected, (participant) => {
@@ -237,15 +247,21 @@ function createLiveRoom({ wsUrl, token, canPublish }) {
             await room.connect(wsUrl, token);
 
             // An empty tile with just a name label, so a muted mic or a
-            // camera-off participant still shows up in the grid.
-            tileFor('you', 'You', gridEl);
+            // camera-off participant still shows up in the grid — only
+            // relevant if we're actually going to publish something into
+            // it; a viewer with nothing to show doesn't need a self tile.
+            if (canPublish) {
+                tileFor('you', 'You', gridEl);
+            }
 
             // ParticipantConnected only fires for people who join after us —
             // anyone already in the room needs to be added from the roster
             // we get back the moment we connect.
-            room.remoteParticipants.forEach((participant) => {
-                tileFor(participant.identity, participant.name || 'Someone', gridEl);
-            });
+            if (showPlaceholderTiles) {
+                room.remoteParticipants.forEach((participant) => {
+                    tileFor(participant.identity, participant.name || 'Someone', gridEl);
+                });
+            }
 
             let mediaError = null;
 

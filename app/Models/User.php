@@ -389,6 +389,18 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     }
 
     /**
+     * Whether this user is allowed to request collaborating on someone
+     * else's live stream (a second publisher alongside the host) — gated
+     * behind demonstrated engagement or a paid subscription, not open to
+     * every viewer. See config/streams.php for the threshold itself.
+     */
+    public function canCollaborateOnStreams(): bool
+    {
+        return $this->bridgeScore() >= config('streams.collaboration_bridge_score_threshold')
+            || $this->subscribed();
+    }
+
+    /**
      * Get the user's initials
      */
     public function initials(): string

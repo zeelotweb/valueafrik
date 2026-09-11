@@ -3,12 +3,14 @@
 namespace App\Models;
 
 use App\Events\CallStatusUpdated;
+use App\Events\StreamCollaborationUpdated;
 use App\Jobs\ExpireRingingCall;
 use App\Notifications\LiveCallStarted;
 use App\Notifications\MissedCall;
 use App\Support\SafeNotifier;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
@@ -144,16 +146,84 @@ class LiveSession extends Model
     }
 
     /**
-     * Calls are open-mic for everyone in the room; streams only let the
-     * host publish audio/video, everyone else just subscribes.
+     * Calls are open-mic for everyone in the room; a stream only lets the
+     * host publish audio/video, plus anyone the host has approved to
+     * collaborate — everyone else just subscribes.
      */
     public function canPublish(User $user): bool
     {
         if ($this->type === self::TYPE_STREAM) {
-            return $user->id === $this->host_id;
+            return $user->id === $this->host_id || $this->isApprovedCollaborator($user);
         }
 
         return true;
+    }
+
+    public function collaborators(): HasMany
+    {
+        return $this->hasMany(LiveSessionCollaborator::class);
+    }
+
+    public function pendingCollaboratorRequests(): HasMany
+    {
+        return $this->collaborators()->whereNull('approved_at');
+    }
+
+    public function isApprovedCollaborator(User $user): bool
+    {
+        return $this->collaborators()->where('user_id', $user->id)->whereNotNull('approved_at')->exists();
+    }
+
+    public function hasRequestedCollaboration(User $user): bool
+    {
+        return $this->collaborators()->where('user_id', $user->id)->exists();
+    }
+
+    /**
+     * A viewer asks to become a second publisher. Gated behind the same
+     * viewing rules as watching at all, plus the platform-wide engagement/
+     * paid threshold in User::canCollaborateOnStreams() — this is a
+     * lightweight co-host slot, not something every viewer can grab.
+     */
+    public function requestCollaboration(User $user): LiveSessionCollaborator
+    {
+        abort_unless($this->type === self::TYPE_STREAM, 403);
+        abort_if($user->id === $this->host_id, 403);
+        abort_unless($this->canView($user), 403);
+        abort_unless($user->canCollaborateOnStreams(), 403);
+
+        $row = $this->collaborators()->firstOrCreate(
+            ['user_id' => $user->id],
+            ['requested_at' => now()],
+        );
+
+        self::broadcastCollaboration($this, $user, 'requested');
+
+        return $row;
+    }
+
+    public function approveCollaborator(User $host, User $collaborator): void
+    {
+        abort_unless($host->id === $this->host_id, 403);
+
+        $row = $this->collaborators()->where('user_id', $collaborator->id)->firstOrFail();
+        $row->update(['approved_at' => now()]);
+
+        self::broadcastCollaboration($this, $collaborator, 'approved');
+    }
+
+    /**
+     * Denies a pending request or revokes an already-approved collaborator
+     * — either way the row is just gone, since a denial carries nothing
+     * worth remembering and the host can always re-approve a fresh request.
+     */
+    public function removeCollaborator(User $host, User $collaborator): void
+    {
+        abort_unless($host->id === $this->host_id, 403);
+
+        $this->collaborators()->where('user_id', $collaborator->id)->delete();
+
+        self::broadcastCollaboration($this, $collaborator, 'removed');
     }
 
     /**
@@ -451,6 +521,15 @@ class LiveSession extends Model
     {
         try {
             broadcast(new CallStatusUpdated($session));
+        } catch (\Throwable $e) {
+            report($e);
+        }
+    }
+
+    private static function broadcastCollaboration(self $session, User $collaborator, string $status): void
+    {
+        try {
+            broadcast(new StreamCollaborationUpdated($session, $collaborator, $status));
         } catch (\Throwable $e) {
             report($e);
         }
