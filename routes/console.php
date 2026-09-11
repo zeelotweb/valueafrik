@@ -3,10 +3,17 @@
 use App\Models\User;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
+
+// Requires the server cron to actually call `schedule:run` every minute —
+// see Forge's "Scheduler" toggle for this site.
+Schedule::command('backup:clean')->daily()->at('01:00');
+Schedule::command('backup:run')->daily()->at('01:30');
+Schedule::command('backup:monitor')->daily()->at('03:00');
 
 Artisan::command('admin:grant {email}', function (string $email) {
     $user = User::where('email', $email)->first();
