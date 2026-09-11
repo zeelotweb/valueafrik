@@ -18,6 +18,13 @@
         </include>
     </source>
     <php>
+        <!-- The default CLI 128M is tight once enough ImageOptimizer (GD)
+             tests run in the same process — memory doesn't always get
+             fully reclaimed between image operations, and the suite would
+             intermittently die with "Allowed memory size exhausted" deep
+             in Intervention's GD cloner, unrelated to whatever the actual
+             change under test was. -->
+        <ini name="memory_limit" value="256M"/>
         <env name="APP_ENV" value="testing"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>

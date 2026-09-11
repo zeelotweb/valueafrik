@@ -82,16 +82,7 @@ new #[Title('Topic')] class extends Component {
                     <p class="mt-3 whitespace-pre-line text-stone-700 dark:text-stone-300">{!! RichText::render($post->body, $post->hashtags, $post->mentions) !!}</p>
                 @endif
 
-                @if ($post->media->isNotEmpty())
-                    @php $mediaUrls = $post->media->map->url()->all(); @endphp
-                    <div class="mt-3 grid grid-cols-2 gap-2" x-data>
-                        @foreach ($post->media as $index => $media)
-                            <button type="button" x-on:click="window.dispatchEvent(new CustomEvent('media-viewer:show', { detail: { images: @js($mediaUrls), index: {{ $index }} } }))" class="block">
-                                <img src="{{ $media->url() }}" class="aspect-square w-full rounded-lg object-cover">
-                            </button>
-                        @endforeach
-                    </div>
-                @endif
+                @include('partials.media-grid', ['media' => $post->media])
 
                 <div class="mt-3 flex items-center justify-between border-t border-stone-200 pt-2 dark:border-stone-800">
                     <div class="flex items-center gap-1">
