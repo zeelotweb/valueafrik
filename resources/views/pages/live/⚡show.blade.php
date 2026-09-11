@@ -56,6 +56,17 @@ new #[Title('Live')] class extends Component {
         return Auth::id() === $this->session->host_id;
     }
 
+    /**
+     * Calls are always exactly two people, so a spotlight layout (the other
+     * person fills the stage, your own tile floats as a small inset) makes
+     * sense. Streams/sprints keep the equal-tile grid.
+     */
+    #[Computed]
+    public function isSpotlightLayout(): bool
+    {
+        return $this->session->type === LiveSession::TYPE_CALL;
+    }
+
     #[Computed]
     public function isCallee(): bool
     {
@@ -344,7 +355,11 @@ new #[Title('Live')] class extends Component {
             >
                 <p class="p-6 text-sm text-zinc-400" x-show="!connected && !error">{{ __('Connecting…') }}</p>
 
-                <div x-ref="grid" class="grid flex-1 auto-rows-fr grid-cols-1 gap-3 p-3 sm:grid-cols-2"></div>
+                <div
+                    x-ref="grid"
+                    @if ($this->isSpotlightLayout) data-layout="spotlight" @endif
+                    class="{{ $this->isSpotlightLayout ? 'relative flex-1' : 'grid flex-1 auto-rows-fr grid-cols-1 gap-3 p-3 sm:grid-cols-2' }}"
+                ></div>
 
                 {{-- Floating reactions drift up from the control bar and fade out. --}}
                 <div class="pointer-events-none absolute inset-x-0 bottom-24 h-40">

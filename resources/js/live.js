@@ -22,12 +22,27 @@ function createLiveRoom({ wsUrl, token, canPublish }) {
 
         tile = document.createElement('div');
         tile.dataset.tile = identity;
-        tile.className = 'relative isolate flex aspect-video items-center justify-center overflow-hidden rounded-xl bg-zinc-800';
+
+        // In spotlight mode (1:1 calls) your own tile floats as a small
+        // inset over whoever else is in the call, who fills the whole
+        // stage — everywhere else keeps the equal-size tile grid.
+        const spotlight = gridEl.dataset.layout === 'spotlight';
+        const isSelfInset = spotlight && identity === 'you';
+
+        if (isSelfInset) {
+            tile.className = 'absolute bottom-3 right-3 z-20 flex aspect-[3/4] w-24 items-center justify-center overflow-hidden rounded-lg bg-zinc-800 shadow-lg ring-2 ring-white/70 sm:w-32';
+        } else if (spotlight) {
+            tile.className = 'absolute inset-0 flex items-center justify-center overflow-hidden bg-zinc-800';
+        } else {
+            tile.className = 'relative isolate flex aspect-video items-center justify-center overflow-hidden rounded-xl bg-zinc-800';
+        }
 
         const placeholder = document.createElement('div');
         placeholder.dataset.placeholder = 'true';
-        placeholder.className = 'flex size-16 items-center justify-center rounded-full bg-zinc-700 text-zinc-400';
-        placeholder.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-8"><path fill-rule="evenodd" d="M18.685 19.097A9.723 9.723 0 0 0 21.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 0 0 3.065 7.097A9.716 9.716 0 0 0 12 21.75a9.716 9.716 0 0 0 6.685-2.653Zm-12.54-1.285A7.486 7.486 0 0 1 12 15a7.486 7.486 0 0 1 5.855 2.812A8.224 8.224 0 0 1 12 20.25a8.224 8.224 0 0 1-5.855-2.438ZM15.75 9a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" clip-rule="evenodd" /></svg>';
+        placeholder.className = isSelfInset
+            ? 'flex size-8 items-center justify-center rounded-full bg-zinc-700 text-zinc-400'
+            : 'flex size-16 items-center justify-center rounded-full bg-zinc-700 text-zinc-400';
+        placeholder.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="${isSelfInset ? 'size-4' : 'size-8'}"><path fill-rule="evenodd" d="M18.685 19.097A9.723 9.723 0 0 0 21.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12a9.723 9.723 0 0 0 3.065 7.097A9.716 9.716 0 0 0 12 21.75a9.716 9.716 0 0 0 6.685-2.653Zm-12.54-1.285A7.486 7.486 0 0 1 12 15a7.486 7.486 0 0 1 5.855 2.812A8.224 8.224 0 0 1 12 20.25a8.224 8.224 0 0 1-5.855-2.438ZM15.75 9a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" clip-rule="evenodd" /></svg>`;
         tile.appendChild(placeholder);
 
         const labelEl = document.createElement('div');
@@ -35,7 +50,9 @@ function createLiveRoom({ wsUrl, token, canPublish }) {
         // Top-left, not bottom-left — the bottom of the stage is where the
         // floating control bar sits, and a bottom-anchored label on the
         // last row of tiles would end up hidden behind it.
-        labelEl.className = 'absolute top-2 left-2 z-10 rounded-md bg-black/60 px-2 py-1 text-xs font-medium text-white backdrop-blur-sm';
+        labelEl.className = isSelfInset
+            ? 'absolute top-1 left-1 z-10 rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm'
+            : 'absolute top-2 left-2 z-10 rounded-md bg-black/60 px-2 py-1 text-xs font-medium text-white backdrop-blur-sm';
         labelEl.textContent = label;
         tile.appendChild(labelEl);
 
