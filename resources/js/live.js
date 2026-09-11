@@ -1,6 +1,68 @@
 import { Room, RoomEvent } from 'livekit-client';
 
 /**
+ * Lets the self-inset tile (the small floating "you" box in a 1:1 call) be
+ * dragged anywhere within the stage instead of being pinned to one corner.
+ * Pointer Events cover mouse and touch with one code path. Position is kept
+ * in inline left/top pixels once dragged, which naturally overrides the
+ * tile's default bottom/right Tailwind classes (inline style always wins),
+ * clamped so it can't be dragged off the visible stage.
+ */
+function makeDraggable(tile, boundsEl) {
+    let dragging = false;
+    let startX = 0;
+    let startY = 0;
+    let startLeft = 0;
+    let startTop = 0;
+
+    tile.addEventListener('pointerdown', (e) => {
+        dragging = true;
+        tile.setPointerCapture(e.pointerId);
+
+        const tileRect = tile.getBoundingClientRect();
+        const boundsRect = boundsEl.getBoundingClientRect();
+
+        startX = e.clientX;
+        startY = e.clientY;
+        startLeft = tileRect.left - boundsRect.left;
+        startTop = tileRect.top - boundsRect.top;
+
+        // Switch to left/top positioning the first time it's dragged —
+        // until then it's just sitting at its default bottom-right spot.
+        tile.style.left = `${startLeft}px`;
+        tile.style.top = `${startTop}px`;
+        tile.style.right = 'auto';
+        tile.style.bottom = 'auto';
+    });
+
+    tile.addEventListener('pointermove', (e) => {
+        if (!dragging) {
+            return;
+        }
+
+        const boundsRect = boundsEl.getBoundingClientRect();
+        const maxLeft = boundsRect.width - tile.offsetWidth;
+        const maxTop = boundsRect.height - tile.offsetHeight;
+
+        const left = Math.min(Math.max(0, startLeft + (e.clientX - startX)), Math.max(0, maxLeft));
+        const top = Math.min(Math.max(0, startTop + (e.clientY - startY)), Math.max(0, maxTop));
+
+        tile.style.left = `${left}px`;
+        tile.style.top = `${top}px`;
+    });
+
+    const stopDragging = (e) => {
+        if (dragging) {
+            dragging = false;
+            tile.releasePointerCapture(e.pointerId);
+        }
+    };
+
+    tile.addEventListener('pointerup', stopDragging);
+    tile.addEventListener('pointercancel', stopDragging);
+}
+
+/**
  * A room connector: joins, renders local + remote video/audio tracks into
  * a tiled grid (one tile per participant, with a name label), and exposes
  * the controls the call screen wraps in its own UI — mute, camera,
@@ -11,6 +73,13 @@ import { Room, RoomEvent } from 'livekit-client';
 function createLiveRoom({ wsUrl, token, canPublish }) {
     const room = new Room();
     const remoteAudioEls = new Set();
+    // LiveKit can route remote audio through a WebAudio gain node instead of
+    // playing the <audio> element directly (e.g. once any audio processing
+    // plugin is active) — when it does, that element's own .muted property
+    // stops being connected to what's actually audible. track.setVolume()
+    // is the one API that works either way, so deafening needs the actual
+    // RemoteAudioTrack objects, not just their attached elements.
+    const remoteAudioTracks = new Set();
     let deafened = false;
 
     function tileFor(identity, label, gridEl) {
@@ -30,7 +99,13 @@ function createLiveRoom({ wsUrl, token, canPublish }) {
         const isSelfInset = spotlight && identity === 'you';
 
         if (isSelfInset) {
-            tile.className = 'absolute bottom-3 right-3 z-20 flex aspect-[3/4] w-24 items-center justify-center overflow-hidden rounded-lg bg-zinc-800 shadow-lg ring-2 ring-white/70 sm:w-32';
+            // bottom-20 clears the floating control bar (bottom-4, ~56px
+            // tall) instead of sitting on top of it — on a narrow screen
+            // the old bottom-3 placement covered its rightmost buttons.
+            // touch-none stops the browser treating a drag on this tile as
+            // a page scroll gesture on mobile.
+            tile.className = 'absolute bottom-20 right-3 z-20 flex aspect-[3/4] w-24 touch-none items-center justify-center overflow-hidden rounded-lg bg-zinc-800 shadow-lg ring-2 ring-white/70 sm:w-32';
+            makeDraggable(tile, gridEl);
         } else if (spotlight) {
             tile.className = 'absolute inset-0 flex items-center justify-center overflow-hidden bg-zinc-800';
         } else {
@@ -76,11 +151,18 @@ function createLiveRoom({ wsUrl, token, canPublish }) {
             if (identity !== 'you') {
                 remoteAudioEls.add(el);
                 el.muted = deafened;
+
+                if (typeof track.setVolume === 'function') {
+                    remoteAudioTracks.add(track);
+                    track.setVolume(deafened ? 0 : 1);
+                }
             }
         }
     }
 
     function detach(track, identity, gridEl) {
+        remoteAudioTracks.delete(track);
+
         track.detach().forEach((el) => {
             remoteAudioEls.delete(el);
             el.remove();
@@ -191,6 +273,9 @@ function createLiveRoom({ wsUrl, token, canPublish }) {
             deafened = enabled;
             remoteAudioEls.forEach((el) => {
                 el.muted = enabled;
+            });
+            remoteAudioTracks.forEach((track) => {
+                track.setVolume(enabled ? 0 : 1);
             });
         },
 
