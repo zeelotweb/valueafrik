@@ -263,3 +263,38 @@ test('an ended session shows nothing to join', function () {
         ->test('pages::live.show', ['liveSession' => $session])
         ->assertSee('This session has ended.');
 });
+
+test('the back button on a finished call goes to the other person\'s profile, not the live directory', function () {
+    $host = User::factory()->create();
+    $callee = User::factory()->create();
+    $session = LiveSession::create([
+        'host_id' => $host->id,
+        'callee_id' => $callee->id,
+        'room_name' => 'room-back-call',
+        'type' => LiveSession::TYPE_CALL,
+        'status' => LiveSession::STATUS_ENDED,
+        'started_at' => now(),
+        'ended_at' => now(),
+    ]);
+
+    Livewire::actingAs($host)
+        ->test('pages::live.show', ['liveSession' => $session])
+        ->assertSeeHtml(route('profile.show', $callee))
+        ->assertDontSeeHtml(route('live.index'));
+});
+
+test('the back button on a finished stream goes to the live directory', function () {
+    $host = User::factory()->create();
+    $session = LiveSession::create([
+        'host_id' => $host->id,
+        'room_name' => 'room-back-stream',
+        'type' => LiveSession::TYPE_STREAM,
+        'status' => LiveSession::STATUS_ENDED,
+        'started_at' => now(),
+        'ended_at' => now(),
+    ]);
+
+    Livewire::actingAs($host)
+        ->test('pages::live.show', ['liveSession' => $session])
+        ->assertSeeHtml(route('live.index'));
+});

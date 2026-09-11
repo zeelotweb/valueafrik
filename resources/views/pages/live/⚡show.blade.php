@@ -79,6 +79,23 @@ new #[Title('Live')] class extends Component {
         return $this->session->otherParty(Auth::user());
     }
 
+    /**
+     * Where the "Back" button on a non-live session (ended/missed/declined
+     * call, or a stream you're just viewing/it already ended) sends you.
+     * A finished call is personal — the other person is the relevant place
+     * to go back to, not the live directory. Everything else (streams,
+     * sprints, or a call with no resolvable other party) falls back to it.
+     */
+    #[Computed]
+    public function backRoute(): string
+    {
+        if ($this->session->type === LiveSession::TYPE_CALL && $this->otherParty) {
+            return route('profile.show', $this->otherParty);
+        }
+
+        return route('live.index');
+    }
+
     #[Computed]
     public function ringDeadline(): ?string
     {
@@ -169,7 +186,7 @@ new #[Title('Live')] class extends Component {
                 {{ __('End call') }}
             </flux:button>
         @else
-            <flux:button :href="route('live.index')" wire:navigate variant="ghost">
+            <flux:button :href="$this->backRoute" wire:navigate variant="ghost">
                 {{ __('Back') }}
             </flux:button>
         @endif
