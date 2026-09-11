@@ -385,8 +385,13 @@ new #[Title('Live')] class extends Component {
 
             <div
                 x-ref="stage"
-                class="relative isolate flex min-h-[60vh] flex-col overflow-hidden bg-zinc-900"
-                :class="cssFullscreen ? 'fixed inset-0 z-50' : 'rounded-2xl'"
+                class="isolate flex min-h-[60vh] flex-col overflow-hidden bg-zinc-900"
+                {{-- relative/fixed can't both be in the class list at once — same
+                    specificity, so whichever Tailwind happens to define later in
+                    the stylesheet always wins the tie, regardless of source order
+                    here. Keeping position entirely inside this one binding is what
+                    actually guarantees the switch takes effect. --}}
+                :class="cssFullscreen ? 'fixed inset-0 z-50' : 'relative rounded-2xl'"
             >
                 <p class="p-6 text-sm text-zinc-400" x-show="!connected && !error">{{ __('Connecting…') }}</p>
 
