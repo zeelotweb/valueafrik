@@ -60,10 +60,64 @@ test('starting a stream from the dashboard creates a live session of type stream
 
     Livewire::actingAs($host)
         ->test('pages::dashboard.start-stream')
-        ->call('startStream')
+        ->call('startStream', LiveSession::VISIBILITY_PUBLIC)
         ->assertRedirect();
 
     expect(LiveSession::first()->type)->toBe(LiveSession::TYPE_STREAM);
+    expect(LiveSession::first()->visibility)->toBe(LiveSession::VISIBILITY_PUBLIC);
+});
+
+test('starting a stream defaults to public but can be started followers-only, and rejects anything else', function () {
+    $host = User::factory()->create();
+
+    Livewire::actingAs($host)
+        ->test('pages::dashboard.start-stream')
+        ->call('startStream', LiveSession::VISIBILITY_FOLLOWERS)
+        ->assertRedirect();
+
+    expect(LiveSession::first()->visibility)->toBe(LiveSession::VISIBILITY_FOLLOWERS);
+
+    Livewire::actingAs($host)
+        ->test('pages::dashboard.start-stream')
+        ->call('startStream', 'secret-club')
+        ->assertStatus(422);
+});
+
+test('a followers-only stream can be viewed by the host and by followers, but not by anyone else', function () {
+    $host = User::factory()->create();
+    $follower = User::factory()->create();
+    $stranger = User::factory()->create();
+    $follower->following()->attach($host->id);
+
+    $session = LiveSession::startStream($host, visibility: LiveSession::VISIBILITY_FOLLOWERS);
+
+    expect($session->canView($host))->toBeTrue();
+    expect($session->canView($follower))->toBeTrue();
+    expect($session->canView($stranger))->toBeFalse();
+});
+
+test('a public stream can be viewed by anyone, including a non-follower', function () {
+    $host = User::factory()->create();
+    $stranger = User::factory()->create();
+
+    $session = LiveSession::startStream($host, visibility: LiveSession::VISIBILITY_PUBLIC);
+
+    expect($session->canView($stranger))->toBeTrue();
+});
+
+test('a non-follower cannot join or fetch a token for a followers-only stream, and it is hidden from the discovery page', function () {
+    $host = User::factory()->create(['name' => 'Followers Only Host']);
+    $stranger = User::factory()->create();
+
+    $session = LiveSession::startStream($host, visibility: LiveSession::VISIBILITY_FOLLOWERS);
+
+    Livewire::actingAs($stranger)
+        ->test('pages::live.show', ['liveSession' => $session])
+        ->assertForbidden();
+
+    Livewire::actingAs($stranger)
+        ->test('pages::live.index')
+        ->assertDontSee('Followers Only Host');
 });
 
 test('the live discovery page only lists currently live streams, not calls or ended sessions', function () {

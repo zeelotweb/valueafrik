@@ -13,7 +13,9 @@ new #[Title('Live')] class extends Component {
                 ->where('status', LiveSession::STATUS_LIVE)
                 ->with('host.profile')
                 ->latest('started_at')
-                ->get(),
+                ->get()
+                ->filter(fn (LiveSession $stream) => $stream->canView(auth()->user()))
+                ->values(),
         ];
     }
 }; ?>

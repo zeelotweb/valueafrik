@@ -16,15 +16,14 @@ class LiveKitToken
      * getenv() fallback, since getenv() is unreliable under Octane's
      * long-lived workers.
      *
-     * Streams are meant to be watched by anyone (visibility settings are a
-     * separate, not-yet-built concern) — canPublish() already restricts
-     * publishing to the host. Calls and sprints are inherently private, so
-     * only a participant gets a token at all; this is the last line of
-     * defense even if a caller forgets its own participant check.
+     * canView() covers who may even receive a token (public/followers-only
+     * for streams, participants-only for calls and sprints); canPublish()
+     * separately restricts who may publish once inside. This check is the
+     * last line of defense even if a caller forgets its own view check.
      */
     public static function generate(LiveSession $session, User $user): string
     {
-        abort_unless($session->type === LiveSession::TYPE_STREAM || $session->isParticipant($user), 403);
+        abort_unless($session->canView($user), 403);
 
         $options = (new AccessTokenOptions())
             ->setIdentity((string) $user->id)

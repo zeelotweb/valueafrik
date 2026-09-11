@@ -72,18 +72,20 @@ test('a blocked relationship prevents following in either direction', function (
         ->assertForbidden();
 });
 
-test('a blocked relationship prevents starting a new conversation in either direction', function () {
+test('a blocked relationship prevents starting a new conversation in either direction, and hides the button', function () {
     $blocker = User::factory()->create();
     $blocked = User::factory()->create();
     $blocker->block($blocked);
 
     Livewire::actingAs($blocked)
         ->test('pages::profile.message-button', ['user' => $blocker])
+        ->assertDontSee('Message')
         ->call('startConversation')
         ->assertForbidden();
 
     Livewire::actingAs($blocker)
         ->test('pages::profile.message-button', ['user' => $blocked])
+        ->assertDontSee('Message')
         ->call('startConversation')
         ->assertForbidden();
 });

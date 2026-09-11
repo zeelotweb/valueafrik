@@ -33,6 +33,10 @@ new #[Title('Live')] class extends Component {
             $this->session->expireIfStale();
         }
 
+        if ($this->session->type === LiveSession::TYPE_STREAM) {
+            abort_unless($this->session->canView(Auth::user()), 403);
+        }
+
         $this->wsUrl = (string) config('services.livekit.url');
         $this->configured = filled(config('services.livekit.api_key')) && filled(config('services.livekit.api_secret')) && filled($this->wsUrl);
 

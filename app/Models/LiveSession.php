@@ -10,6 +10,7 @@ use App\Support\SafeNotifier;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 
 class LiveSession extends Model
@@ -36,11 +37,24 @@ class LiveSession extends Model
 
     public const REASON_TIMEOUT = 'timeout';
 
+    /**
+     * Cap on how many *new* call sessions one host can start per minute —
+     * redialing the same person is deduped separately above and doesn't
+     * count against this; this guards against dialing many different people
+     * in a burst (harassment / notification spam), not normal retrying.
+     */
+    private const MAX_NEW_CALLS_PER_MINUTE = 10;
+
+    public const VISIBILITY_PUBLIC = 'public';
+
+    public const VISIBILITY_FOLLOWERS = 'followers';
+
     protected $fillable = [
         'host_id',
         'callee_id',
         'room_name',
         'title',
+        'visibility',
         'culture_word',
         'type',
         'status',
@@ -143,6 +157,29 @@ class LiveSession extends Model
     }
 
     /**
+     * Calls and sprints are inherently private — only a participant can
+     * view them, same as before. Streams are the one type an audience
+     * outside the participants can view at all, gated by the host's own
+     * visibility choice: public (anyone) or followers-only.
+     */
+    public function canView(User $user): bool
+    {
+        if ($this->type !== self::TYPE_STREAM) {
+            return $this->isParticipant($user);
+        }
+
+        if ($user->id === $this->host_id) {
+            return true;
+        }
+
+        if ($this->visibility === self::VISIBILITY_FOLLOWERS) {
+            return $user->isFollowing($this->host);
+        }
+
+        return true;
+    }
+
+    /**
      * Start a 1:1 call. If the invitee is online, it rings — a delayed job
      * registers a missed call if nobody answers in time. If they're offline,
      * there's nothing to ring, so it's recorded as missed immediately and
@@ -154,6 +191,7 @@ class LiveSession extends Model
     public static function startCallWith(User $host, User $invitee): self
     {
         abort_if($host->id === $invitee->id, 403);
+        abort_if($host->hasBlockRelationWith($invitee), 403);
 
         $existing = self::query()
             ->where('type', self::TYPE_CALL)
@@ -167,6 +205,10 @@ class LiveSession extends Model
         if ($existing) {
             return $existing;
         }
+
+        $throttleKey = 'start-call:'.$host->id;
+        abort_if(RateLimiter::tooManyAttempts($throttleKey, self::MAX_NEW_CALLS_PER_MINUTE), 429);
+        RateLimiter::hit($throttleKey, 60);
 
         $online = $invitee->isOnline();
 
@@ -193,12 +235,13 @@ class LiveSession extends Model
         return $session;
     }
 
-    public static function startStream(User $host, ?string $title = null): self
+    public static function startStream(User $host, ?string $title = null, string $visibility = self::VISIBILITY_PUBLIC): self
     {
         return self::create([
             'host_id' => $host->id,
             'room_name' => (string) Str::uuid(),
             'title' => $title,
+            'visibility' => $visibility,
             'type' => self::TYPE_STREAM,
             'status' => self::STATUS_LIVE,
             'started_at' => now(),

@@ -81,6 +81,59 @@ test('a user cannot start a call with themselves', function () {
     expect(fn () => LiveSession::startCallWith($user, $user))->toThrow(Symfony\Component\HttpKernel\Exception\HttpException::class);
 });
 
+test('a host is rate-limited after starting too many new calls in a burst', function () {
+    Queue::fake();
+
+    $host = User::factory()->create();
+    $invitees = User::factory()->count(11)->create(['last_seen_at' => now()]);
+
+    foreach ($invitees->take(10) as $invitee) {
+        LiveSession::startCallWith($host, $invitee);
+    }
+
+    try {
+        LiveSession::startCallWith($host, $invitees->last());
+        $this->fail('Expected the 11th new call in a burst to be rate-limited.');
+    } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+        expect($e->getStatusCode())->toBe(429);
+    }
+});
+
+test('redialing the same person while already ringing does not count against the burst rate limit', function () {
+    Queue::fake();
+
+    $host = User::factory()->create();
+    $invitee = User::factory()->create(['last_seen_at' => now()]);
+
+    foreach (range(1, 15) as $_) {
+        $session = LiveSession::startCallWith($host, $invitee);
+    }
+
+    expect($session->host_id)->toBe($host->id);
+    expect(LiveSession::count())->toBe(1);
+});
+
+test('a user cannot start a call with someone they blocked, or someone who blocked them', function () {
+    $host = User::factory()->create();
+    $blocked = User::factory()->create(['last_seen_at' => now()]);
+    $host->block($blocked);
+
+    expect(fn () => LiveSession::startCallWith($host, $blocked))->toThrow(Symfony\Component\HttpKernel\Exception\HttpException::class);
+    expect(fn () => LiveSession::startCallWith($blocked, $host))->toThrow(Symfony\Component\HttpKernel\Exception\HttpException::class);
+});
+
+test('the profile page call button is hidden and the action is blocked when either side has blocked the other', function () {
+    $viewer = User::factory()->create();
+    $target = User::factory()->create(['last_seen_at' => now()]);
+    $viewer->block($target);
+
+    Livewire::actingAs($viewer)
+        ->test('pages::profile.start-call-button', ['user' => $target])
+        ->assertDontSee('Call')
+        ->call('startCall')
+        ->assertForbidden();
+});
+
 // --- respondToRing -----------------------------------------------------------
 
 test('the callee can accept a ringing call', function () {
