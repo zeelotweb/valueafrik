@@ -178,6 +178,17 @@ new #[Title('Profile settings')] class extends Component {
             </div>
         </form>
 
+            <section class="mt-10 rounded-xl border border-stone-200 bg-white p-5 dark:border-stone-800 dark:bg-stone-900">
+                <flux:heading>{{ __('Your data') }}</flux:heading>
+                <flux:subheading class="mt-1">
+                    {{ __('Download a copy of everything tied to your account — your profile, posts, Bridge Posts, communities, and Bridge Score history.') }}
+                </flux:subheading>
+
+                <flux:button variant="ghost" icon="arrow-down-tray" class="mt-4" href="{{ route('data-export.download') }}" data-test="download-data-button">
+                    {{ __('Download your data') }}
+                </flux:button>
+            </section>
+
             <livewire:pages::settings.delete-user-form />
     </x-pages::settings.layout>
 </section>

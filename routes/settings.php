@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Settings\DataExportController;
 use App\Http\Controllers\Settings\ProfilePhotoController;
 use Illuminate\Support\Facades\Route;
 
@@ -13,6 +14,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::post('settings/profile/avatar', [ProfilePhotoController::class, 'updateAvatar'])->name('profile.avatar');
     Route::post('settings/profile/cover', [ProfilePhotoController::class, 'updateCover'])->name('profile.cover');
+    Route::get('settings/data-export', [DataExportController::class, 'download'])->name('data-export.download');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
