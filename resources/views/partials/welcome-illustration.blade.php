@@ -2,7 +2,7 @@
     $countryFlag = fn ($code) => $code ? \App\Support\Countries::flag($code) : null;
 @endphp
 
-<div class="flex h-full flex-col rounded-2xl border border-stone-200 bg-white p-6 shadow-sm dark:border-stone-800 dark:bg-stone-900">
+<div class="surface-card flex h-full flex-col border-cyan-600/20 p-6 dark:border-cyan-400/20">
     <div class="flex items-center justify-between">
         <span class="font-mono text-xs text-stone-400 dark:text-stone-600">{{ $item['number'] }}</span>
         <span class="rounded-full bg-cyan-50 px-2.5 py-1 text-xs font-medium text-cyan-700 dark:bg-cyan-950 dark:text-cyan-400">
@@ -97,10 +97,10 @@
                     </div>
                     <div class="min-w-0">
                         <p class="truncate font-semibold">{{ $item['user']->name }}</p>
-                        <p class="text-sm text-cyan-600 dark:text-cyan-400">{{ $badge['name'] ?? '' }}</p>
+                        <p class="text-sm text-warm-600 dark:text-warm-400">{{ $badge['name'] ?? '' }}</p>
                     </div>
                 </div>
-                <p class="mt-4 text-4xl font-bold tracking-tight text-cyan-600 dark:text-cyan-400">
+                <p class="font-display mt-4 text-4xl font-semibold tracking-tight text-warm-600 dark:text-warm-400">
                     {{ $item['user']->bridgeScore() }}
                 </p>
                 <p class="mt-1 text-sm text-stone-500 dark:text-stone-400">bridge points earned through real exchange</p>
@@ -137,7 +137,7 @@
                 {{-- A fixed, modest height rather than aspect-video — keeps this
                      card's footprint close to the others so the hero carousel
                      doesn't jump when it rotates in. --}}
-                <div class="relative flex h-28 items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-orange-600 to-rose-700">
+                <div class="relative flex h-28 items-center justify-center overflow-hidden rounded-md bg-stone-900 dark:bg-black">
                     <div class="absolute top-3 left-3 flex items-center gap-1.5 rounded-full bg-black/30 px-2.5 py-1 text-xs font-medium text-white backdrop-blur">
                         <span class="size-1.5 animate-pulse rounded-full bg-white"></span>
                         LIVE

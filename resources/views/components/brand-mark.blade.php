@@ -13,5 +13,5 @@
 
 <a href="{{ $href ?? route('home') }}" wire:navigate {{ $attributes->class($wrapperClass) }}>
     <x-app-logo-icon class="{{ $iconClass }} object-contain dark:invert" />
-    <span class="{{ $textClass }}"><span class="font-normal text-cyan-600">value</span><span class="font-black text-stone-900 dark:text-white">AFRIK</span></span>
+    <span class="font-display {{ $textClass }}"><span class="font-thin text-cyan-600">value</span><span class="font-bold text-stone-900 dark:text-white">AFRIK</span></span>
 </a>

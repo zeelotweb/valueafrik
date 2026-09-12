@@ -26,7 +26,7 @@ new class extends Component {
              wrong person if you clicked the partner's side. --}}
         <div
             wire:key="activity-{{ $post->id }}"
-            class="flex items-center gap-3 rounded-xl border border-cyan-200 p-3 dark:border-cyan-900"
+            class="flex items-center gap-3 rounded-md border border-cyan-200 p-3 dark:border-cyan-900"
         >
             <div class="flex -space-x-2">
                 @foreach ([$post->initiator, $post->partner] as $person)
@@ -54,7 +54,7 @@ new class extends Component {
             <flux:icon.arrows-right-left class="size-4 shrink-0 text-cyan-600 dark:text-cyan-400" />
         </div>
     @empty
-        <div class="rounded-xl border border-dashed border-stone-300 p-4 text-center dark:border-stone-700">
+        <div class="rounded-md border border-dashed border-stone-300 p-4 text-center dark:border-stone-700">
             <flux:text class="text-sm">{{ __('No Bridge Posts to show yet — start one from your Wall.') }}</flux:text>
         </div>
     @endforelse

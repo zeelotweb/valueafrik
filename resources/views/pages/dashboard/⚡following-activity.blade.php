@@ -113,7 +113,7 @@ new class extends Component {
 <div wire:key="dashboard-following-activity" wire:poll.60s>
     @if ($items->isEmpty() && $liveFriends->isEmpty())
         @if (! $isFollowingAnyone)
-            <div class="rounded-xl border border-dashed border-stone-300 p-6 text-center dark:border-stone-700">
+            <div class="rounded-md border border-dashed border-stone-300 p-6 text-center dark:border-stone-700">
                 <flux:text>{{ __("You're not following anyone yet — find people to bridge with.") }}</flux:text>
                 <div class="mt-3">
                     <a href="{{ route('discover.index') }}" wire:navigate>
@@ -122,7 +122,7 @@ new class extends Component {
                 </div>
             </div>
         @else
-            <div class="rounded-xl border border-dashed border-stone-300 p-6 text-center dark:border-stone-700">
+            <div class="rounded-md border border-dashed border-stone-300 p-6 text-center dark:border-stone-700">
                 <flux:text>{{ __('No recent activity from people you follow yet.') }}</flux:text>
             </div>
         @endif
@@ -152,7 +152,7 @@ new class extends Component {
                 x-transition.opacity
                 x-cloak
                 @click="scroll(-1)"
-                class="absolute -left-3 top-1/2 z-10 flex size-9 -translate-y-1/2 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-600 shadow-md hover:text-stone-900 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:text-white"
+                class="absolute -left-3 top-1/2 z-10 flex size-9 -translate-y-1/2 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-600 hover:text-stone-900 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:text-white"
                 aria-label="{{ __('Scroll left') }}"
             >
                 <flux:icon.chevron-left class="size-4" />
@@ -164,7 +164,7 @@ new class extends Component {
                 x-transition.opacity
                 x-cloak
                 @click="scroll(1)"
-                class="absolute -right-3 top-1/2 z-10 flex size-9 -translate-y-1/2 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-600 shadow-md hover:text-stone-900 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:text-white"
+                class="absolute -right-3 top-1/2 z-10 flex size-9 -translate-y-1/2 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-600 hover:text-stone-900 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:text-white"
                 aria-label="{{ __('Scroll right') }}"
             >
                 <flux:icon.chevron-right class="size-4" />
@@ -180,7 +180,7 @@ new class extends Component {
                     href="{{ route('live.show', $stream) }}"
                     wire:navigate
                     wire:key="following-live-{{ $stream->id }}"
-                    class="group relative flex h-72 w-56 shrink-0 snap-start flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-rose-500 to-rose-700 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg"
+                    class="group relative flex h-72 w-56 shrink-0 snap-start flex-col overflow-hidden rounded-md bg-gradient-to-br from-rose-500 to-rose-700 transition hover:-translate-y-0.5"
                 >
                     <div class="flex items-center gap-1.5 p-4">
                         <span class="relative flex size-2">
@@ -221,7 +221,7 @@ new class extends Component {
                          wrong person if you clicked the partner's side. --}}
                     <div
                         wire:key="following-activity-bridge-{{ $item['initiator']->id }}-{{ $item['timestamp'] }}"
-                        class="flex h-72 w-56 shrink-0 snap-start flex-col overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm dark:border-stone-800 dark:bg-stone-900"
+                        class="surface-card flex h-72 w-56 shrink-0 snap-start flex-col overflow-hidden"
                     >
                         <div class="relative flex h-32 shrink-0 items-center justify-center bg-gradient-to-br from-rose-100 to-amber-50 dark:from-rose-950 dark:to-stone-900">
                             <span class="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-rose-700 dark:bg-stone-900/80 dark:text-rose-400">
@@ -257,7 +257,7 @@ new class extends Component {
                 @else
                     <div
                         wire:key="following-activity-{{ $item['type'] }}-{{ $item['user']->id }}-{{ $item['timestamp'] }}"
-                        class="group flex h-72 w-56 shrink-0 snap-start flex-col overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg dark:border-stone-800 dark:bg-stone-900"
+                        class="surface-card group flex h-72 w-56 shrink-0 snap-start flex-col overflow-hidden transition hover:-translate-y-0.5 hover:border-cyan-600/40 dark:hover:border-cyan-400/40"
                     >
                         @if ($item['photo'])
                             {{-- The photo itself opens the full-size lightbox — the rest of

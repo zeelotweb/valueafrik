@@ -3,25 +3,18 @@ $showcaseItems = \App\Support\WelcomeShowcase::items();
 $countries = \App\Support\WelcomeShowcase::countries();
 
 $pillars = [
-    ['type' => 'identity', 'icon' => 'user', 'title' => 'Identity & Profiles', 'blurb' => 'Your way of life as your profile — languages, heritage, traditions, not just a bio.', 'color' => 'cyan'],
-    ['type' => 'bridge_post', 'icon' => 'chat-bubble-left-right', 'title' => 'Bridge Posts', 'blurb' => 'Co-create posts with someone from another culture, comparing the same tradition side by side.', 'color' => 'rose'],
-    ['type' => 'community', 'icon' => 'user-group', 'title' => 'Culture Circles', 'blurb' => 'Small communities built around curiosity, not virality.', 'color' => 'amber'],
-    ['type' => 'bridge_score', 'icon' => 'trophy', 'title' => 'Bridge Score & Badges', 'blurb' => 'Recognition for sparking exchange, not just posting.', 'color' => 'violet'],
-    ['type' => 'discovery', 'icon' => 'magnifying-glass', 'title' => 'Discovery', 'blurb' => 'Find people through shared curiosity, not follower overlap.', 'color' => 'emerald'],
-    ['type' => 'live', 'icon' => 'video-camera', 'title' => 'Live & Video', 'blurb' => 'Real-time conversation and broadcast, calls to cultural events.', 'color' => 'orange'],
+    ['type' => 'identity', 'icon' => 'user', 'title' => 'Identity & Profiles', 'blurb' => 'Your way of life as your profile — languages, heritage, traditions, not just a bio.', 'warm' => false],
+    ['type' => 'bridge_post', 'icon' => 'chat-bubble-left-right', 'title' => 'Bridge Posts', 'blurb' => 'Co-create posts with someone from another culture, comparing the same tradition side by side.', 'warm' => false],
+    ['type' => 'community', 'icon' => 'user-group', 'title' => 'Culture Circles', 'blurb' => 'Small communities built around curiosity, not virality.', 'warm' => false],
+    ['type' => 'bridge_score', 'icon' => 'trophy', 'title' => 'Bridge Score & Badges', 'blurb' => 'Recognition for sparking exchange, not just posting.', 'warm' => true],
+    ['type' => 'discovery', 'icon' => 'magnifying-glass', 'title' => 'Discovery', 'blurb' => 'Find people through shared curiosity, not follower overlap.', 'warm' => false],
+    ['type' => 'live', 'icon' => 'video-camera', 'title' => 'Live & Video', 'blurb' => 'Real-time conversation and broadcast, calls to cultural events.', 'warm' => false],
 ];
 
-// Literal Tailwind class strings per color, keyed by the pillar 'color'
-// above — kept as full strings (not string-built) so Tailwind's scanner
-// picks them all up.
-$pillarColors = [
-    'cyan' => ['badge' => 'bg-cyan-50 text-cyan-700 dark:bg-cyan-950 dark:text-cyan-400', 'ring' => 'group-hover:border-cyan-600/40'],
-    'rose' => ['badge' => 'bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-400', 'ring' => 'group-hover:border-rose-600/40'],
-    'amber' => ['badge' => 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-400', 'ring' => 'group-hover:border-amber-600/40'],
-    'violet' => ['badge' => 'bg-violet-50 text-violet-700 dark:bg-violet-950 dark:text-violet-400', 'ring' => 'group-hover:border-violet-600/40'],
-    'emerald' => ['badge' => 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400', 'ring' => 'group-hover:border-emerald-600/40'],
-    'orange' => ['badge' => 'bg-orange-50 text-orange-700 dark:bg-orange-950 dark:text-orange-400', 'ring' => 'group-hover:border-orange-600/40'],
-];
+// One accent (cyan) carries every pillar badge except Bridge Score, which
+// gets the warm tone deliberately — points and badges are gold in the
+// product itself, so this is the one place a second color means something
+// rather than just telling pillars apart with decoration.
 ?>
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -39,18 +32,18 @@ $pillarColors = [
         <main>
             {{-- Hero --}}
             <section class="relative overflow-hidden">
-                {{-- Aurora backdrop: soft color blooms standing in for a literal
-                     "bridge" — warm meeting cool, nobody depicted, so nothing to
-                     misrepresent. Blurred, decorative, ignored by screen readers. --}}
+                {{-- The bridge motif, drawn rather than blurred: a single
+                     structural line crossing the section, echoing the hut
+                     roofline in the brand mark instead of standing in for
+                     "culture" with soft color blooms. Decorative, ignored by
+                     screen readers. --}}
                 <div class="pointer-events-none absolute inset-0 -z-10 overflow-hidden" aria-hidden="true">
-                    <div class="animate-drift absolute -top-24 -left-24 size-80 rounded-full bg-cyan-300/50 blur-3xl dark:bg-cyan-700/20"></div>
-                    <div class="animate-drift absolute top-4 -right-16 size-96 rounded-full bg-amber-300/40 blur-3xl dark:bg-amber-700/15" style="animation-delay: -5s"></div>
-                    <div class="animate-drift absolute bottom-0 left-1/3 size-72 rounded-full bg-rose-300/30 blur-3xl dark:bg-rose-800/15" style="animation-delay: -9s"></div>
-
-                    <svg class="absolute inset-x-0 bottom-0 h-40 w-full text-cyan-600/10 dark:text-cyan-400/10" viewBox="0 0 1200 200" preserveAspectRatio="none" fill="none">
-                        <path d="M0 160 Q 300 40 600 160 T 1200 160" stroke="currentColor" stroke-width="2" />
-                        <path d="M0 180 Q 300 70 600 180 T 1200 180" stroke="currentColor" stroke-width="2" />
+                    <svg class="absolute inset-x-0 bottom-0 h-48 w-full text-cyan-600/[0.07] dark:text-cyan-400/[0.08]" viewBox="0 0 1200 220" preserveAspectRatio="none" fill="none">
+                        <path d="M0 140 L 260 140 L 420 40 L 780 40 L 940 140 L 1200 140" stroke="currentColor" stroke-width="2" />
+                        <path d="M0 170 L 260 170 L 420 70 L 780 70 L 940 170 L 1200 170" stroke="currentColor" stroke-width="2" />
                     </svg>
+                    <span class="absolute top-10 right-[8%] size-2 rounded-full bg-warm-400/60 dark:bg-warm-400/40"></span>
+                    <span class="absolute top-24 right-[18%] size-1.5 rounded-full bg-cyan-500/50 dark:bg-cyan-400/40"></span>
                 </div>
 
                 <div class="mx-auto max-w-6xl px-6 pt-16 pb-16">
@@ -64,7 +57,7 @@ $pillarColors = [
                                     Beta
                                 </span>
                             </div>
-                            <h1 class="text-4xl font-bold tracking-tight text-balance sm:text-5xl">
+                            <h1 class="font-display text-5xl font-semibold tracking-tight text-balance text-stone-900 sm:text-6xl dark:text-white">
                                 Building Bridges Across Cultures
                             </h1>
                             <p class="mx-auto mt-6 max-w-xl text-lg text-stone-600 lg:mx-0 dark:text-stone-400">
@@ -220,7 +213,7 @@ $pillarColors = [
                     <p class="text-sm font-medium tracking-widest text-cyan-600 uppercase dark:text-cyan-400">
                         What you can do here
                     </p>
-                    <h2 class="mt-2 text-3xl font-bold tracking-tight text-balance">
+                    <h2 class="font-display mt-2 text-3xl font-semibold tracking-tight text-balance text-stone-900 dark:text-white">
                         Six pillars, one story
                     </h2>
                     <p class="mt-4 text-stone-600 dark:text-stone-400">
@@ -231,20 +224,21 @@ $pillarColors = [
 
                 <div class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                     @foreach ($pillars as $index => $pillar)
-                        @php
-                            $available = $index < count($showcaseItems);
-                            $colors = $pillarColors[$pillar['color']];
-                        @endphp
+                        @php $available = $index < count($showcaseItems); @endphp
                         <button
                             type="button"
                             @if ($available) x-on:click="active = {{ $index }}; modalOpen = true" @endif
-                            class="group flex flex-col items-start rounded-2xl border border-stone-200 bg-white p-6 text-start transition hover:-translate-y-0.5 hover:shadow-md disabled:opacity-60 disabled:hover:translate-y-0 {{ $colors['ring'] }} dark:border-stone-800 dark:bg-stone-900"
+                            class="surface-card group flex flex-col items-start p-6 text-start transition hover:border-cyan-600/40 disabled:opacity-60 dark:hover:border-cyan-400/40"
                             @if (! $available) disabled @endif
                         >
-                            <span class="flex size-10 items-center justify-center rounded-lg {{ $colors['badge'] }}">
+                            <span @class([
+                                'flex size-10 items-center justify-center rounded-md',
+                                'bg-warm-100 text-warm-600 dark:bg-warm-950 dark:text-warm-400' => $pillar['warm'],
+                                'bg-cyan-50 text-cyan-700 dark:bg-cyan-950 dark:text-cyan-400' => ! $pillar['warm'],
+                            ])>
                                 <flux:icon :icon="$pillar['icon']" class="size-5" />
                             </span>
-                            <h3 class="mt-4 font-semibold">{{ $pillar['title'] }}</h3>
+                            <h3 class="mt-4 font-semibold text-stone-900 dark:text-white">{{ $pillar['title'] }}</h3>
                             <p class="mt-1.5 text-sm text-stone-500 dark:text-stone-400">{{ $pillar['blurb'] }}</p>
                             @if ($available)
                                 <span class="mt-4 flex items-center gap-1 text-sm font-medium text-cyan-600 group-hover:gap-1.5 dark:text-cyan-400">
@@ -275,37 +269,37 @@ $pillarColors = [
                         <p class="text-sm font-medium tracking-widest text-cyan-600 uppercase dark:text-cyan-400">
                             Why it's different
                         </p>
-                        <h2 class="mt-2 text-3xl font-bold tracking-tight text-balance">
+                        <h2 class="font-display mt-2 text-3xl font-semibold tracking-tight text-balance text-stone-900 dark:text-white">
                             Built for exchange, not attention
                         </h2>
                     </div>
 
-                    <div class="mt-12 grid gap-8 sm:grid-cols-3">
-                        <div class="rounded-2xl bg-white p-6 text-center shadow-sm sm:text-start dark:bg-stone-900">
-                            <span class="mx-auto flex size-11 items-center justify-center rounded-lg bg-cyan-50 text-cyan-700 sm:mx-0 dark:bg-cyan-950 dark:text-cyan-400">
+                    <div class="mt-12 grid gap-5 sm:grid-cols-3">
+                        <div class="surface-card p-6 text-center sm:text-start">
+                            <span class="mx-auto flex size-11 items-center justify-center rounded-md bg-cyan-50 text-cyan-700 sm:mx-0 dark:bg-cyan-950 dark:text-cyan-400">
                                 <flux:icon.identification class="size-5" />
                             </span>
-                            <h3 class="mt-3 font-semibold">Identity first</h3>
+                            <h3 class="mt-3 font-semibold text-stone-900 dark:text-white">Identity first</h3>
                             <p class="mt-1.5 text-sm text-stone-500 dark:text-stone-400">
                                 Your heritage, languages, and traditions are the profile — not an afterthought
                                 buried under a follower count.
                             </p>
                         </div>
-                        <div class="rounded-2xl bg-white p-6 text-center shadow-sm sm:text-start dark:bg-stone-900">
-                            <span class="mx-auto flex size-11 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700 sm:mx-0 dark:bg-emerald-950 dark:text-emerald-400">
+                        <div class="surface-card p-6 text-center sm:text-start">
+                            <span class="mx-auto flex size-11 items-center justify-center rounded-md bg-cyan-50 text-cyan-700 sm:mx-0 dark:bg-cyan-950 dark:text-cyan-400">
                                 <flux:icon.globe-europe-africa class="size-5" />
                             </span>
-                            <h3 class="mt-3 font-semibold">Curiosity over virality</h3>
+                            <h3 class="mt-3 font-semibold text-stone-900 dark:text-white">Curiosity over virality</h3>
                             <p class="mt-1.5 text-sm text-stone-500 dark:text-stone-400">
                                 Discovery surfaces people by shared interests and cross-cultural curiosity, not
                                 by who's trending.
                             </p>
                         </div>
-                        <div class="rounded-2xl bg-white p-6 text-center shadow-sm sm:text-start dark:bg-stone-900">
-                            <span class="mx-auto flex size-11 items-center justify-center rounded-lg bg-violet-50 text-violet-700 sm:mx-0 dark:bg-violet-950 dark:text-violet-400">
+                        <div class="surface-card p-6 text-center sm:text-start">
+                            <span class="mx-auto flex size-11 items-center justify-center rounded-md bg-warm-100 text-warm-600 sm:mx-0 dark:bg-warm-950 dark:text-warm-400">
                                 <flux:icon.trophy class="size-5" />
                             </span>
-                            <h3 class="mt-3 font-semibold">Recognition that means something</h3>
+                            <h3 class="mt-3 font-semibold text-stone-900 dark:text-white">Recognition that means something</h3>
                             <p class="mt-1.5 text-sm text-stone-500 dark:text-stone-400">
                                 Bridge Score rewards follows, conversations, and community — engagement with
                                 people, not just posts.
@@ -322,13 +316,14 @@ $pillarColors = [
                 x-bind:class="{ 'is-visible': visible }"
                 class="scroll-reveal mx-auto max-w-6xl px-6 py-20"
             >
-                <div class="relative flex flex-col items-center gap-6 overflow-hidden rounded-3xl bg-gradient-to-br from-cyan-600 to-cyan-800 px-8 py-14 text-center shadow-lg">
-                    <div class="pointer-events-none absolute inset-0 -z-10" aria-hidden="true">
-                        <div class="absolute -top-10 -right-10 size-56 rounded-full bg-amber-400/20 blur-3xl"></div>
-                        <div class="absolute -bottom-16 -left-10 size-64 rounded-full bg-white/10 blur-3xl"></div>
+                <div class="relative flex flex-col items-center gap-6 overflow-hidden rounded-md bg-cyan-700 px-8 py-14 text-center dark:bg-cyan-800">
+                    <div class="pointer-events-none absolute inset-x-0 bottom-0 -z-10 opacity-20" aria-hidden="true">
+                        <svg class="h-20 w-full" viewBox="0 0 1200 100" preserveAspectRatio="none" fill="none">
+                            <path d="M0 60 L 260 60 L 420 20 L 780 20 L 940 60 L 1200 60" stroke="white" stroke-width="2" />
+                        </svg>
                     </div>
 
-                    <h2 class="text-3xl font-bold tracking-tight text-balance text-white">
+                    <h2 class="font-display text-3xl font-semibold tracking-tight text-balance text-white">
                         Come build a bridge.
                     </h2>
                     <p class="max-w-md text-cyan-50">

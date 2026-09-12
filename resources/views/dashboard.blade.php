@@ -6,29 +6,34 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
 ?>
 <x-layouts::app :title="__('Dashboard')">
     <div class="mx-auto w-full max-w-5xl">
-        <div class="flex flex-wrap items-center justify-between gap-3 hidden">
+        <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
-                <flux:heading size="l">
-                    {{ __(':name', ['name' => Str::before($user->name, ' ')]) }}
-                </flux:heading>
+                <h1 class="font-display text-2xl font-semibold tracking-tight text-stone-900 dark:text-white">
+                    {{ __('Welcome back, :name', ['name' => Str::before($user->name, ' ')]) }}
+                </h1>
                 <flux:subheading>{{ __("Here's what's going on across valueAFRIK.") }}</flux:subheading>
             </div>
         </div>
 
         @php
-            $quickActionClass = '!bg-stone-200 hover:!bg-cyan-100 dark:!bg-stone-800 dark:hover:!bg-cyan-950/40';
+            $quickActionClass = '!bg-stone-200 hover:!bg-stone-300 dark:!bg-stone-800 dark:hover:!bg-stone-700';
+            // Bridge Post is the one quick action that shares Bridge Score's
+            // warm accent — it's literally how that score gets earned, so the
+            // color is doing the same job as it does on the stat card.
+            $bridgePostActionClass = '!bg-warm-100 !text-warm-700 hover:!bg-warm-100/70 dark:!bg-warm-950 dark:!text-warm-400 dark:hover:!bg-warm-950/70';
+            $streamActionClass = '!bg-pink-50 !text-pink-700 hover:!bg-pink-100 dark:!bg-pink-950 dark:!text-pink-400 dark:hover:!bg-pink-950/70';
         @endphp
 
         {{-- Quick actions --}}
         <div class="mt-4 flex flex-wrap gap-2">
-            <livewire:pages::dashboard.start-stream :key="'start-stream-'.$user->id" class="{{ $quickActionClass }}" />
+            <livewire:pages::dashboard.start-stream :key="'start-stream-'.$user->id" class="{{ $streamActionClass }}" />
 
             <flux:modal.trigger name="wall-composer">
                 <flux:button size="sm" variant="ghost" icon="pencil-square" class="{{ $quickActionClass }}">{{ __('Post to Wall') }}</flux:button>
             </flux:modal.trigger>
 
             <flux:modal.trigger name="bridge-post-composer">
-                <flux:button size="sm" variant="ghost" icon="arrows-right-left" class="{{ $quickActionClass }}">{{ __('Start a Bridge Post') }}</flux:button>
+                <flux:button size="sm" variant="ghost" icon="arrows-right-left" class="{{ $bridgePostActionClass }}">{{ __('Start a Bridge Post') }}</flux:button>
             </flux:modal.trigger>
 
             <a href="{{ route('communities.create') }}" wire:navigate>
@@ -56,13 +61,13 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
             <a
                 href="{{ route('profile.show', $user) }}"
                 wire:navigate
-                class="w-fit min-w-40 rounded-xl bg-white border border-stone-200 p-5 hover:bg-stone-50 dark:bg-stone-900 dark:border-stone-800 dark:hover:bg-stone-800"
+                class="surface-card w-fit min-w-40 p-5 hover:border-warm-500/40 dark:hover:border-warm-400/40"
             >
-                <div class="flex items-center gap-2 text-cyan-600 dark:text-cyan-400">
+                <div class="flex items-center gap-2 text-warm-600 dark:text-warm-400">
                     <flux:icon.sparkles class="size-5" />
                     <span class="text-sm font-medium">{{ __('Bridge Score') }}</span>
                 </div>
-                <p class="mt-2 text-3xl font-semibold text-stone-900 dark:text-white">{{ $bridgeScore }}</p>
+                <p class="font-display mt-2 text-3xl font-semibold text-stone-900 dark:text-white">{{ $bridgeScore }}</p>
                 <p class="mt-1 truncate text-sm text-stone-500 dark:text-stone-400">
                     {{ $badge['name'] ?? __('Just getting started') }}
                 </p>
@@ -71,13 +76,13 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
             <a
                 href="{{ route('communities.index') }}"
                 wire:navigate
-                class="w-fit min-w-40 rounded-xl bg-white border border-stone-200 p-5 hover:bg-stone-50 dark:bg-stone-900 dark:border-stone-800 dark:hover:bg-stone-800"
+                class="surface-card w-fit min-w-40 p-5 hover:border-amber-600/40 dark:hover:border-amber-500/40"
             >
-                <div class="flex items-center gap-2 text-cyan-600 dark:text-cyan-400">
+                <div class="flex items-center gap-2 text-amber-700 dark:text-amber-400">
                     <flux:icon.user-group class="size-5" />
                     <span class="text-sm font-medium">{{ __('Communities') }}</span>
                 </div>
-                <p class="mt-2 text-3xl font-semibold text-stone-900 dark:text-white">
+                <p class="font-display mt-2 text-3xl font-semibold text-stone-900 dark:text-white">
                     {{ $user->communities()->wherePivot('status', 'active')->count() }}
                 </p>
                 <p class="mt-1 text-sm text-stone-500 dark:text-stone-400">{{ __('joined') }}</p>
@@ -86,19 +91,19 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
             <a
                 href="{{ route('messages.index') }}"
                 wire:navigate
-                class="w-fit min-w-40 rounded-xl bg-white border border-stone-200 p-5 hover:bg-stone-50 dark:bg-stone-900 dark:border-stone-800 dark:hover:bg-stone-800"
+                class="surface-card w-fit min-w-40 p-5 hover:border-violet-600/40 dark:hover:border-violet-400/40"
             >
-                <div class="flex items-center gap-2 text-cyan-600 dark:text-cyan-400">
+                <div class="flex items-center gap-2 text-violet-700 dark:text-violet-400">
                     <flux:icon.chat-bubble-left-right class="size-5" />
                     <span class="text-sm font-medium">{{ __('Messages') }}</span>
                 </div>
-                <p class="mt-2 text-3xl font-semibold text-stone-900 dark:text-white">{{ $user->unreadConversationsCount() }}</p>
+                <p class="font-display mt-2 text-3xl font-semibold text-stone-900 dark:text-white">{{ $user->unreadConversationsCount() }}</p>
                 <p class="mt-1 text-sm text-stone-500 dark:text-stone-400">{{ __('unread') }}</p>
             </a>
         </div>
 
         <div class="mt-10">
-            <flux:heading size="lg">{{ __('From people you follow') }}</flux:heading>
+            <flux:heading size="lg" class="font-display">{{ __('From people you follow') }}</flux:heading>
             <flux:subheading>{{ __('Their latest posts, bridges, and communities.') }}</flux:subheading>
             <div class="mt-3">
                 <livewire:pages::dashboard.following-activity :key="'dashboard-following-activity-'.$user->id" />
@@ -107,7 +112,7 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
 
         <div class="mt-10 grid gap-8 lg:grid-cols-2">
             <div class="min-w-0">
-                <flux:heading size="lg">{{ __('Needs your attention') }}</flux:heading>
+                <flux:heading size="lg" class="font-display">{{ __('Needs your attention') }}</flux:heading>
 
                 <div class="mt-3">
                     <flux:subheading>{{ __('Bridge Post invites') }}</flux:subheading>
@@ -133,7 +138,7 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
 
             <div class="min-w-0">
                 <div class="flex items-center justify-between">
-                    <flux:heading size="lg">{{ __('Your communities') }}</flux:heading>
+                    <flux:heading size="lg" class="font-display">{{ __('Your communities') }}</flux:heading>
                     <a href="{{ route('communities.create') }}" wire:navigate class="text-sm font-medium text-cyan-600 hover:text-cyan-500 dark:text-cyan-400">
                         {{ __('New community') }}
                     </a>
@@ -143,7 +148,7 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
                 </div>
 
                 <div class="mt-6 flex items-center justify-between">
-                    <flux:heading size="lg">{{ __('People to discover') }}</flux:heading>
+                    <flux:heading size="lg" class="font-display">{{ __('People to discover') }}</flux:heading>
                     <a href="{{ route('discover.index') }}" wire:navigate class="text-sm font-medium text-cyan-600 hover:text-cyan-500 dark:text-cyan-400">
                         {{ __('See all') }}
                     </a>
@@ -155,7 +160,7 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
         </div>
 
         <div class="mt-10">
-            <flux:heading size="lg">{{ __('Fresh Bridge Posts') }}</flux:heading>
+            <flux:heading size="lg" class="font-display">{{ __('Fresh Bridge Posts') }}</flux:heading>
             <flux:subheading>{{ __('Real exchange happening across the platform right now.') }}</flux:subheading>
             <div class="mt-3">
                 <livewire:pages::dashboard.activity :key="'dashboard-activity-'.$user->id" />

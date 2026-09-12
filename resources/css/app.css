@@ -11,6 +11,20 @@
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
+    /* Headlines only — marketing surfaces and section titles. Body copy,
+       forms, and app UI stay on --font-sans; mixing the two is what gives
+       the page an actual hierarchy instead of one typeface doing every job. */
+    --font-display: 'Fraunces', 'Instrument Sans', ui-serif, serif;
+
+    /* The one warm accent alongside cyan — used with intent (Bridge Score,
+       a single hero detail), never handed out per-section as decoration. */
+    --color-warm-50: #fdf6ec;
+    --color-warm-100: #faead1;
+    --color-warm-400: #e0a238;
+    --color-warm-500: #c4841f;
+    --color-warm-600: #a3691a;
+    --color-warm-950: #2e1f0c;
+
     --color-zinc-50: #fafafa;
     --color-zinc-100: #f5f5f5;
     --color-zinc-200: #e5e5e5;
@@ -74,6 +88,18 @@ select:focus[data-flux-control] {
 
 [data-flux-control] {
     border-radius: 0 !important;
+}
+
+/**
+ * The flat, square identity above only ever reached buttons and form
+ * controls — every card on the marketing pages still carried Flux's
+ * default rounded-2xl-plus-soft-shadow look, so the two lived side by
+ * side as a visible contradiction. This finishes that thought: a shared
+ * card surface with a small radius and a crisp border instead of a blurred
+ * shadow, for anything on the marketing pages that isn't a button.
+ */
+.surface-card {
+    @apply rounded-md border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900;
 }
 
 /* A reaction emoji drifting up and fading out over the call canvas. */
