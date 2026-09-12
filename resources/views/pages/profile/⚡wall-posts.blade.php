@@ -4,19 +4,32 @@ use App\Models\User;
 use App\Models\WallPost;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Component;
-use Livewire\WithPagination;
 
 new class extends Component {
-    use WithPagination;
-
     public User $user;
+
+    public int $perPage = 10;
+
+    public int $loaded = 10;
 
     #[On('wall-post-created')]
     public function refresh(): void
     {
-        $this->resetPage();
+        $this->loaded = $this->perPage;
+
+        unset($this->postsWindow, $this->hasMore);
+    }
+
+    public function loadMore(): void
+    {
+        if ($this->hasMore) {
+            $this->loaded += $this->perPage;
+
+            unset($this->postsWindow, $this->hasMore);
+        }
     }
 
     public function delete(int $postId): void
@@ -32,21 +45,39 @@ new class extends Component {
         $post->delete();
     }
 
+    /**
+     * Fetches one row past the current window so hasMore can tell whether
+     * there's more without a separate count() query — same pattern as the
+     * notifications page's infinite scroll.
+     */
+    #[Computed]
+    public function postsWindow()
+    {
+        // Eager-loaded here so the nested reactions/comments/bookmark
+        // components don't each fire their own count/exists query per
+        // post — see HasReactions/HasComments/HasBookmarks.
+        return $this->user->wallPosts()
+            ->with(['user.profile', 'media', 'hashtags', 'mentions.user'])
+            ->withCount(['reactions', 'comments'])
+            ->withExists([
+                'reactions as user_reacted' => fn ($q) => $q->where('user_id', Auth::id()),
+                'bookmarks as user_bookmarked' => fn ($q) => $q->where('user_id', Auth::id()),
+            ])
+            ->latest()
+            ->limit($this->loaded + 1)
+            ->get();
+    }
+
+    #[Computed]
+    public function hasMore(): bool
+    {
+        return $this->postsWindow->count() > $this->loaded;
+    }
+
     public function with(): array
     {
         return [
-            // Eager-loaded here so the nested reactions/comments/bookmark
-            // components don't each fire their own count/exists query per
-            // post — see HasReactions/HasComments/HasBookmarks.
-            'posts' => $this->user->wallPosts()
-                ->with(['user.profile', 'media', 'hashtags', 'mentions.user'])
-                ->withCount(['reactions', 'comments'])
-                ->withExists([
-                    'reactions as user_reacted' => fn ($q) => $q->where('user_id', Auth::id()),
-                    'bookmarks as user_bookmarked' => fn ($q) => $q->where('user_id', Auth::id()),
-                ])
-                ->latest()
-                ->paginate(10),
+            'posts' => $this->postsWindow->take($this->loaded),
         ];
     }
 }; ?>
@@ -121,5 +152,9 @@ new class extends Component {
         </div>
     @endforelse
 
-    {{ $posts->links() }}
+    @if ($this->hasMore)
+        <div wire:intersect="loadMore" wire:key="wall-posts-load-more" class="flex justify-center py-4">
+            <flux:icon.loading class="size-5 text-stone-400" />
+        </div>
+    @endif
 </div>

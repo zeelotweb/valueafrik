@@ -86,6 +86,47 @@ test('anyone can view and join a public community', function () {
     expect($community->fresh()->roleFor($joiner))->toBe('member');
 });
 
+test('leaving and rejoining the same public community only ever awards bridge score once', function () {
+    // Regression guard: join() awarded community_joined unconditionally,
+    // and leave() has no cooldown — isJoinableBy() goes straight back to
+    // true the moment you leave, so join/leave/join/leave was a trivial,
+    // self-serve way to farm unlimited points from one community.
+    $owner = User::factory()->create();
+    $community = createCommunity($owner, ['visibility' => Community::VISIBILITY_PUBLIC]);
+    $joiner = User::factory()->create();
+
+    Livewire::actingAs($joiner)->test('pages::communities.join-button', ['community' => $community])->call('join');
+    expect($joiner->fresh()->bridgeScore())->toBe(config('bridge_score.points.community_joined'));
+
+    Livewire::actingAs($joiner)->test('pages::communities.join-button', ['community' => $community])->call('leave');
+    Livewire::actingAs($joiner)->test('pages::communities.join-button', ['community' => $community])->call('join');
+
+    expect($joiner->fresh()->bridgeScore())->toBe(config('bridge_score.points.community_joined'));
+    expect($community->fresh()->isMember($joiner))->toBeTrue();
+});
+
+test('approving the same private-community request twice only ever awards bridge score once', function () {
+    $owner = User::factory()->create();
+    $community = createCommunity($owner, ['visibility' => Community::VISIBILITY_PRIVATE]);
+    $requester = User::factory()->create();
+    $community->members()->attach($requester->id, ['role' => 'member', 'status' => 'pending']);
+
+    Livewire::actingAs($owner)
+        ->test('pages::communities.members', ['community' => $community])
+        ->call('approve', $requester->id);
+
+    expect($requester->fresh()->bridgeScore())->toBe(config('bridge_score.points.community_joined'));
+
+    // Simulates approve() being reachable a second time for someone
+    // already active (e.g. a stale request row) without a fresh query
+    // guard — the reason+subject check should still hold the line.
+    Livewire::actingAs($owner)
+        ->test('pages::communities.members', ['community' => $community])
+        ->call('approve', $requester->id);
+
+    expect($requester->fresh()->bridgeScore())->toBe(config('bridge_score.points.community_joined'));
+});
+
 test('a private community is hidden from non members and requires approval to join', function () {
     $owner = User::factory()->create();
     $community = createCommunity($owner, ['visibility' => Community::VISIBILITY_PRIVATE]);
@@ -254,6 +295,77 @@ test('a monitor can dismiss a member from the community', function () {
     expect($community->fresh()->isMember($troublemaker))->toBeFalse();
 });
 
+test('the owner cannot leave their own community, even by calling leave() directly', function () {
+    // Regression guard: the "Leave" button was already hidden for the owner
+    // in the template, but leave() itself had no server-side check —
+    // Livewire::test() (and a forged request) reaches it directly. Detaching
+    // the owner from the pivot while communities.owner_id still points at
+    // them would strand the community: canModerate()/canView() key off the
+    // pivot role, not that column, and there's no ownership-transfer
+    // feature to recover it afterward.
+    $owner = User::factory()->create();
+    $community = createCommunity($owner);
+
+    Livewire::actingAs($owner)
+        ->test('pages::communities.join-button', ['community' => $community])
+        ->call('leave')
+        ->assertForbidden();
+
+    expect($community->fresh()->isMember($owner))->toBeTrue();
+    expect($community->fresh()->owner_id)->toBe($owner->id);
+});
+
+test('a monitor cannot promote or demote anyone, including themselves', function () {
+    $owner = User::factory()->create();
+    $community = createCommunity($owner);
+    $monitor = User::factory()->create();
+    $member = User::factory()->create();
+    $community->members()->attach($monitor->id, ['role' => 'monitor', 'status' => 'active']);
+    $community->members()->attach($member->id, ['role' => 'member', 'status' => 'active']);
+
+    Livewire::actingAs($monitor)
+        ->test('pages::communities.members', ['community' => $community])
+        ->call('promote', $member->id)
+        ->assertForbidden();
+
+    Livewire::actingAs($monitor)
+        ->test('pages::communities.members', ['community' => $community])
+        ->call('demote', $monitor->id)
+        ->assertForbidden();
+
+    expect($community->fresh()->roleFor($member))->toBe('member');
+    expect($community->fresh()->roleFor($monitor))->toBe('monitor');
+});
+
+test('a plain member cannot dismiss another member or approve/reject a join request', function () {
+    $owner = User::factory()->create();
+    $community = createCommunity($owner, ['visibility' => Community::VISIBILITY_PRIVATE]);
+    $member = User::factory()->create();
+    $troublemaker = User::factory()->create();
+    $requester = User::factory()->create();
+    $community->members()->attach($member->id, ['role' => 'member', 'status' => 'active']);
+    $community->members()->attach($troublemaker->id, ['role' => 'member', 'status' => 'active']);
+    $community->members()->attach($requester->id, ['role' => 'member', 'status' => 'pending']);
+
+    Livewire::actingAs($member)
+        ->test('pages::communities.members', ['community' => $community])
+        ->call('dismiss', $troublemaker->id)
+        ->assertForbidden();
+
+    Livewire::actingAs($member)
+        ->test('pages::communities.members', ['community' => $community])
+        ->call('approve', $requester->id)
+        ->assertForbidden();
+
+    Livewire::actingAs($member)
+        ->test('pages::communities.members', ['community' => $community])
+        ->call('reject', $requester->id)
+        ->assertForbidden();
+
+    expect($community->fresh()->isMember($troublemaker))->toBeTrue();
+    expect($community->fresh()->membershipFor($requester)->status)->toBe('pending');
+});
+
 test('a community can carry a photo attachment on a post', function () {
     $owner = User::factory()->create();
     $community = createCommunity($owner);
@@ -288,4 +400,45 @@ test('a staged photo can be removed before posting to a community', function () 
     $component->call('post')->assertHasNoErrors();
 
     expect($community->posts()->first()->media)->toHaveCount(1);
+});
+
+// --- pagination -------------------------------------------------------------
+
+test('community posts beyond the first page are reachable via loadMore', function () {
+    $owner = User::factory()->create();
+    $community = createCommunity($owner);
+
+    foreach (range(1, 15) as $i) {
+        $community->posts()->create(['user_id' => $owner->id, 'body' => "Post {$i}"]);
+    }
+
+    $component = Livewire::actingAs($owner)->test('pages::communities.posts', ['community' => $community]);
+
+    expect($component->instance()->postsWindow->take(10))->toHaveCount(10);
+    $component->assertSet('hasMore', true);
+
+    $component->call('loadMore');
+
+    expect($component->instance()->postsWindow->take($component->get('loaded')))->toHaveCount(15);
+    $component->assertSet('hasMore', false);
+});
+
+test('community members beyond the first page are reachable via loadMore', function () {
+    $owner = User::factory()->create();
+    $community = createCommunity($owner);
+
+    $members = User::factory()->count(25)->create();
+    $community->members()->attach($members->pluck('id'), ['role' => 'member', 'status' => 'active']);
+
+    $component = Livewire::actingAs($owner)->test('pages::communities.members', ['community' => $community]);
+
+    // 20 loaded + the owner themself in the underlying query = 21 fetched,
+    // but the owner is filtered out in the template, not the query.
+    expect($component->instance()->activeMembersWindow->take(20))->toHaveCount(20);
+    $component->assertSet('hasMore', true);
+
+    $component->call('loadMore');
+
+    expect($component->instance()->activeMembersWindow->take($component->get('loaded')))->toHaveCount(26);
+    $component->assertSet('hasMore', false);
 });

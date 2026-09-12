@@ -68,6 +68,12 @@ trait HasReactions
      */
     public function reactAs(User $user, string $type): void
     {
+        // Every model using this trait (WallPost, CommunityPost, Message)
+        // exposes user() as its author/sender — the same block check
+        // follow/message/call already enforce on a profile, applied here so
+        // a blocked pair can't reach each other through a reaction either.
+        abort_if($user->hasBlockRelationWith($this->user), 403);
+
         $existing = $this->reactions()->where('user_id', $user->id)->first();
 
         if ($existing && $existing->type === $type) {
@@ -84,6 +90,13 @@ trait HasReactions
 
         $this->reactions()->create(['user_id' => $user->id, 'type' => $type]);
 
-        $user->awardBridgeScore('reaction_given', $this);
+        // Scoped to this specific reactable — unreacting (above) never
+        // claws the point back, so without this guard, react/unreact/react
+        // repeatedly re-triggers the create branch and awards every time.
+        // Once earned for this item it stays earned; it just doesn't
+        // re-earn.
+        if (! $user->hasEarnedBridgeScoreFor('reaction_given', $this)) {
+            $user->awardBridgeScore('reaction_given', $this);
+        }
     }
 }

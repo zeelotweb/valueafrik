@@ -4,23 +4,39 @@ use App\Models\Bookmark;
 use App\Models\CommunityPost;
 use App\Models\WallPost;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Livewire\WithPagination;
 
 new #[Title('Bookmarks')] class extends Component {
-    use WithPagination;
+    public int $perPage = 10;
+
+    public int $loaded = 10;
 
     #[On('bookmark-toggled')]
     public function refresh(): void
     {
-        //
+        // A bookmark removed from this same page (or another tab) should
+        // drop out of the list immediately rather than waiting for a full
+        // reload — the underlying window is now cached per-request via
+        // #[Computed], which the old plain query in with() never was.
+        unset($this->bookmarksWindow, $this->hasMore);
     }
 
-    public function with(): array
+    public function loadMore(): void
     {
-        $bookmarks = Bookmark::query()
+        if ($this->hasMore) {
+            $this->loaded += $this->perPage;
+
+            unset($this->bookmarksWindow, $this->hasMore);
+        }
+    }
+
+    #[Computed]
+    public function bookmarksWindow()
+    {
+        return Bookmark::query()
             ->where('user_id', Auth::id())
             ->with(['bookmarkable' => function ($morphTo) {
                 $morphTo->morphWith([
@@ -29,16 +45,29 @@ new #[Title('Bookmarks')] class extends Component {
                 ]);
             }])
             ->latest()
-            ->paginate(10)
-            ->through(fn ($bookmark) => $bookmark->bookmarkable);
+            ->limit($this->loaded + 1)
+            ->get();
+    }
 
+    #[Computed]
+    public function hasMore(): bool
+    {
+        return $this->bookmarksWindow->count() > $this->loaded;
+    }
+
+    public function with(): array
+    {
         // A mixed WallPost/CommunityPost collection — loadCount/loadExists
         // batch per model class (one query per class per aggregate) instead
         // of each nested reactions/comments/bookmark component querying
         // per post. filter() drops any dangling bookmark whose target post
         // was deleted (rendered as null and skipped in the template).
-        $bookmarks->getCollection()
-            ->filter()
+        $bookmarks = $this->bookmarksWindow
+            ->take($this->loaded)
+            ->map(fn ($bookmark) => $bookmark->bookmarkable)
+            ->filter();
+
+        $bookmarks
             ->loadCount(['reactions', 'comments'])
             ->loadExists([
                 'reactions as user_reacted' => fn ($q) => $q->where('user_id', Auth::id()),
@@ -114,5 +143,9 @@ new #[Title('Bookmarks')] class extends Component {
         @endforelse
     </div>
 
-    {{ $bookmarks->links() }}
+    @if ($this->hasMore)
+        <div wire:intersect="loadMore" wire:key="bookmarks-load-more" class="flex justify-center py-4">
+            <flux:icon.loading class="size-5 text-stone-400" />
+        </div>
+    @endif
 </div>

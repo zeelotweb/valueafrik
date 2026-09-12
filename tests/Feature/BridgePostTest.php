@@ -184,6 +184,45 @@ test('bridge score is only awarded once both sides are complete, to both partici
     expect($partner->fresh()->bridgeScore())->toBe(config('bridge_score.points.bridge_post_completed'));
 });
 
+test('re-submitting a side after the bridge post is already complete does not re-award bridge score', function () {
+    // Regression guard: isComplete() just checks both bodies are
+    // non-empty, which stays true forever once reached — either side
+    // re-submitting afterward (e.g. to add a photo) used to re-trigger
+    // the completion award (and notification) every single time.
+    $initiator = User::factory()->create();
+    $partner = User::factory()->create();
+    $bridgePost = BridgePost::create([
+        'theme' => 'Weddings',
+        'initiator_id' => $initiator->id,
+        'partner_id' => $partner->id,
+        'status' => BridgePost::STATUS_ACTIVE,
+    ]);
+
+    Livewire::actingAs($initiator)
+        ->test('pages::profile.bridge-posts', ['user' => $initiator])
+        ->call('startSide', $bridgePost->id)
+        ->set('sideBody', 'Here is how we do weddings...')
+        ->call('submitSide');
+
+    Livewire::actingAs($partner)
+        ->test('pages::profile.bridge-posts', ['user' => $initiator])
+        ->call('startSide', $bridgePost->id)
+        ->set('sideBody', 'And here is how we do it...')
+        ->call('submitSide');
+
+    expect($initiator->fresh()->bridgeScore())->toBe(config('bridge_score.points.bridge_post_completed'));
+
+    // Re-submit the already-complete side again.
+    Livewire::actingAs($initiator)
+        ->test('pages::profile.bridge-posts', ['user' => $initiator])
+        ->call('startSide', $bridgePost->id)
+        ->set('sideBody', 'Here is how we do weddings, updated...')
+        ->call('submitSide');
+
+    expect($initiator->fresh()->bridgeScore())->toBe(config('bridge_score.points.bridge_post_completed'));
+    expect($partner->fresh()->bridgeScore())->toBe(config('bridge_score.points.bridge_post_completed'));
+});
+
 test('a side can carry a photo attachment', function () {
     $initiator = User::factory()->create();
     $partner = User::factory()->create();
@@ -233,4 +272,33 @@ test('a staged side photo can be removed before submitting', function () {
     $component->call('submitSide');
 
     expect($bridgePost->fresh()->media)->toHaveCount(1);
+});
+
+// --- pagination -------------------------------------------------------------
+
+test('bridge posts beyond the first page are reachable via loadMore, not silently dropped', function () {
+    // Regression guard: this list used to be a flat ->limit(20)->get() with
+    // no pagination at all — a 21st active bridge post was permanently
+    // invisible, not just deferred to a later page.
+    $user = User::factory()->create();
+
+    foreach (range(1, 25) as $i) {
+        $partner = User::factory()->create();
+        BridgePost::create([
+            'theme' => "Theme {$i}",
+            'initiator_id' => $user->id,
+            'partner_id' => $partner->id,
+            'status' => BridgePost::STATUS_ACTIVE,
+        ]);
+    }
+
+    $component = Livewire::actingAs($user)->test('pages::profile.bridge-posts', ['user' => $user]);
+
+    expect($component->instance()->bridgePostsWindow->take(20))->toHaveCount(20);
+    $component->assertSet('hasMore', true);
+
+    $component->call('loadMore');
+
+    expect($component->instance()->bridgePostsWindow->take($component->get('loaded')))->toHaveCount(25);
+    $component->assertSet('hasMore', false);
 });

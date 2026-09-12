@@ -94,12 +94,23 @@ test('optimizing a large photo succeeds even when the process starts at the plat
     // full-resolution source twice, which reliably exhausted PHP's
     // default 128M CLI/worker limit on an ordinary 3000x2000 phone
     // photo — a real upload would have fatally crashed in production.
+    // Built *before* the constrained block below — generating the fake
+    // 3000x2000 JPEG is Laravel's own FileFactory using GD, unrelated to
+    // the code this test actually exercises, and doesn't need to run
+    // memory-constrained too. Folding it into the 128M block used to make
+    // this test's own fixture setup compete for the same tight ceiling as
+    // ImageOptimizer itself — harmless early in a short run, but a real
+    // uncatchable OOM once the suite grew large enough that baseline
+    // process memory ate into that headroom. A true "allowed memory size
+    // exhausted" fatal isn't catchable, so it skipped the finally() below
+    // entirely and left every later test in this same process pinned at
+    // 128M — which is what was actually happening, not test-order flake.
+    $file = UploadedFile::fake()->image('phone-photo.jpg', 3000, 2000);
+
     $original = ini_get('memory_limit');
     ini_set('memory_limit', '128M');
 
     try {
-        $file = UploadedFile::fake()->image('phone-photo.jpg', 3000, 2000);
-
         $result = ImageOptimizer::store($file, 'test-media', 'public');
 
         expect($result['thumbnail_path'])->not->toBeNull();

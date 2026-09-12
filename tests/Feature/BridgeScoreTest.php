@@ -4,6 +4,7 @@ use App\Models\Community;
 use App\Models\Conversation;
 use App\Models\Heritage;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 
 function communityFor(User $owner, array $attributes = []): Community
@@ -44,6 +45,39 @@ test('badge reflects the highest score threshold crossed', function () {
 
     $user->bridgeScoreEvents()->update(['points' => 150]);
     expect($user->bridgeBadge()['key'])->toBe('b');
+});
+
+test('bridgeScore uses an eager-loaded withSum instead of querying again, when the caller loaded one', function () {
+    $user = User::factory()->create();
+    $user->awardBridgeScore('wall_post');
+
+    $loaded = User::query()->withSum('bridgeScoreEvents', 'points')->find($user->id);
+
+    DB::enableQueryLog();
+    $score = $loaded->bridgeScore();
+    $badge = $loaded->bridgeBadge();
+    $queries = DB::getQueryLog();
+    DB::disableQueryLog();
+
+    expect($score)->toBe(config('bridge_score.points.wall_post'));
+    expect($badge)->toBe(User::badgeForScore($score));
+    expect($queries)->toBeEmpty();
+});
+
+test('bridgeScore still queries fresh for a plain instance that never eager-loaded the sum', function () {
+    $user = User::factory()->create();
+    $user->awardBridgeScore('wall_post');
+
+    $plain = User::find($user->id);
+
+    expect($plain->bridgeScore())->toBe(config('bridge_score.points.wall_post'));
+
+    // Mutate the underlying events directly (bypassing awardBridgeScore) and
+    // confirm the very next read reflects it — this is the exact behavior
+    // 'badge reflects the highest score threshold crossed' above depends on.
+    $plain->bridgeScoreEvents()->update(['points' => 999]);
+
+    expect($plain->bridgeScore())->toBe(999);
 });
 
 test('following someone awards points to the follower and the followed', function () {

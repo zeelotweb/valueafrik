@@ -126,6 +126,40 @@ test('rendering the wall post list does not run more queries as the post count g
     expect($twentyPostQueries)->toBe($tenPostQueries);
 });
 
+test('the wall loads 10 at a time and reports whether more exist', function () {
+    $user = User::factory()->create();
+
+    foreach (range(1, 15) as $i) {
+        $user->wallPosts()->create(['body' => "Post {$i}"]);
+    }
+
+    $component = Livewire::actingAs($user)->test('pages::profile.wall-posts', ['user' => $user]);
+
+    expect($component->instance()->postsWindow->take(10))->toHaveCount(10);
+    $component->assertSet('hasMore', true);
+
+    $component->call('loadMore');
+
+    expect($component->instance()->postsWindow->take($component->get('loaded')))->toHaveCount(15);
+    $component->assertSet('hasMore', false);
+});
+
+test('posting a new wall post resets the loaded window back to the first page', function () {
+    $user = User::factory()->create();
+
+    foreach (range(1, 15) as $i) {
+        $user->wallPosts()->create(['body' => "Post {$i}"]);
+    }
+
+    $component = Livewire::actingAs($user)->test('pages::profile.wall-posts', ['user' => $user]);
+    $component->call('loadMore')->assertSet('loaded', 20);
+
+    $component->dispatch('wall-post-created');
+
+    $component->assertSet('loaded', 10);
+    expect($component->instance()->postsWindow->take(10))->toHaveCount(10);
+});
+
 test('owner can delete their own wall post and its media', function () {
     $user = User::factory()->create();
     $post = $user->wallPosts()->create(['body' => 'Delete me']);

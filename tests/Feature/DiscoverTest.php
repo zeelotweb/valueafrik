@@ -79,6 +79,44 @@ test('a user already followed is excluded from every section', function () {
         ->assertDontSee('Already Following');
 });
 
+test('a blocked relationship is excluded from every curated section, in either direction', function () {
+    // Regression guard: only the follow *action* was blocked (403), the
+    // curated sections and search had no block filter at all, so a
+    // blocked user's name/avatar/bio still surfaced in Discover.
+    $viewer = User::factory()->create();
+    $heritage = Heritage::create(['name' => 'Testland', 'slug' => 'testland']);
+    $otherHeritage = Heritage::create(['name' => 'Otherland', 'slug' => 'otherland']);
+    $viewer->heritages()->attach($heritage->id);
+
+    $blockedByViewer = User::factory()->create(['name' => 'Blocked By Viewer']);
+    $blockedByViewer->heritages()->attach($otherHeritage->id);
+    $viewer->block($blockedByViewer);
+
+    $viewerBlockedBy = User::factory()->create(['name' => 'Blocked Viewer']);
+    $viewerBlockedBy->heritages()->attach($otherHeritage->id);
+    $viewerBlockedBy->block($viewer);
+
+    Livewire::actingAs($viewer)
+        ->test('pages::discover.index')
+        ->assertDontSee('Blocked By Viewer')
+        ->assertDontSee('Blocked Viewer');
+});
+
+test('a blocked user is excluded from search results, in either direction', function () {
+    $viewer = User::factory()->create();
+    $blockedByViewer = User::factory()->create(['name' => 'Blocked Searchable']);
+    $viewer->block($blockedByViewer);
+
+    $viewerBlockedBy = User::factory()->create(['name' => 'Also Blocked Searchable']);
+    $viewerBlockedBy->block($viewer);
+
+    Livewire::actingAs($viewer)
+        ->test('pages::discover.index')
+        ->set('search', 'Searchable')
+        ->assertDontSee('Blocked Searchable')
+        ->assertDontSee('Also Blocked Searchable');
+});
+
 test('the follow button on a discover card actually follows', function () {
     $viewer = User::factory()->create();
     $target = User::factory()->create();

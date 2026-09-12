@@ -100,6 +100,8 @@ class Comment extends Model
      */
     public function voteAs(User $user, string $type): void
     {
+        abort_if($user->hasBlockRelationWith($this->user), 403);
+
         $existing = $this->votes()->where('user_id', $user->id)->first();
 
         if ($existing && $existing->type === $type) {

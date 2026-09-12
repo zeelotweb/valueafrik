@@ -1,6 +1,7 @@
 <?php
 $user = auth()->user();
-$badge = $user->bridgeBadge();
+$bridgeScore = $user->bridgeScore();
+$badge = \App\Models\User::badgeForScore($bridgeScore);
 $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $user->heritages->isEmpty();
 ?>
 <x-layouts::app :title="__('Dashboard')">
@@ -61,7 +62,7 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
                     <flux:icon.sparkles class="size-5" />
                     <span class="text-sm font-medium">{{ __('Bridge Score') }}</span>
                 </div>
-                <p class="mt-2 text-3xl font-semibold text-stone-900 dark:text-white">{{ $user->bridgeScore() }}</p>
+                <p class="mt-2 text-3xl font-semibold text-stone-900 dark:text-white">{{ $bridgeScore }}</p>
                 <p class="mt-1 truncate text-sm text-stone-500 dark:text-stone-400">
                     {{ $badge['name'] ?? __('Just getting started') }}
                 </p>

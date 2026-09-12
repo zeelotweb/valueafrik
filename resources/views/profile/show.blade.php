@@ -59,7 +59,7 @@ $countryFlag = \App\Support\Countries::flag($profile?->country);
 
             @php
                 $bridgeScore = $user->bridgeScore();
-                $bridgeBadge = $user->bridgeBadge();
+                $bridgeBadge = \App\Models\User::badgeForScore($bridgeScore);
             @endphp
 
             <div class="mt-3 flex flex-wrap items-center gap-2">

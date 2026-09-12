@@ -7,16 +7,30 @@ use App\Notifications\PromotedToMonitor;
 use App\Support\SafeNotifier;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
 new class extends Component {
     public Community $community;
 
+    public int $perPage = 20;
+
+    public int $loaded = 20;
+
     #[On('community-membership-changed')]
     public function refresh(): void
     {
-        //
+        unset($this->activeMembersWindow, $this->hasMore);
+    }
+
+    public function loadMore(): void
+    {
+        if ($this->hasMore) {
+            $this->loaded += $this->perPage;
+
+            unset($this->activeMembersWindow, $this->hasMore);
+        }
     }
 
     public function approve(int $userId): void
@@ -26,7 +40,9 @@ new class extends Component {
         $this->community->members()->updateExistingPivot($userId, ['status' => 'active']);
 
         $requester = User::find($userId);
-        $requester?->awardBridgeScore('community_joined', $this->community);
+        if ($requester && ! $requester->hasEarnedBridgeScoreFor('community_joined', $this->community)) {
+            $requester->awardBridgeScore('community_joined', $this->community);
+        }
         if ($requester) {
             SafeNotifier::send($requester, new CommunityJoinApproved($this->community));
         }
@@ -88,11 +104,35 @@ new class extends Component {
         $this->dispatch('community-membership-changed');
     }
 
+    #[Computed]
+    public function activeMembersWindow()
+    {
+        // Owner is filtered out below in the template (never actionable
+        // from this list), but kept in the fetch/count so the window math
+        // stays simple — one fewer row shown just means loadMore's "more?"
+        // check errs slightly early, never late.
+        // A deterministic order is required for the window (limit N+1,
+        // take N) to page through consistently — without one, SQL doesn't
+        // guarantee the same row order across the two queries loadMore()
+        // implicitly runs.
+        return $this->community->activeMembers()
+            ->with('profile')
+            ->orderBy('community_user.created_at')
+            ->limit($this->loaded + 1)
+            ->get();
+    }
+
+    #[Computed]
+    public function hasMore(): bool
+    {
+        return $this->activeMembersWindow->count() > $this->loaded;
+    }
+
     public function with(): array
     {
         return [
             'pendingRequests' => $this->community->members()->wherePivot('status', 'pending')->get(),
-            'activeMembers' => $this->community->activeMembers()->with('profile')->get(),
+            'activeMembers' => $this->activeMembersWindow->take($this->loaded),
         ];
     }
 }; ?>
@@ -164,6 +204,12 @@ new class extends Component {
                     @endif
                 @endforeach
             </div>
+
+            @if ($this->hasMore)
+                <div wire:intersect="loadMore" wire:key="community-members-load-more" class="flex justify-center py-3">
+                    <flux:icon.loading class="size-4 text-stone-400" />
+                </div>
+            @endif
         </div>
     </div>
     @endif

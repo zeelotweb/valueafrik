@@ -342,14 +342,40 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
         return $this->hasMany(BridgeScoreEvent::class);
     }
 
+    /**
+     * Uses withSum('bridgeScoreEvents', 'points') when the caller eager-
+     * loaded it (same precedent as HasReactions::reactionsCount()) — falls
+     * back to a live query otherwise. Not instance-cached beyond that: a
+     * plain (non-withSum) instance always re-sums fresh, since some callers
+     * mutate bridgeScoreEvents directly and expect the very next read to
+     * reflect it.
+     */
     public function bridgeScore(): int
     {
+        if (array_key_exists('bridge_score_events_sum_points', $this->attributes)) {
+            return (int) $this->attributes['bridge_score_events_sum_points'];
+        }
+
         return (int) $this->bridgeScoreEvents()->sum('points');
     }
 
-    public function hasEarnedBridgeScoreFor(string $reason): bool
+    /**
+     * $subject scopes the check to "already earned for THIS specific thing"
+     * (e.g. this community, this bridge post) rather than the reason
+     * globally — needed anywhere the same reason can legitimately recur for
+     * a different subject (joining a second community should still earn
+     * points) but not for the same one repeated (leaving and rejoining the
+     * same community, or a bridge post re-triggering completion, should
+     * not).
+     */
+    public function hasEarnedBridgeScoreFor(string $reason, ?Model $subject = null): bool
     {
-        return $this->bridgeScoreEvents()->where('reason', $reason)->exists();
+        return $this->bridgeScoreEvents()
+            ->where('reason', $reason)
+            ->when($subject, fn ($query) => $query
+                ->where('subject_type', $subject->getMorphClass())
+                ->where('subject_id', $subject->getKey()))
+            ->exists();
     }
 
     public function awardBridgeScore(string $reason, ?Model $subject = null): BridgeScoreEvent
@@ -371,12 +397,26 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
 
     /**
      * The highest badge threshold this user has crossed, or null if none yet.
+     * Always re-sums bridgeScore() fresh — do NOT cache this or bridgeScore()
+     * on the instance; several places (including a real test) mutate
+     * bridgeScoreEvents directly and expect the very next call to reflect it.
      *
      * @return array{key: string, name: string}|null
      */
     public function bridgeBadge(): ?array
     {
-        $score = $this->bridgeScore();
+        return self::badgeForScore($this->bridgeScore());
+    }
+
+    /**
+     * Split out so a caller that already has the score (e.g. a page that
+     * displays both the number and the badge) can get the badge without a
+     * second identical sum('points') query.
+     *
+     * @return array{key: string, name: string}|null
+     */
+    public static function badgeForScore(int $score): ?array
+    {
         $earned = null;
 
         foreach (config('bridge_score.badges') as $threshold => $badge) {

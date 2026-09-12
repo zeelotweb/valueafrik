@@ -6,6 +6,7 @@ use App\Notifications\BridgePostCompleted;
 use App\Services\ImageOptimizer;
 use App\Support\SafeNotifier;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -15,6 +16,8 @@ new class extends Component {
     public User $user;
     public ?int $editingId = null;
     public string $sideBody = '';
+    public int $perPage = 20;
+    public int $loaded = 20;
 
     /** @var \Livewire\Features\SupportFileUploads\TemporaryUploadedFile[] */
     public array $sidePhotos = [];
@@ -71,7 +74,12 @@ new class extends Component {
             ]);
         }
 
-        if ($bridgePost->fresh()->isComplete()) {
+        // isComplete() just checks both bodies are non-empty, which stays
+        // true forever once reached — without this guard, either side
+        // re-submitting (e.g. to add another photo) re-triggers the
+        // completion award and notification every time.
+        if ($bridgePost->fresh()->isComplete()
+            && ! $bridgePost->initiator->hasEarnedBridgeScoreFor('bridge_post_completed', $bridgePost)) {
             $bridgePost->initiator->awardBridgeScore('bridge_post_completed', $bridgePost);
             $bridgePost->partner->awardBridgeScore('bridge_post_completed', $bridgePost);
 
@@ -85,17 +93,36 @@ new class extends Component {
         $this->reset(['sideBody', 'sidePhotos']);
     }
 
-    public function with(): array
+    public function loadMore(): void
     {
-        $bridgePosts = BridgePost::query()
+        if ($this->hasMore) {
+            $this->loaded += $this->perPage;
+
+            unset($this->bridgePostsWindow, $this->hasMore);
+        }
+    }
+
+    #[Computed]
+    public function bridgePostsWindow()
+    {
+        return BridgePost::query()
             ->where('status', BridgePost::STATUS_ACTIVE)
             ->where(fn ($query) => $query->where('initiator_id', $this->user->id)->orWhere('partner_id', $this->user->id))
             ->with(['initiator.profile', 'partner.profile', 'media'])
             ->latest()
-            ->limit(20)
+            ->limit($this->loaded + 1)
             ->get();
+    }
 
-        return ['bridgePosts' => $bridgePosts];
+    #[Computed]
+    public function hasMore(): bool
+    {
+        return $this->bridgePostsWindow->count() > $this->loaded;
+    }
+
+    public function with(): array
+    {
+        return ['bridgePosts' => $this->bridgePostsWindow->take($this->loaded)];
     }
 }; ?>
 
@@ -172,4 +199,10 @@ new class extends Component {
             </flux:modal>
         @endif
     @endforeach
+
+    @if ($this->hasMore)
+        <div wire:intersect="loadMore" wire:key="bridge-posts-load-more" class="flex justify-center py-4">
+            <flux:icon.loading class="size-5 text-stone-400" />
+        </div>
+    @endif
 </div>

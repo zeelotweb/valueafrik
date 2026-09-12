@@ -35,7 +35,13 @@ new class extends Component {
         $this->community->members()->attach($user->id, ['role' => 'member', 'status' => $status]);
 
         if ($status === 'active') {
-            $user->awardBridgeScore('community_joined', $this->community);
+            // Scoped to this community, not the reason globally — a genuine
+            // farming loop otherwise, since leave() has no cooldown and
+            // isJoinableBy() goes straight back to true the moment you
+            // leave: join, leave, join, leave... would award every time.
+            if (! $user->hasEarnedBridgeScoreFor('community_joined', $this->community)) {
+                $user->awardBridgeScore('community_joined', $this->community);
+            }
         } else {
             $moderators = $this->community->activeMembers()->wherePivotIn('role', ['owner', 'monitor'])->get();
             SafeNotifier::send($moderators, new CommunityJoinRequested($this->community, $user));
@@ -45,8 +51,22 @@ new class extends Component {
         $this->dispatch('community-membership-changed');
     }
 
+    /**
+     * The "Leave" button is already hidden for the owner in the template
+     * below, but that's UI-only — Livewire::test() (and a forged request)
+     * reaches this method directly, bypassing it. Without this check the
+     * owner could detach themselves from their own community's pivot row
+     * while communities.owner_id still points at them: canModerate()/
+     * canView() key off the pivot role, not that column, so the community
+     * is left with no one who can moderate, approve joins, or promote —
+     * permanently, since there's no ownership-transfer feature to recover
+     * it. Matches the identical "can't remove the owner" guard dismiss()
+     * already enforces for moderator-initiated removal.
+     */
     public function leave(): void
     {
+        abort_if(Auth::id() === $this->community->owner_id, 403);
+
         $this->community->members()->detach(Auth::id());
 
         unset($this->membership, $this->joinable);

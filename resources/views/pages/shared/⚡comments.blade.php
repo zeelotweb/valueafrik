@@ -31,14 +31,46 @@ new class extends Component {
     public ?int $viewingReplyFor = null;
     public string $replyBody = '';
 
+    public int $commentsPerPage = 20;
+
+    public int $commentsLoaded = 20;
+
+    public int $repliesPerPage = 20;
+
+    public int $repliesLoaded = 20;
+
     #[Computed]
     public function count(): int
     {
         return $this->commentable->commentsCount();
     }
 
+    public function loadMoreComments(): void
+    {
+        if ($this->hasMoreComments) {
+            $this->commentsLoaded += $this->commentsPerPage;
+
+            unset($this->commentsWindow, $this->hasMoreComments);
+        }
+    }
+
+    public function loadMoreReplies(): void
+    {
+        if ($this->hasMoreReplies) {
+            $this->repliesLoaded += $this->repliesPerPage;
+
+            unset($this->repliesWindow, $this->hasMoreReplies);
+        }
+    }
+
+    /**
+     * Fetches one row past the current window so hasMoreComments/
+     * hasMoreReplies can tell whether there's more without a separate
+     * count() query — same growing-window pattern used on Notifications,
+     * the Wall, and Bridge Posts.
+     */
     #[Computed]
-    public function comments()
+    public function commentsWindow()
     {
         if (! $this->open) {
             return collect();
@@ -55,7 +87,20 @@ new class extends Component {
                 ->limit(1),
             ])
             ->with(['user.profile', 'hashtags', 'mentions.user'])
+            ->limit($this->commentsLoaded + 1)
             ->get();
+    }
+
+    #[Computed]
+    public function comments()
+    {
+        return $this->commentsWindow->take($this->commentsLoaded);
+    }
+
+    #[Computed]
+    public function hasMoreComments(): bool
+    {
+        return $this->commentsWindow->count() > $this->commentsLoaded;
     }
 
     #[Computed]
@@ -67,7 +112,7 @@ new class extends Component {
     }
 
     #[Computed]
-    public function replies()
+    public function repliesWindow()
     {
         if (! $this->viewingReplyFor) {
             return collect();
@@ -83,7 +128,20 @@ new class extends Component {
             ])
             ->with(['user.profile', 'hashtags', 'mentions.user'])
             ->latest()
+            ->limit($this->repliesLoaded + 1)
             ->get();
+    }
+
+    #[Computed]
+    public function replies()
+    {
+        return $this->repliesWindow->take($this->repliesLoaded);
+    }
+
+    #[Computed]
+    public function hasMoreReplies(): bool
+    {
+        return $this->repliesWindow->count() > $this->repliesLoaded;
     }
 
     public function modalName(): string
@@ -99,6 +157,7 @@ new class extends Component {
     public function openModal(): void
     {
         $this->open = true;
+        $this->commentsLoaded = $this->commentsPerPage;
 
         $this->modal($this->modalName())->show();
     }
@@ -113,6 +172,7 @@ new class extends Component {
     public function openReplies(int $commentId): void
     {
         $this->viewingReplyFor = $commentId;
+        $this->repliesLoaded = $this->repliesPerPage;
 
         $this->modal($this->repliesModalName())->show();
     }
@@ -126,6 +186,8 @@ new class extends Component {
 
     public function post(): void
     {
+        abort_if(Auth::user()->hasBlockRelationWith($this->commentable->user), 403);
+
         $this->validate(['body' => ['required', 'string', 'max:2000']]);
 
         $comment = $this->commentable->comments()->create([
@@ -140,12 +202,13 @@ new class extends Component {
 
         $this->reset('body');
 
-        unset($this->count, $this->comments);
+        unset($this->count, $this->commentsWindow, $this->comments, $this->hasMoreComments);
     }
 
     public function postReply(): void
     {
         abort_unless($this->viewingReplyFor, 404);
+        abort_if(Auth::user()->hasBlockRelationWith($this->commentable->user), 403);
 
         $this->validate(['replyBody' => ['required', 'string', 'max:2000']]);
 
@@ -164,7 +227,11 @@ new class extends Component {
 
         $this->reset('replyBody');
 
-        unset($this->count, $this->comments, $this->replies);
+        unset(
+            $this->count,
+            $this->commentsWindow, $this->comments, $this->hasMoreComments,
+            $this->repliesWindow, $this->replies, $this->hasMoreReplies,
+        );
     }
 
     public function startEdit(int $commentId): void
@@ -200,7 +267,7 @@ new class extends Component {
 
         $this->reset(['editingCommentId', 'editBody']);
 
-        unset($this->comments, $this->replies);
+        unset($this->commentsWindow, $this->comments, $this->repliesWindow, $this->replies);
     }
 
     public function delete(int $commentId): void
@@ -211,7 +278,11 @@ new class extends Component {
 
         $comment->delete();
 
-        unset($this->count, $this->comments, $this->replies);
+        unset(
+            $this->count,
+            $this->commentsWindow, $this->comments, $this->hasMoreComments,
+            $this->repliesWindow, $this->replies, $this->hasMoreReplies,
+        );
     }
 
     public function voteUp(int $commentId): void
@@ -230,7 +301,7 @@ new class extends Component {
 
         $comment->voteAs(Auth::user(), $type);
 
-        unset($this->comments, $this->replies);
+        unset($this->commentsWindow, $this->comments, $this->repliesWindow, $this->replies);
     }
 }; ?>
 
@@ -346,6 +417,12 @@ new class extends Component {
                 @empty
                     <p class="text-sm text-stone-400 dark:text-stone-500">{{ __('No comments yet — be the first.') }}</p>
                 @endforelse
+
+                @if ($this->hasMoreComments)
+                    <div wire:intersect="loadMoreComments" wire:key="comments-load-more" class="flex justify-center py-2">
+                        <flux:icon.loading class="size-4 text-stone-400" />
+                    </div>
+                @endif
             </div>
 
             <div class="shrink-0 border-t border-stone-200 p-3 dark:border-stone-800">
@@ -444,6 +521,12 @@ new class extends Component {
                     @empty
                         <p class="text-sm text-stone-400 dark:text-stone-500">{{ __('No replies yet — be the first.') }}</p>
                     @endforelse
+
+                    @if ($this->hasMoreReplies)
+                        <div wire:intersect="loadMoreReplies" wire:key="replies-load-more" class="flex justify-center py-2">
+                            <flux:icon.loading class="size-4 text-stone-400" />
+                        </div>
+                    @endif
                 </div>
 
                 <div class="shrink-0 border-t border-stone-200 p-3 dark:border-stone-800">

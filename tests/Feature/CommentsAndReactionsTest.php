@@ -41,6 +41,25 @@ test('reacting twice without toggling off does not create duplicate reactions', 
         ->toThrow(\Illuminate\Database\QueryException::class);
 });
 
+test('reacting, unreacting, and reacting again to the same post only awards bridge score once', function () {
+    // Regression guard: the create branch of reactAs() awarded
+    // 'reaction_given' unconditionally — since unreacting never clawed the
+    // point back, a react/unreact loop was a trivial, automatable way to
+    // farm unlimited points off a single post.
+    $author = User::factory()->create();
+    $post = $author->wallPosts()->create(['body' => 'Hello wall.']);
+    $viewer = User::factory()->create();
+
+    Livewire::actingAs($viewer)->test('pages::shared.reactions', ['reactable' => $post])->call('toggle'); // on
+    expect($viewer->fresh()->bridgeScore())->toBe(config('bridge_score.points.reaction_given'));
+
+    Livewire::actingAs($viewer)->test('pages::shared.reactions', ['reactable' => $post])->call('toggle'); // off
+    Livewire::actingAs($viewer)->test('pages::shared.reactions', ['reactable' => $post])->call('toggle'); // on again
+
+    expect($viewer->fresh()->bridgeScore())->toBe(config('bridge_score.points.reaction_given'));
+    expect($post->fresh()->reactionsCount())->toBe(1);
+});
+
 test('a user can comment on a wall post and see it appear once the thread is open', function () {
     $author = User::factory()->create();
     $post = $author->wallPosts()->create(['body' => 'Hello wall.']);
@@ -56,6 +75,68 @@ test('a user can comment on a wall post and see it appear once the thread is ope
 
     expect($post->fresh()->commentsCount())->toBe(1);
     expect($commenter->fresh()->bridgeScore())->toBe(2);
+});
+
+test('comments beyond the first page are reachable via loadMoreComments', function () {
+    $author = User::factory()->create();
+    $post = $author->wallPosts()->create(['body' => 'Hello wall.']);
+
+    foreach (range(1, 25) as $i) {
+        $post->comments()->create(['user_id' => $author->id, 'body' => "Comment {$i}"]);
+    }
+
+    $component = Livewire::actingAs($author)
+        ->test('pages::shared.comments', ['commentable' => $post])
+        ->call('openModal');
+
+    expect($component->instance()->commentsWindow->take(20))->toHaveCount(20);
+    $component->assertSet('hasMoreComments', true);
+
+    $component->call('loadMoreComments');
+
+    expect($component->instance()->commentsWindow->take($component->get('commentsLoaded')))->toHaveCount(25);
+    $component->assertSet('hasMoreComments', false);
+});
+
+test('a comment posted after loadMoreComments already ran is still visible immediately, not hidden behind a stale cached window', function () {
+    // Regression guard: splitting comments() into a windowed fetch +
+    // take() means every mutation (post/edit/delete/vote) has to
+    // invalidate the *window*, not just the derived list — otherwise the
+    // window computed prop keeps serving what it fetched before the
+    // mutation for the rest of the request.
+    $author = User::factory()->create();
+    $post = $author->wallPosts()->create(['body' => 'Hello wall.']);
+
+    $component = Livewire::actingAs($author)
+        ->test('pages::shared.comments', ['commentable' => $post])
+        ->call('openModal')
+        ->call('loadMoreComments') // forces commentsWindow to compute/cache once, up front
+        ->set('body', 'Freshly posted')
+        ->call('post');
+
+    $component->assertSee('Freshly posted');
+});
+
+test('replies beyond the first page are reachable via loadMoreReplies', function () {
+    $author = User::factory()->create();
+    $post = $author->wallPosts()->create(['body' => 'Hello wall.']);
+    $comment = $post->comments()->create(['user_id' => $author->id, 'body' => 'Top level.']);
+
+    foreach (range(1, 25) as $i) {
+        $post->comments()->create(['user_id' => $author->id, 'parent_id' => $comment->id, 'body' => "Reply {$i}"]);
+    }
+
+    $component = Livewire::actingAs($author)
+        ->test('pages::shared.comments', ['commentable' => $post])
+        ->call('openReplies', $comment->id);
+
+    expect($component->instance()->repliesWindow->take(20))->toHaveCount(20);
+    $component->assertSet('hasMoreReplies', true);
+
+    $component->call('loadMoreReplies');
+
+    expect($component->instance()->repliesWindow->take($component->get('repliesLoaded')))->toHaveCount(25);
+    $component->assertSet('hasMoreReplies', false);
 });
 
 test('a user can delete their own comment but not someone elses', function () {
@@ -225,6 +306,42 @@ test('bookmarked posts appear on the bookmarks page and stay private to the book
         ->assertSee("You haven't bookmarked anything yet.");
 });
 
+test('bookmarks beyond the first page are reachable via loadMore', function () {
+    $author = User::factory()->create();
+    $bookmarker = User::factory()->create();
+
+    foreach (range(1, 15) as $i) {
+        $post = $author->wallPosts()->create(['body' => "Post {$i}"]);
+        $post->bookmarks()->create(['user_id' => $bookmarker->id]);
+    }
+
+    $component = Livewire::actingAs($bookmarker)->test('pages::bookmarks.index');
+
+    expect($component->instance()->bookmarksWindow->take(10))->toHaveCount(10);
+    $component->assertSet('hasMore', true);
+
+    $component->call('loadMore');
+
+    expect($component->instance()->bookmarksWindow->take($component->get('loaded')))->toHaveCount(15);
+    $component->assertSet('hasMore', false);
+});
+
+test('unbookmarking a post on the bookmarks page removes it from the list immediately', function () {
+    $author = User::factory()->create();
+    $post = $author->wallPosts()->create(['body' => 'Unbookmark me']);
+    $bookmarker = User::factory()->create();
+    $post->bookmarks()->create(['user_id' => $bookmarker->id]);
+
+    $component = Livewire::actingAs($bookmarker)
+        ->test('pages::bookmarks.index')
+        ->assertSee('Unbookmark me');
+
+    $post->bookmarks()->where('user_id', $bookmarker->id)->delete();
+    $component->dispatch('bookmark-toggled');
+
+    $component->assertDontSee('Unbookmark me');
+});
+
 test('picking an emoji reaction replaces a heart, and picking the heart replaces an emoji', function () {
     $author = User::factory()->create();
     $post = $author->wallPosts()->create(['body' => 'Hello wall.']);
@@ -349,4 +466,78 @@ test('a message can be reacted to', function () {
         ->assertSet('reacted', true);
 
     expect($message->fresh()->reactionsCount())->toBe(1);
+});
+
+// --- blocking cuts off reactions/comments too, not just messages/calls -----
+
+test('a blocked relationship prevents reacting to a wall post, in either direction', function () {
+    $author = User::factory()->create();
+    $blocked = User::factory()->create();
+    $post = $author->wallPosts()->create(['body' => 'Hello wall.']);
+    $author->block($blocked);
+
+    Livewire::actingAs($blocked)
+        ->test('pages::shared.reactions', ['reactable' => $post])
+        ->call('toggle')
+        ->assertForbidden();
+
+    $post2 = $blocked->wallPosts()->create(['body' => 'My own wall.']);
+
+    Livewire::actingAs($author)
+        ->test('pages::shared.reactions', ['reactable' => $post2])
+        ->call('toggle')
+        ->assertForbidden();
+
+    expect($post->fresh()->reactionsCount())->toBe(0);
+});
+
+test('a blocked relationship prevents an emoji reaction on a wall post', function () {
+    $author = User::factory()->create();
+    $blocked = User::factory()->create();
+    $post = $author->wallPosts()->create(['body' => 'Hello wall.']);
+    $author->block($blocked);
+
+    Livewire::actingAs($blocked)
+        ->test('pages::shared.emoji-reactions', ['reactable' => $post])
+        ->call('react', '🔥')
+        ->assertForbidden();
+});
+
+test('a blocked relationship prevents commenting on a wall post, and replying to a comment on one', function () {
+    $author = User::factory()->create();
+    $blocked = User::factory()->create();
+    $post = $author->wallPosts()->create(['body' => 'Hello wall.']);
+    $comment = $post->comments()->create(['user_id' => $author->id, 'body' => 'Top level.']);
+    $author->block($blocked);
+
+    Livewire::actingAs($blocked)
+        ->test('pages::shared.comments', ['commentable' => $post])
+        ->set('body', 'Trying to comment anyway')
+        ->call('post')
+        ->assertForbidden();
+
+    Livewire::actingAs($blocked)
+        ->test('pages::shared.comments', ['commentable' => $post])
+        ->call('openReplies', $comment->id)
+        ->set('replyBody', 'Trying to reply anyway')
+        ->call('postReply')
+        ->assertForbidden();
+
+    expect($post->fresh()->commentsCount())->toBe(1);
+});
+
+test('a blocked relationship prevents upvoting or downvoting a comment', function () {
+    $author = User::factory()->create();
+    $blocked = User::factory()->create();
+    $post = $author->wallPosts()->create(['body' => 'Hello wall.']);
+    $comment = $post->comments()->create(['user_id' => $author->id, 'body' => 'Top level.']);
+    $author->block($blocked);
+
+    Livewire::actingAs($blocked)
+        ->test('pages::shared.comments', ['commentable' => $post])
+        ->call('openModal')
+        ->call('voteUp', $comment->id)
+        ->assertForbidden();
+
+    expect($comment->fresh()->upvotesCount())->toBe(0);
 });

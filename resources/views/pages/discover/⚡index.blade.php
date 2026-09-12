@@ -9,6 +9,22 @@ use Livewire\Component;
 new #[Title('Discover')] class extends Component {
     public string $search = '';
 
+    /**
+     * Every listing on this page excludes a blocked relationship in either
+     * direction — same pattern CultureSprintPool::matchingQuery() already
+     * uses for matching. Without it, someone you blocked (or who blocked
+     * you) still surfaced by name, avatar, and bio in Discover's curated
+     * sections and in search — the follow button itself already 403s, but
+     * that doesn't stop the profile from being shown at all.
+     */
+    private function blockedIds(): \Illuminate\Support\Collection
+    {
+        $viewer = Auth::user();
+
+        return $viewer->blocking()->pluck('users.id')
+            ->merge($viewer->blockedBy()->pluck('users.id'));
+    }
+
     #[Computed]
     public function searchResults()
     {
@@ -18,6 +34,7 @@ new #[Title('Discover')] class extends Component {
 
         return User::query()
             ->whereKeyNot(Auth::id())
+            ->whereNotIn('id', $this->blockedIds())
             ->where('name', 'like', '%'.$this->search.'%')
             ->with(['profile', 'heritages'])
             ->limit(20)
@@ -35,7 +52,7 @@ new #[Title('Discover')] class extends Component {
         $viewerInterestIds = $viewer->interests()->pluck('interests.id');
         $viewerHeritageIds = $viewer->heritages()->pluck('heritages.id');
 
-        $excluded = $followingIds->push($viewer->id);
+        $excluded = $followingIds->push($viewer->id)->merge($this->blockedIds());
 
         $sharedInterests = collect();
 
