@@ -275,7 +275,7 @@ new class extends Component {
                                     'absolute left-3 top-3 rounded-full px-2.5 py-1 text-[11px] font-semibold',
                                     'bg-white/90 dark:bg-stone-900/80' => true,
                                     'text-cyan-700 dark:text-cyan-400' => $item['type'] === 'wall_post',
-                                    'text-amber-700 dark:text-amber-400' => $item['type'] === 'community_post',
+                                    'text-orange-700 dark:text-orange-400' => $item['type'] === 'community_post',
                                 ])>
                                     {{ $item['type'] === 'community_post' ? $item['community']->name : __('Wall') }}
                                 </span>
@@ -287,19 +287,19 @@ new class extends Component {
                                 @class([
                                     'relative flex h-32 shrink-0 items-center justify-center',
                                     'bg-gradient-to-br from-cyan-100 to-cyan-50 dark:from-cyan-950 dark:to-stone-900' => $item['type'] === 'wall_post',
-                                    'bg-gradient-to-br from-amber-100 to-amber-50 dark:from-amber-950 dark:to-stone-900' => $item['type'] === 'community_post',
+                                    'bg-gradient-to-br from-orange-100 to-orange-50 dark:from-orange-950 dark:to-stone-900' => $item['type'] === 'community_post',
                                 ])
                             >
                                 <flux:icon
                                     :icon="$item['type'] === 'community_post' ? 'user-group' : 'pencil-square'"
-                                    class="size-10 {{ $item['type'] === 'community_post' ? 'text-amber-300 dark:text-amber-800' : 'text-cyan-300 dark:text-cyan-800' }}"
+                                    class="size-10 {{ $item['type'] === 'community_post' ? 'text-orange-300 dark:text-orange-800' : 'text-cyan-300 dark:text-cyan-800' }}"
                                 />
 
                                 <span @class([
                                     'absolute left-3 top-3 rounded-full px-2.5 py-1 text-[11px] font-semibold',
                                     'bg-white/90 dark:bg-stone-900/80' => true,
                                     'text-cyan-700 dark:text-cyan-400' => $item['type'] === 'wall_post',
-                                    'text-amber-700 dark:text-amber-400' => $item['type'] === 'community_post',
+                                    'text-orange-700 dark:text-orange-400' => $item['type'] === 'community_post',
                                 ])>
                                     {{ $item['type'] === 'community_post' ? $item['community']->name : __('Wall') }}
                                 </span>

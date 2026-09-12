@@ -22,6 +22,9 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
             // color is doing the same job as it does on the stat card.
             $bridgePostActionClass = '!bg-warm-100 !text-warm-700 hover:!bg-warm-100/70 dark:!bg-warm-950 dark:!text-warm-400 dark:hover:!bg-warm-950/70';
             $streamActionClass = '!bg-pink-50 !text-pink-700 hover:!bg-pink-100 dark:!bg-pink-950 dark:!text-pink-400 dark:hover:!bg-pink-950/70';
+            // Same reasoning as Bridge Post/Bridge Score: this button creates
+            // the exact thing the Communities stat card counts.
+            $communityActionClass = '!bg-orange-50 !text-orange-700 hover:!bg-orange-100 dark:!bg-orange-950 dark:!text-orange-400 dark:hover:!bg-orange-950/70';
         @endphp
 
         {{-- Quick actions --}}
@@ -37,7 +40,7 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
             </flux:modal.trigger>
 
             <a href="{{ route('communities.create') }}" wire:navigate>
-                <flux:button size="sm" variant="ghost" icon="plus" class="{{ $quickActionClass }}">{{ __('Create Community') }}</flux:button>
+                <flux:button size="sm" variant="ghost" icon="plus" class="{{ $communityActionClass }}">{{ __('Create Community') }}</flux:button>
             </a>
 
             <a href="{{ route('roots.edit') }}" wire:navigate>
@@ -76,9 +79,9 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
             <a
                 href="{{ route('communities.index') }}"
                 wire:navigate
-                class="surface-card w-fit min-w-40 p-5 hover:border-amber-600/40 dark:hover:border-amber-500/40"
+                class="surface-card w-fit min-w-40 p-5 hover:border-orange-600/40 dark:hover:border-orange-500/40"
             >
-                <div class="flex items-center gap-2 text-amber-700 dark:text-amber-400">
+                <div class="flex items-center gap-2 text-orange-700 dark:text-orange-400">
                     <flux:icon.user-group class="size-5" />
                     <span class="text-sm font-medium">{{ __('Communities') }}</span>
                 </div>
