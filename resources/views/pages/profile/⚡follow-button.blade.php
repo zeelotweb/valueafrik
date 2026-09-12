@@ -65,12 +65,12 @@ new class extends Component {
         $variant = 'ghost';
         $class = $this->isFollowing
             ? '!text-stone-400 hover:!text-stone-600 hover:!bg-stone-100 dark:!text-stone-500 dark:hover:!text-stone-300 dark:hover:!bg-stone-800'
-            : '!text-cyan-600 hover:!text-cyan-500 hover:!bg-cyan-50 dark:!text-cyan-400 dark:hover:!bg-cyan-950';
+            : '!text-stone-900 hover:!text-stone-700 hover:!bg-stone-100 dark:!text-white dark:hover:!bg-stone-800';
     } else {
         $variant = $this->isFollowing ? 'ghost' : 'primary';
         $class = $this->isFollowing
             ? ($overlay ? '!bg-white/90 !text-stone-900 shadow-sm backdrop-blur hover:!bg-white dark:!bg-stone-900/80 dark:!text-white dark:hover:!bg-stone-900' : '')
-            : '';
+            : ($overlay ? '!bg-stone-900/90 !text-white shadow-sm backdrop-blur hover:!bg-stone-900 dark:!bg-white/90 dark:!text-stone-900 dark:hover:!bg-white' : '!bg-stone-900 hover:!bg-stone-700 dark:!bg-white dark:!text-stone-900 dark:hover:!bg-stone-200');
         // The trailing text is only hidden via CSS at sm+ ("hidden sm:inline"),
         // not actually removed from the slot — Flux only treats a button as
         // square (icon centered, no text padding) when the slot is truly

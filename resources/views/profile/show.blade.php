@@ -63,9 +63,10 @@ $countryFlag = \App\Support\Countries::flag($profile?->country);
             @endphp
 
             <div class="mt-3 flex flex-wrap items-center gap-2">
-                <flux:badge variant="pill" color="rose" icon="sparkles">
+                <span class="inline-flex items-center gap-1.5 rounded-full bg-warm-100 px-3 py-1 text-sm font-medium text-warm-700 dark:bg-warm-950 dark:text-warm-400">
+                    <flux:icon.sparkles class="size-3.5" />
                     {{ trans_choice('1 bridge point|:count bridge points', $bridgeScore) }}
-                </flux:badge>
+                </span>
 
                 @if ($bridgeBadge)
                     <flux:badge variant="pill" color="zinc">{{ $bridgeBadge['name'] }}</flux:badge>
@@ -86,7 +87,7 @@ $countryFlag = \App\Support\Countries::flag($profile?->country);
                         type="button"
                         x-show="isLong"
                         x-on:click="expanded = ! expanded"
-                        class="mt-1 text-sm font-medium text-cyan-600 hover:text-cyan-500 dark:text-cyan-400"
+                        class="mt-1 text-sm font-medium text-stone-700 hover:text-stone-900 dark:text-stone-300 dark:hover:text-white"
                     >
                         <span x-show="! expanded">{{ __('Show more') }}</span>
                         <span x-show="expanded">{{ __('Show less') }}</span>
@@ -110,7 +111,7 @@ $countryFlag = \App\Support\Countries::flag($profile?->country);
                     <flux:subheading>{{ __('Heritage') }}</flux:subheading>
                     <div class="mt-2 flex flex-wrap gap-2">
                         @foreach ($user->heritages as $heritage)
-                            <flux:badge variant="pill" color="cyan">{{ $heritage->name }}</flux:badge>
+                            <flux:badge variant="pill" color="zinc">{{ $heritage->name }}</flux:badge>
                         @endforeach
                     </div>
                 </div>
@@ -164,11 +165,11 @@ $countryFlag = \App\Support\Countries::flag($profile?->country);
                     @if ($isOwnProfile)
                         <div class="mb-6 flex flex-wrap gap-2">
                             <flux:modal.trigger name="wall-composer">
-                                <flux:button icon="pencil-square" variant="primary" color="cyan">{{ __('Post to Wall') }}</flux:button>
+                                <flux:button icon="pencil-square" variant="primary">{{ __('Post to Wall') }}</flux:button>
                             </flux:modal.trigger>
 
                             <flux:modal.trigger name="bridge-post-composer">
-                                <flux:button icon="arrows-right-left" variant="ghost">{{ __('Start a Bridge Post') }}</flux:button>
+                                <flux:button icon="arrows-right-left" variant="ghost" class="!bg-warm-100 !text-warm-700 hover:!bg-warm-100/70 dark:!bg-warm-950 dark:!text-warm-400 dark:hover:!bg-warm-950/70">{{ __('Start a Bridge Post') }}</flux:button>
                             </flux:modal.trigger>
                         </div>
 
