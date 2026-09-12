@@ -32,6 +32,8 @@ new #[Title('Admin — Reports')] class extends Component {
 
     public function dismiss(int $reportId): void
     {
+        abort_unless(Auth::user()?->isAdmin(), 403);
+
         $report = CommunityReport::findOrFail($reportId);
 
         $report->update([
@@ -51,6 +53,8 @@ new #[Title('Admin — Reports')] class extends Component {
      */
     public function removeContent(int $reportId): void
     {
+        abort_unless(Auth::user()?->isAdmin(), 403);
+
         $report = CommunityReport::with('reportable')->findOrFail($reportId);
 
         $report->reportable?->delete();

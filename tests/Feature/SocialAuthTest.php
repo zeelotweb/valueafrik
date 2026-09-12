@@ -66,6 +66,30 @@ test('a returning google account created before the verification fix is self-hea
     expect($unverified->fresh()->hasVerifiedEmail())->toBeTrue();
 });
 
+test('google sign-in refuses to attach to an existing password account instead of silently hijacking it', function () {
+    // Regression guard: without this, anyone could pre-register a
+    // victim's email with a password of their own choosing, then the
+    // victim's first "Sign in with Google" for that same email would
+    // silently log them into (and verify) the attacker's pre-made
+    // account — the attacker still knows the password and can log back
+    // in as the victim from then on.
+    $preRegistered = User::factory()->create([
+        'email' => 'newcomer@example.com',
+        'password' => bcrypt('attacker-chosen-password'),
+    ]);
+
+    Socialite::shouldReceive('driver->user')->andReturn(fakeGoogleUser());
+
+    $response = $this->get(route('social.callback', 'google'));
+
+    $response->assertRedirect(route('login'));
+    $this->assertGuest();
+
+    expect(SocialAccount::where('provider', 'google')->where('provider_id', 'google-123')->exists())->toBeFalse();
+    expect($preRegistered->fresh()->password)->toBe($preRegistered->password);
+    expect(User::where('email', 'newcomer@example.com')->count())->toBe(1);
+});
+
 test('a google user signed in this way can call another user without being blocked from their own call room', function () {
     Socialite::shouldReceive('driver->user')->andReturn(fakeGoogleUser());
     $this->get(route('social.callback', 'google'));

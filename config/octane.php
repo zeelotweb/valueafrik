@@ -157,10 +157,9 @@ return [
     */
 
     'tables' => [
-        'example:1000' => [
-            'name' => 'string:1000',
-            'votes' => 'int',
-        ],
+        // Unused — this app runs on RoadRunner (see OCTANE_SERVER), where
+        // Swoole tables have no effect. Left empty rather than the
+        // scaffolded example, which had no purpose here.
     ],
 
     /*

@@ -26,6 +26,10 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
 
+        // Locally, `php artisan dev` runs this alongside Octane. In
+        // production it needs its own persistent Forge Daemon — real-time
+        // messaging, calls, and streams (all dispatched via
+        // ShouldBroadcastNow) silently stop working without it.
         DevCommands::register('reverb:start --debug', 'reverb');
     }
 

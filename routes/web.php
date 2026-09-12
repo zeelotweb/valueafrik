@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
 Route::view('guide', 'guide')->name('guide');
+Route::view('roadmap', 'roadmap')->name('roadmap');
 Route::view('legal/privacy', 'legal.privacy')->name('legal.privacy');
 Route::view('legal/terms', 'legal.terms')->name('legal.terms');
 

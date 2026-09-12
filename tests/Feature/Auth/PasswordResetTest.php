@@ -41,6 +41,28 @@ test('reset password screen can be rendered', function () {
     });
 });
 
+test('password reset requests are rate-limited per IP to 5 per minute', function () {
+    // Regression guard: Fortify's password.email route carries no throttle
+    // middleware and no configurable limiter at all (unlike login and
+    // two-factor) — without ThrottlePasswordResetRequests in the 'web'
+    // group, this endpoint could be hammered indefinitely. Keyed by IP
+    // alone: the password broker already cools down repeats to the same
+    // email, so this test uses a different email each request to isolate
+    // the IP-scoped gap that cooldown doesn't cover (enumeration/mail-queue
+    // flooding by cycling through many candidate emails).
+    Notification::fake();
+
+    $emails = User::factory(6)->create()->pluck('email');
+
+    foreach ($emails->take(5) as $email) {
+        $this->post(route('password.request'), ['email' => $email])
+            ->assertStatus(302);
+    }
+
+    $this->post(route('password.request'), ['email' => $emails->last()])
+        ->assertStatus(429);
+});
+
 test('password can be reset with valid token', function () {
     Notification::fake();
 

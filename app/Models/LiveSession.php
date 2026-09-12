@@ -295,6 +295,10 @@ class LiveSession extends Model
 
         if ($online) {
             SafeNotifier::send($invitee, new LiveCallStarted($session));
+
+            // Requires a persistent `queue:work` process on the server — see
+            // Forge's Daemons for this site. Without it, this job just sits
+            // in the jobs table and a ringing call never resolves to missed.
             ExpireRingingCall::dispatch($session)->delay(now()->addSeconds((int) config('calls.ring_seconds')));
         } else {
             SafeNotifier::send($invitee, new MissedCall($session));

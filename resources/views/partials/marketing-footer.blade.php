@@ -22,6 +22,7 @@
                 <h3 class="text-sm font-semibold text-stone-900 dark:text-white">Company</h3>
                 <ul class="mt-4 space-y-2 text-sm text-stone-500 dark:text-stone-400">
                     <li><a href="{{ route('guide') }}" class="hover:text-stone-900 dark:hover:text-white" wire:navigate>Guide</a></li>
+                    <li><a href="{{ route('roadmap') }}" class="hover:text-stone-900 dark:hover:text-white" wire:navigate>Roadmap</a></li>
                 </ul>
             </div>
 

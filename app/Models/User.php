@@ -117,14 +117,36 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
         return $this->banned_at !== null;
     }
 
-    public function ban(string $reason): void
+    public function ban(string $reason, ?self $actor = null): void
     {
         $this->forceFill(['banned_at' => now(), 'ban_reason' => $reason])->save();
+
+        $this->moderationLogs()->create([
+            'actor_id' => $actor?->id,
+            'action' => 'banned',
+            'reason' => $reason,
+        ]);
     }
 
-    public function unban(): void
+    /**
+     * Wipes banned_at/ban_reason, so the reason is captured on the log
+     * entry before it's gone — otherwise unbanning destroys the only
+     * record of who was banned, when, and why.
+     */
+    public function unban(?self $actor = null): void
     {
+        $this->moderationLogs()->create([
+            'actor_id' => $actor?->id,
+            'action' => 'unbanned',
+            'reason' => $this->ban_reason,
+        ]);
+
         $this->forceFill(['banned_at' => null, 'ban_reason' => null])->save();
+    }
+
+    public function moderationLogs(): HasMany
+    {
+        return $this->hasMany(ModerationLog::class, 'target_user_id');
     }
 
     /**

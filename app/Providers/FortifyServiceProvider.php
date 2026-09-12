@@ -69,5 +69,15 @@ class FortifyServiceProvider extends ServiceProvider
             return Limit::perMinute(5)->by($throttleKey);
         });
 
+        // Keyed by IP alone, not email+IP: Laravel's own password broker
+        // already refuses a second reset link to the *same* email within
+        // 60 seconds (its "Please wait before retrying." cooldown). The
+        // gap this closes is different — one IP cycling through many
+        // *different* candidate emails to enumerate accounts or flood the
+        // mail queue, which an email-scoped key wouldn't touch since each
+        // new email starts with a fresh allowance.
+        RateLimiter::for('password-reset', function (Request $request) {
+            return Limit::perMinute(5)->by($request->ip());
+        });
     }
 }

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureNotBanned;
+use App\Http\Middleware\ThrottlePasswordResetRequests;
 use App\Http\Middleware\TrackLastSeen;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -19,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->appendToGroup('web', EnsureNotBanned::class);
         $middleware->appendToGroup('web', TrackLastSeen::class);
+        $middleware->appendToGroup('web', ThrottlePasswordResetRequests::class);
 
         // Forge puts nginx in front of Octane on the same box (OVH). Trusting
         // only the loopback proxy — not '*' — means we only accept forwarded

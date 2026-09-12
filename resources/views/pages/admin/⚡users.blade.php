@@ -33,6 +33,7 @@ new #[Title('Admin — Users')] class extends Component {
 
     public function startBan(int $userId): void
     {
+        abort_unless(Auth::user()?->isAdmin(), 403);
         abort_if($userId === Auth::id(), 403);
 
         $this->banningUserId = $userId;
@@ -50,13 +51,15 @@ new #[Title('Admin — Users')] class extends Component {
 
     public function confirmBan(): void
     {
+        abort_unless(Auth::user()?->isAdmin(), 403);
+
         $this->validate(['banReason' => ['required', 'string', 'max:500']]);
 
         $user = User::findOrFail($this->banningUserId);
 
         abort_if($user->id === Auth::id(), 403);
 
-        $user->ban($this->banReason);
+        $user->ban($this->banReason, Auth::user());
 
         Flux::toast(variant: 'success', text: __(':name has been banned.', ['name' => $user->name]));
 
@@ -67,9 +70,11 @@ new #[Title('Admin — Users')] class extends Component {
 
     public function unban(int $userId): void
     {
+        abort_unless(Auth::user()?->isAdmin(), 403);
+
         $user = User::findOrFail($userId);
 
-        $user->unban();
+        $user->unban(Auth::user());
 
         Flux::toast(text: __(':name has been unbanned.', ['name' => $user->name]));
     }
@@ -99,7 +104,7 @@ new #[Title('Admin — Users')] class extends Component {
     <flux:input wire:model.live.debounce.300ms="search" icon="magnifying-glass" placeholder="{{ __('Search by name, email, or username…') }}" class="mt-4" />
 
     <div class="mt-6 space-y-2">
-        @foreach ($users as $user)
+        @forelse ($users as $user)
             <div class="flex items-center gap-3 rounded-lg bg-white border border-stone-200 p-3 dark:bg-stone-900 dark:border-stone-800" wire:key="admin-user-{{ $user->id }}">
                 <a href="{{ route('profile.show', $user) }}" wire:navigate class="size-9 shrink-0 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
                     @if ($user->profile?->avatarUrl())
@@ -139,7 +144,11 @@ new #[Title('Admin — Users')] class extends Component {
                     @endif
                 @endunless
             </div>
-        @endforeach
+        @empty
+            <div class="rounded-lg border border-dashed border-stone-300 p-6 text-center dark:border-stone-800">
+                <flux:text>{{ __('No users match that search.') }}</flux:text>
+            </div>
+        @endforelse
     </div>
 
     {{ $users->links() }}

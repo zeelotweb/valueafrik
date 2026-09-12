@@ -149,3 +149,99 @@ test('the admin:grant command fails gracefully for an unknown email', function (
 
     expect($exitCode)->toBe(Command::FAILURE);
 });
+
+// --- demoted-admin regression -------------------------------------------
+//
+// mount() only re-runs on the component's initial render, not on
+// subsequent Livewire action calls within the same browser session — so
+// a check placed only in mount() doesn't protect an admin who's demoted
+// mid-session but keeps an open tab. Every mutating method needs its own
+// check, mirroring the Livewire::test()-bypasses-route-middleware
+// convention already established elsewhere.
+
+test('a demoted admin loses the ability to dismiss reports immediately, not just on next page load', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+    $report = reportedCommunityPost();
+
+    // mount() only runs once, when the component is first created — an
+    // admin demoted after that point but still holding this same
+    // component instance (an open browser tab) must be blocked by a
+    // check inside the action method itself, not just at mount time.
+    $component = Livewire::actingAs($admin)->test('pages::admin.reports');
+    $admin->forceFill(['is_admin' => false])->save();
+
+    $component->call('dismiss', $report->id)->assertForbidden();
+});
+
+test('a demoted admin loses the ability to remove reported content immediately', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+    $report = reportedCommunityPost();
+
+    $component = Livewire::actingAs($admin)->test('pages::admin.reports');
+    $admin->forceFill(['is_admin' => false])->save();
+
+    $component->call('removeContent', $report->id)->assertForbidden();
+
+    expect($report->fresh()->status)->toBe('open');
+});
+
+test('a demoted admin loses the ability to ban a user immediately', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+    $target = User::factory()->create();
+
+    $component = Livewire::actingAs($admin)->test('pages::admin.users');
+    $admin->forceFill(['is_admin' => false])->save();
+
+    $component->call('startBan', $target->id)->assertForbidden();
+
+    expect($target->fresh()->isBanned())->toBeFalse();
+});
+
+test('a demoted admin loses the ability to unban a user immediately', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+    $target = User::factory()->create();
+    $target->ban('test');
+
+    $component = Livewire::actingAs($admin)->test('pages::admin.users');
+    $admin->forceFill(['is_admin' => false])->save();
+
+    $component->call('unban', $target->id)->assertForbidden();
+
+    expect($target->fresh()->isBanned())->toBeTrue();
+});
+
+// --- moderation audit trail ----------------------------------------------
+
+test('banning a user records who banned them and why', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+    $target = User::factory()->create();
+
+    Livewire::actingAs($admin)
+        ->test('pages::admin.users')
+        ->call('startBan', $target->id)
+        ->set('banReason', 'Repeated harassment.')
+        ->call('confirmBan');
+
+    $log = $target->moderationLogs()->latest()->first();
+
+    expect($log->action)->toBe('banned');
+    expect($log->actor_id)->toBe($admin->id);
+    expect($log->reason)->toBe('Repeated harassment.');
+});
+
+test('unbanning preserves the original ban reason on the log even though it is wiped from the user', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+    $target = User::factory()->create();
+    $target->ban('Repeated harassment.', $admin);
+
+    Livewire::actingAs($admin)
+        ->test('pages::admin.users')
+        ->call('unban', $target->id);
+
+    expect($target->fresh()->ban_reason)->toBeNull();
+
+    $log = $target->moderationLogs()->where('action', 'unbanned')->first();
+
+    expect($log->actor_id)->toBe($admin->id);
+    expect($log->reason)->toBe('Repeated harassment.');
+});

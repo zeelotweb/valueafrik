@@ -37,6 +37,13 @@ class SocialAuthController extends Controller
 
         $user = $this->findOrCreateUser($provider, $socialiteUser);
 
+        if ($user === null) {
+            return redirect()->route('login')->with(
+                'status',
+                __('An account with that email already exists. Sign in with your password to continue.'),
+            );
+        }
+
         Auth::login($user, remember: true);
 
         // The password-login path (Fortify's PrepareAuthenticatedSession)
@@ -51,7 +58,7 @@ class SocialAuthController extends Controller
         return redirect()->intended(route('dashboard', absolute: false));
     }
 
-    private function findOrCreateUser(string $provider, SocialiteUser $socialiteUser): User
+    private function findOrCreateUser(string $provider, SocialiteUser $socialiteUser): ?User
     {
         $account = SocialAccount::where('provider', $provider)
             ->where('provider_id', $socialiteUser->getId())
@@ -74,13 +81,23 @@ class SocialAuthController extends Controller
             return $account->user;
         }
 
-        $user = User::firstOrCreate(
-            ['email' => $socialiteUser->getEmail()],
-            [
-                'name' => $socialiteUser->getName() ?: $socialiteUser->getNickname(),
-                'password' => Str::password(32),
-            ]
-        );
+        // No SocialAccount is linked to this provider identity yet. If a
+        // user with this email already exists (registered by password, or
+        // via a different provider), refuse to auto-attach and log in as
+        // them — otherwise anyone can pre-register a victim's email with a
+        // password, then have the real owner's first Google/Facebook sign-in
+        // silently hijacked into the attacker's account. There's no
+        // account-linking flow to safely fold the two together, so send
+        // them to sign in with their password instead.
+        if (User::where('email', $socialiteUser->getEmail())->exists()) {
+            return null;
+        }
+
+        $user = User::create([
+            'email' => $socialiteUser->getEmail(),
+            'name' => $socialiteUser->getName() ?: $socialiteUser->getNickname(),
+            'password' => Str::password(32),
+        ]);
 
         // email_verified_at isn't mass-assignable (it's not in User::$fillable),
         // so it has to be set explicitly — Google/Facebook already verified
