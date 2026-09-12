@@ -207,6 +207,34 @@ test('the notifications page lists notifications and marking one read redirects 
     expect($user->fresh()->notifications()->first()->read_at)->not->toBeNull();
 });
 
+test('the notifications page loads 20 at a time and reports whether more exist', function () {
+    $user = User::factory()->create();
+    $actor = User::factory()->create();
+
+    foreach (range(1, 25) as $_) {
+        $user->notify(new NewFollower($actor));
+    }
+
+    $component = Livewire::actingAs($user)->test('pages::notifications.index');
+
+    expect($component->instance()->notificationsWindow->count())->toBeLessThanOrEqual(21);
+    $component->assertSet('hasMore', true);
+
+    $component->call('loadMore')->assertSet('hasMore', false);
+});
+
+test('loadMore does nothing once every notification is already loaded', function () {
+    $user = User::factory()->create();
+    $actor = User::factory()->create();
+    $user->notify(new NewFollower($actor));
+
+    Livewire::actingAs($user)
+        ->test('pages::notifications.index')
+        ->assertSet('hasMore', false)
+        ->call('loadMore')
+        ->assertSet('loaded', 20);
+});
+
 test('mark all as read clears every unread notification', function () {
     $user = User::factory()->create();
     $actor = User::factory()->create();
@@ -217,6 +245,47 @@ test('mark all as read clears every unread notification', function () {
 
     Livewire::actingAs($user)
         ->test('pages::notifications.index')
+        ->call('markAllRead');
+
+    expect($user->fresh()->unreadNotifications()->count())->toBe(0);
+});
+
+// --- notifications-icon dropdown -------------------------------------------
+
+test('the notifications dropdown shows recent notifications and a link to the full page', function () {
+    $user = User::factory()->create();
+    $actor = User::factory()->create(['name' => 'Dropdown Actor']);
+    $user->notify(new NewFollower($actor));
+
+    Livewire::actingAs($user)
+        ->test('pages::layout.notifications-icon')
+        ->assertSee('Dropdown Actor')
+        ->assertSee('View more')
+        ->assertSeeHtml(route('notifications.index'));
+});
+
+test('opening a notification from the dropdown marks it read and redirects', function () {
+    $user = User::factory()->create();
+    $actor = User::factory()->create();
+    $user->notify(new NewFollower($actor));
+    $notification = $user->fresh()->notifications()->first();
+
+    Livewire::actingAs($user)
+        ->test('pages::layout.notifications-icon')
+        ->call('open', $notification->id)
+        ->assertRedirect(route('profile.show', $actor));
+
+    expect($user->fresh()->notifications()->first()->read_at)->not->toBeNull();
+});
+
+test('mark all as read from the dropdown clears every unread notification', function () {
+    $user = User::factory()->create();
+    $actor = User::factory()->create();
+    $user->notify(new NewFollower($actor));
+    $user->notify(new NewFollower($actor));
+
+    Livewire::actingAs($user)
+        ->test('pages::layout.notifications-icon')
         ->call('markAllRead');
 
     expect($user->fresh()->unreadNotifications()->count())->toBe(0);

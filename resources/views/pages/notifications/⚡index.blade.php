@@ -1,12 +1,28 @@
 <?php
 
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Livewire\WithPagination;
 
 new #[Title('Notifications')] class extends Component {
-    use WithPagination;
+    public int $perPage = 20;
+
+    public int $loaded = 20;
+
+    public function loadMore(): void
+    {
+        if ($this->hasMore) {
+            $this->loaded += $this->perPage;
+
+            // #[Computed] only memoizes for the lifetime of a component
+            // instance, not a dependency graph — it has no idea
+            // notificationsWindow/hasMore depend on $loaded, so without
+            // this they'd keep serving the pre-increment values for the
+            // rest of this request.
+            unset($this->notificationsWindow, $this->hasMore);
+        }
+    }
 
     public function open(string $id)
     {
@@ -24,10 +40,27 @@ new #[Title('Notifications')] class extends Component {
         Auth::user()->unreadNotifications->markAsRead();
     }
 
+    /**
+     * Fetches one row past the current window so hasMore can tell whether
+     * there's more without a separate count() query — the window itself is
+     * just the first $loaded of these.
+     */
+    #[Computed]
+    public function notificationsWindow()
+    {
+        return Auth::user()->notifications()->latest()->limit($this->loaded + 1)->get();
+    }
+
+    #[Computed]
+    public function hasMore(): bool
+    {
+        return $this->notificationsWindow->count() > $this->loaded;
+    }
+
     public function with(): array
     {
         return [
-            'notifications' => Auth::user()->notifications()->paginate(20),
+            'notifications' => $this->notificationsWindow->take($this->loaded),
         ];
     }
 }; ?>
@@ -69,7 +102,12 @@ new #[Title('Notifications')] class extends Component {
         @endforelse
     </div>
 
-    <div class="mt-6">
-        {{ $notifications->links() }}
-    </div>
+    @if ($this->hasMore)
+        {{-- wire:intersect fires loadMore() the moment this sentinel scrolls
+             into view — no separate JS/Alpine plugin needed, Livewire ships
+             its own IntersectionObserver-backed directive for exactly this. --}}
+        <div wire:intersect="loadMore" wire:key="notifications-load-more" class="flex justify-center py-6">
+            <flux:icon.loading class="size-5 text-stone-400" />
+        </div>
+    @endif
 </div>

@@ -9,7 +9,12 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class MessageSent implements ShouldBroadcastNow
+/**
+ * Fires when the sender deletes a message "for everyone" — the other
+ * participant's open thread swaps that message for the redacted payload
+ * live, the same way a brand new MessageSent gets pushed in.
+ */
+class MessageDeletedForEveryone implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -22,7 +27,7 @@ class MessageSent implements ShouldBroadcastNow
 
     public function broadcastAs(): string
     {
-        return 'MessageSent';
+        return 'MessageDeletedForEveryone';
     }
 
     public function broadcastWith(): array

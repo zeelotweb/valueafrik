@@ -1,5 +1,6 @@
 <?php
 
+use App\Events\MessageDeletedForEveryone;
 use App\Events\MessageSent;
 use App\Events\MessagesRead;
 use App\Events\UserTyping;
@@ -39,27 +40,14 @@ new #[Title('Messages')] class extends Component {
 
         $this->messages = $conversation->messages()
             ->with(['user.profile', 'media'])
+            ->whereDoesntHave('hides', fn ($query) => $query->where('user_id', Auth::id()))
             ->latest()
             ->limit(50)
             ->get()
             ->reverse()
             ->values()
-            ->map(fn (Message $message) => $this->formatMessage($message))
+            ->map(fn (Message $message) => $message->toBroadcastArray())
             ->all();
-    }
-
-    protected function formatMessage(Message $message): array
-    {
-        return [
-            'id' => $message->id,
-            'body' => $message->body,
-            'user_id' => $message->user_id,
-            'user_name' => $message->user->name,
-            'avatar_url' => $message->user->profile?->avatarUrl(),
-            'created_at' => $message->created_at->toIso8601String(),
-            'read_at' => $message->read_at?->toIso8601String(),
-            'media' => $message->media->map(fn ($media) => ['url' => $media->url(), 'thumbnail_url' => $media->thumbnailUrl()])->all(),
-        ];
     }
 
     /**
@@ -119,9 +107,7 @@ new #[Title('Messages')] class extends Component {
             ]);
         }
 
-        $message->load(['user.profile', 'media']);
-
-        $this->messages[] = $this->formatMessage($message);
+        $this->messages[] = $message->toBroadcastArray();
 
         $this->conversation->participants()->updateExistingPivot(Auth::id(), ['last_read_at' => now()]);
 
@@ -148,13 +134,53 @@ new #[Title('Messages')] class extends Component {
         return $this->redirect(route('live.show', $session), navigate: true);
     }
 
+    /**
+     * "Hide for me" — local-only, nothing broadcast. findOrFail (scoped to
+     * this conversation) is the same backstop used everywhere else a
+     * client-supplied id reaches a write: it 404s instead of trusting that
+     * the id actually belongs to this thread.
+     */
+    public function hideMessage(int $id): void
+    {
+        $message = $this->conversation->messages()->findOrFail($id);
+        $message->hideFor(Auth::user());
+
+        $this->messages = collect($this->messages)->reject(fn ($m) => $m['id'] === $id)->values()->all();
+    }
+
+    public function deleteForEveryone(int $id): void
+    {
+        $message = $this->conversation->messages()->findOrFail($id);
+        $message->deleteForEveryone(Auth::user());
+
+        $redacted = $message->toBroadcastArray();
+
+        $this->messages = collect($this->messages)
+            ->map(fn ($m) => $m['id'] === $id ? $redacted : $m)
+            ->all();
+
+        try {
+            broadcast(new MessageDeletedForEveryone($message))->toOthers();
+        } catch (\Throwable $e) {
+            report($e);
+        }
+    }
+
     public function getListeners(): array
     {
         return [
             "echo-private:conversation.{$this->conversation->id},.MessageSent" => 'onMessageReceived',
             "echo-private:conversation.{$this->conversation->id},.MessagesRead" => 'onMessagesRead',
             "echo-private:conversation.{$this->conversation->id},.UserTyping" => 'onTypingReceived',
+            "echo-private:conversation.{$this->conversation->id},.MessageDeletedForEveryone" => 'onMessageDeletedForEveryone',
         ];
+    }
+
+    public function onMessageDeletedForEveryone(array $event): void
+    {
+        $this->messages = collect($this->messages)
+            ->map(fn ($m) => $m['id'] === $event['id'] ? $event : $m)
+            ->all();
     }
 
     public function onMessageReceived(array $event): void
@@ -247,27 +273,67 @@ new #[Title('Messages')] class extends Component {
         class="flex-1 space-y-3 overflow-y-auto py-4"
     >
         @foreach ($messages as $message)
-            @php $isMine = $message['user_id'] === Auth::id(); @endphp
+            @php
+                $isMine = $message['user_id'] === Auth::id();
+                $isDeleted = $message['deleted_for_everyone'] ?? false;
+            @endphp
 
             <div class="flex flex-col {{ $isMine ? 'items-end' : 'items-start' }}" wire:key="message-{{ $message['id'] }}">
-                <div class="max-w-[75%] rounded-2xl px-4 py-2 {{ $isMine ? 'bg-cyan-600 text-white' : 'bg-stone-100 text-stone-900 dark:bg-stone-800 dark:text-stone-100' }}">
-                    @if (! empty($message['media']))
-                        @php $mediaUrls = array_column($message['media'], 'url'); @endphp
-                        <div class="mb-1 grid gap-1 {{ count($message['media']) > 1 ? 'grid-cols-2' : '' }}" x-data>
-                            @foreach ($message['media'] as $index => $media)
-                                <button type="button" x-on:click="window.dispatchEvent(new CustomEvent('media-viewer:show', { detail: { images: @js($mediaUrls), index: {{ $index }} } }))" class="block">
-                                    <img src="{{ $media['thumbnail_url'] }}" class="max-h-64 w-full rounded-lg object-cover">
-                                </button>
-                            @endforeach
-                        </div>
-                    @endif
+                <div class="flex items-end gap-1 {{ $isMine ? 'flex-row-reverse' : 'flex-row' }}">
+                    <div class="max-w-[75%] rounded-2xl px-4 py-2 {{ $isMine ? 'bg-cyan-600 text-white' : 'bg-stone-100 text-stone-900 dark:bg-stone-800 dark:text-stone-100' }}">
+                        @if ($isDeleted)
+                            <p class="text-sm italic {{ $isMine ? 'text-cyan-100' : 'text-stone-400 dark:text-stone-500' }}">
+                                {{ __('This message was deleted.') }}
+                            </p>
+                        @else
+                            @if (! empty($message['media']))
+                                @php $mediaUrls = array_column($message['media'], 'url'); @endphp
+                                <div class="mb-1 grid gap-1 {{ count($message['media']) > 1 ? 'grid-cols-2' : '' }}" x-data>
+                                    @foreach ($message['media'] as $index => $media)
+                                        <button type="button" x-on:click="window.dispatchEvent(new CustomEvent('media-viewer:show', { detail: { images: @js($mediaUrls), index: {{ $index }} } }))" class="block">
+                                            <img src="{{ $media['thumbnail_url'] }}" class="max-h-64 w-full rounded-lg object-cover">
+                                        </button>
+                                    @endforeach
+                                </div>
+                            @endif
 
-                    @if ($message['body'])
-                        <p class="whitespace-pre-line text-sm">{{ $message['body'] }}</p>
-                    @endif
+                            @if ($message['body'])
+                                <p class="whitespace-pre-line text-sm">{{ $message['body'] }}</p>
+                            @endif
+                        @endif
+                    </div>
+
+                    @unless ($isDeleted)
+                        <flux:dropdown position="bottom" align="{{ $isMine ? 'end' : 'start' }}">
+                            <button
+                                type="button"
+                                class="flex size-6 shrink-0 items-center justify-center rounded-md text-stone-300 hover:bg-stone-100 hover:text-stone-600 dark:text-stone-600 dark:hover:bg-stone-800 dark:hover:text-stone-300"
+                                aria-label="{{ __('Message options') }}"
+                            >
+                                <flux:icon.ellipsis-horizontal class="size-4" />
+                            </button>
+
+                            <flux:menu>
+                                <flux:menu.item wire:click="hideMessage({{ $message['id'] }})" icon="eye-slash">
+                                    {{ __('Hide for me') }}
+                                </flux:menu.item>
+
+                                @if ($isMine)
+                                    <flux:menu.item
+                                        wire:click="deleteForEveryone({{ $message['id'] }})"
+                                        wire:confirm="{{ __('Delete this message for everyone? This cannot be undone.') }}"
+                                        variant="danger"
+                                        icon="trash"
+                                    >
+                                        {{ __('Delete for everyone') }}
+                                    </flux:menu.item>
+                                @endif
+                            </flux:menu>
+                        </flux:dropdown>
+                    @endunless
                 </div>
 
-                @if ($isMine)
+                @if ($isMine && ! $isDeleted)
                     <span class="mt-0.5 flex items-center gap-0.5 text-xs {{ $message['read_at'] ? 'text-cyan-600 dark:text-cyan-400' : 'text-stone-400 dark:text-stone-500' }}" data-test="read-receipt">
                         @if ($message['read_at'])
                             <flux:icon.check-circle variant="solid" class="size-3.5" />
@@ -278,7 +344,7 @@ new #[Title('Messages')] class extends Component {
                     </span>
                 @endif
 
-                @if ($messageModel = \App\Models\Message::find($message['id']))
+                @if (! $isDeleted && $messageModel = \App\Models\Message::find($message['id']))
                     <livewire:pages::shared.reactions :reactable="$messageModel" :key="'message-reactions-'.$message['id']" />
                 @endif
             </div>
