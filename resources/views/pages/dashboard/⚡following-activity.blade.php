@@ -152,7 +152,7 @@ new class extends Component {
                 x-transition.opacity
                 x-cloak
                 @click="scroll(-1)"
-                class="absolute -left-3 top-1/2 z-10 flex size-9 -translate-y-1/2 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-600 hover:text-stone-900 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:text-white"
+                class="absolute -left-3 top-1/2 z-10 flex size-9 -translate-y-1/2 items-center justify-center rounded-full bg-stone-900 text-white hover:bg-stone-700 dark:bg-white dark:text-stone-900 dark:hover:bg-stone-200"
                 aria-label="{{ __('Scroll left') }}"
             >
                 <flux:icon.chevron-left class="size-4" />
@@ -164,7 +164,7 @@ new class extends Component {
                 x-transition.opacity
                 x-cloak
                 @click="scroll(1)"
-                class="absolute -right-3 top-1/2 z-10 flex size-9 -translate-y-1/2 items-center justify-center rounded-full border border-stone-200 bg-white text-stone-600 hover:text-stone-900 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300 dark:hover:text-white"
+                class="absolute -right-3 top-1/2 z-10 flex size-9 -translate-y-1/2 items-center justify-center rounded-full bg-stone-900 text-white hover:bg-stone-700 dark:bg-white dark:text-stone-900 dark:hover:bg-stone-200"
                 aria-label="{{ __('Scroll right') }}"
             >
                 <flux:icon.chevron-right class="size-4" />

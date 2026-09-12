@@ -44,7 +44,7 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
             </a>
 
             <a href="{{ route('roots.edit') }}" wire:navigate>
-                <flux:button size="sm" variant="ghost" icon="identification" class="{{ $quickActionClass }}">{{ __('Edit Roots') }}</flux:button>
+                <flux:button size="sm" variant="ghost" icon="identification" class="!bg-stone-900 !text-white hover:!bg-stone-700 dark:!bg-white dark:!text-stone-900 dark:hover:!bg-stone-200">{{ __('Edit Roots') }}</flux:button>
             </a>
         </div>
 
