@@ -44,13 +44,15 @@ class AppServiceProvider extends ServiceProvider
             app()->isProduction(),
         );
 
+        // Composition rules (mixed case, a number, a symbol) were dropped —
+        // NIST 800-63B recommends against them: they push people toward
+        // predictable patterns ("Password1!") and mostly just add signup
+        // friction, without the real protection uncompromised() already
+        // gives by rejecting passwords that show up in known breach data.
+        // Length is what actually matters; 10 is a reasonable floor for a
+        // consumer platform without demanding a password manager to pass.
         Password::defaults(fn (): ?Password => app()->isProduction()
-            ? Password::min(12)
-                ->mixedCase()
-                ->letters()
-                ->numbers()
-                ->symbols()
-                ->uncompromised()
+            ? Password::min(10)->uncompromised()
             : null,
         );
     }

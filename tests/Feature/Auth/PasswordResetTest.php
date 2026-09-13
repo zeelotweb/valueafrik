@@ -41,6 +41,22 @@ test('reset password screen can be rendered', function () {
     });
 });
 
+test('the response gives no sign of whether the email belongs to an account', function () {
+    // Fortify's defaults respond differently for a known vs. unknown email
+    // (a form error naming the email field vs. a flash "sent" status),
+    // which lets anyone enumerate registered accounts by POSTing candidate
+    // addresses here. Both outcomes must now render identically.
+    Notification::fake();
+
+    $user = User::factory()->create();
+
+    $known = $this->post(route('password.request'), ['email' => $user->email]);
+    $unknown = $this->post(route('password.request'), ['email' => 'definitely-not-registered@example.com']);
+
+    $known->assertSessionHasNoErrors()->assertSessionHas('status', __('passwords.sent'));
+    $unknown->assertSessionHasNoErrors()->assertSessionHas('status', __('passwords.sent'));
+});
+
 test('password reset requests are rate-limited per IP to 5 per minute', function () {
     // Regression guard: Fortify's password.email route carries no throttle
     // middleware and no configurable limiter at all (unlike login and

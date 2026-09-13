@@ -88,7 +88,14 @@ trait HasReactions
             return;
         }
 
-        $this->reactions()->create(['user_id' => $user->id, 'type' => $type]);
+        try {
+            $this->reactions()->create(['user_id' => $user->id, 'type' => $type]);
+        } catch (\Illuminate\Database\UniqueConstraintViolationException) {
+            // A concurrent request (double-click, two tabs) already created
+            // this reaction row — the desired end state is reached either
+            // way, so this one just stops instead of 500ing.
+            return;
+        }
 
         // Scoped to this specific reactable — unreacting (above) never
         // claws the point back, so without this guard, react/unreact/react

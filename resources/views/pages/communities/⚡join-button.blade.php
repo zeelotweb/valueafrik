@@ -32,7 +32,16 @@ new class extends Component {
 
         $status = $this->community->visibility === Community::VISIBILITY_PRIVATE ? 'pending' : 'active';
 
-        $this->community->members()->attach($user->id, ['role' => 'member', 'status' => $status]);
+        try {
+            $this->community->members()->attach($user->id, ['role' => 'member', 'status' => $status]);
+        } catch (\Illuminate\Database\UniqueConstraintViolationException) {
+            // A concurrent request (double-click, two tabs) already created
+            // this membership row — the desired end state is reached
+            // either way, so this one just refreshes instead of 500ing.
+            unset($this->membership, $this->joinable);
+
+            return;
+        }
 
         if ($status === 'active') {
             // Scoped to this community, not the reason globally — a genuine

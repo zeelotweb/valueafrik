@@ -116,6 +116,12 @@ class Comment extends Model
             return;
         }
 
-        $this->votes()->create(['user_id' => $user->id, 'type' => $type]);
+        try {
+            $this->votes()->create(['user_id' => $user->id, 'type' => $type]);
+        } catch (\Illuminate\Database\UniqueConstraintViolationException) {
+            // A concurrent request (double-click, two tabs) already created
+            // this vote row — the desired end state is reached either way,
+            // so this one just stops instead of 500ing.
+        }
     }
 }
