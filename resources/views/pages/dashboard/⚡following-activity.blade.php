@@ -117,7 +117,7 @@ new class extends Component {
                 <flux:text>{{ __("You're not following anyone yet — find people to bridge with.") }}</flux:text>
                 <div class="mt-3">
                     <a href="{{ route('discover.index') }}" wire:navigate>
-                        <flux:button size="sm" variant="primary" color="cyan">{{ __('Discover people') }}</flux:button>
+                        <flux:button size="sm" variant="primary" class="btn-flat-primary">{{ __('Discover people') }}</flux:button>
                     </a>
                 </div>
             </div>
@@ -257,7 +257,7 @@ new class extends Component {
                 @else
                     <div
                         wire:key="following-activity-{{ $item['type'] }}-{{ $item['user']->id }}-{{ $item['timestamp'] }}"
-                        class="surface-card group flex h-72 w-56 shrink-0 snap-start flex-col overflow-hidden transition hover:-translate-y-0.5 hover:border-cyan-600/40 dark:hover:border-cyan-400/40"
+                        class="surface-card group flex h-72 w-56 shrink-0 snap-start flex-col overflow-hidden transition hover:-translate-y-0.5 hover:border-score-500/40 dark:hover:border-score-400/40"
                     >
                         @if ($item['photo'])
                             {{-- The photo itself opens the full-size lightbox — the rest of
@@ -274,7 +274,7 @@ new class extends Component {
                                 <span @class([
                                     'absolute left-3 top-3 rounded-full px-2.5 py-1 text-[11px] font-semibold',
                                     'bg-white/90 dark:bg-stone-900/80' => true,
-                                    'text-cyan-700 dark:text-cyan-400' => $item['type'] === 'wall_post',
+                                    'text-stone-700 dark:text-stone-300' => $item['type'] === 'wall_post',
                                     'text-communities-700 dark:text-communities-400' => $item['type'] === 'community_post',
                                 ])>
                                     {{ $item['type'] === 'community_post' ? $item['community']->name : __('Wall') }}
@@ -286,19 +286,19 @@ new class extends Component {
                                 wire:navigate
                                 @class([
                                     'relative flex h-32 shrink-0 items-center justify-center',
-                                    'bg-gradient-to-br from-cyan-100 to-cyan-50 dark:from-cyan-950 dark:to-stone-900' => $item['type'] === 'wall_post',
+                                    'bg-gradient-to-br from-stone-100 to-stone-50 dark:from-stone-800 dark:to-stone-900' => $item['type'] === 'wall_post',
                                     'bg-gradient-to-br from-communities-100 to-communities-50 dark:from-communities-950 dark:to-stone-900' => $item['type'] === 'community_post',
                                 ])
                             >
                                 <flux:icon
                                     :icon="$item['type'] === 'community_post' ? 'user-group' : 'pencil-square'"
-                                    class="size-10 {{ $item['type'] === 'community_post' ? 'text-communities-300 dark:text-communities-800' : 'text-cyan-300 dark:text-cyan-800' }}"
+                                    class="size-10 {{ $item['type'] === 'community_post' ? 'text-communities-300 dark:text-communities-800' : 'text-stone-300 dark:text-stone-700' }}"
                                 />
 
                                 <span @class([
                                     'absolute left-3 top-3 rounded-full px-2.5 py-1 text-[11px] font-semibold',
                                     'bg-white/90 dark:bg-stone-900/80' => true,
-                                    'text-cyan-700 dark:text-cyan-400' => $item['type'] === 'wall_post',
+                                    'text-stone-700 dark:text-stone-300' => $item['type'] === 'wall_post',
                                     'text-communities-700 dark:text-communities-400' => $item['type'] === 'community_post',
                                 ])>
                                     {{ $item['type'] === 'community_post' ? $item['community']->name : __('Wall') }}

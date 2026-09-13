@@ -74,7 +74,7 @@ new class extends Component {
     }
 }; ?>
 
-<?php $pill = $overlay ? '!bg-white/90 !text-stone-900 shadow-sm backdrop-blur hover:!bg-white dark:!bg-stone-900/80 dark:!text-white dark:hover:!bg-stone-900' : ''; ?>
+<?php $pill = $overlay ? 'btn-overlay-neutral' : ''; ?>
 <div>
     @unless (Auth::id() === $community->owner_id)
         @if ($this->membership !== null)
@@ -86,11 +86,11 @@ new class extends Component {
         @elseif ($community->isFull())
             <flux:button size="sm" variant="ghost" class="{{ $pill }}" disabled>{{ __('Community full') }}</flux:button>
         @elseif ($this->joinable)
-            <flux:button wire:click="join" size="sm" variant="primary" color="cyan" wire:loading.attr="disabled">
+            <flux:button wire:click="join" size="sm" variant="primary" wire:loading.attr="disabled" class="!bg-communities-600 hover:!bg-communities-500">
                 {{ __('Join') }}
             </flux:button>
         @else
-            <flux:text size="sm" class="{{ $overlay ? '!bg-white/90 !text-stone-700 rounded-md px-2 py-1 shadow-sm backdrop-blur dark:!bg-stone-900/80 dark:!text-stone-300' : 'text-stone-500 dark:text-stone-400' }}">{{ __('Only followers of the owner can join') }}</flux:text>
+            <flux:text size="sm" class="{{ $overlay ? 'btn-overlay-neutral rounded-md px-2 py-1' : 'text-stone-500 dark:text-stone-400' }}">{{ __('Only followers of the owner can join') }}</flux:text>
         @endif
     @endunless
 </div>

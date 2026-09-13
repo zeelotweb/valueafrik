@@ -232,7 +232,22 @@ test('inbox lists conversations with the other participant and unread state', fu
         ->assertSee('Bola')
         ->assertSee('Unread ping');
 
-    expect($a->fresh()->unreadConversationsCount())->toBe(1);
+    // The two-pane inbox auto-opens the most recent conversation into the
+    // thread pane (desktop's master-detail layout) — same as Gmail/Slack,
+    // whatever's visible in the detail pane counts as read the moment it's
+    // shown, not only once the user explicitly clicks into it.
+    expect($a->fresh()->unreadConversationsCount())->toBe(0);
+});
+
+test('a conversation with no messages yet does not clutter the inbox list, but still opens in the thread pane', function () {
+    $a = User::factory()->create();
+    $b = User::factory()->create(['name' => 'Empty Chat']);
+    Conversation::between($a, $b);
+
+    Livewire::actingAs($a)
+        ->test('pages::messages.inbox')
+        ->assertDontSee('Empty Chat')
+        ->assertSee('Select a conversation, or search above to start one.');
 });
 
 test('opening a thread marks the other participants messages as read and broadcasts it', function () {

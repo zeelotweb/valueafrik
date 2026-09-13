@@ -231,9 +231,19 @@ new #[Title('Messages')] class extends Component {
     }
 }; ?>
 
-<div class="mx-auto flex h-[calc(100vh-8rem)] w-full max-w-2xl flex-col">
-    <div class="flex items-center gap-3 border-b border-stone-200 pb-4 dark:border-stone-800">
-        <flux:button :href="route('messages.index')" wire:navigate size="sm" variant="ghost" icon="arrow-left" />
+<div class="mx-auto flex h-full min-h-0 w-full max-w-2xl flex-col">
+    {{-- Height comes entirely from whatever wraps this component — the
+         messages panel's own explicit height, on both the /messages list
+         page and a direct /messages/{conversation} link, now that they're
+         the same component (see pages::messages.inbox). min-h-0 is the
+         actual fix: without it, a flex child ignores its parent's height
+         and grows to fit its own content instead, which is what was
+         silently pushing the composer below the visible/clipped area. --}}
+    <div class="flex shrink-0 items-center gap-3 border-b border-stone-200 pb-4 dark:border-stone-800">
+        {{-- Only meaningful on mobile, where this component fills the whole
+             screen — on desktop it's embedded next to the conversation
+             list it would navigate back to, so the button is redundant. --}}
+        <flux:button :href="route('messages.index')" wire:navigate size="sm" variant="ghost" icon="arrow-left" class="lg:hidden" />
 
         @if ($otherParticipant)
             <a href="{{ route('profile.show', $otherParticipant) }}" wire:navigate class="size-9 shrink-0 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
@@ -270,7 +280,7 @@ new #[Title('Messages')] class extends Component {
         x-data="{ typing: false, timer: null }"
         x-on:other-typing.window="typing = true; clearTimeout(timer); timer = setTimeout(() => typing = false, 3000)"
         x-init="$watch('$wire.messages', () => $nextTick(() => $el.scrollTop = $el.scrollHeight)); $el.scrollTop = $el.scrollHeight"
-        class="flex-1 space-y-3 overflow-y-auto py-4"
+        class="scrollbar-thin min-h-0 flex-1 space-y-3 overflow-y-auto py-4"
     >
         @foreach ($messages as $message)
             @php
@@ -280,9 +290,9 @@ new #[Title('Messages')] class extends Component {
 
             <div class="flex flex-col {{ $isMine ? 'items-end' : 'items-start' }}" wire:key="message-{{ $message['id'] }}">
                 <div class="flex items-end gap-1 {{ $isMine ? 'flex-row-reverse' : 'flex-row' }}">
-                    <div class="max-w-[75%] rounded-2xl px-4 py-2 {{ $isMine ? 'bg-cyan-600 text-white' : 'bg-stone-100 text-stone-900 dark:bg-stone-800 dark:text-stone-100' }}">
+                    <div class="max-w-[75%] rounded-2xl px-4 py-2 {{ $isMine ? 'bg-messages-600 text-white' : 'bg-stone-100 text-stone-900 dark:bg-stone-800 dark:text-stone-100' }}">
                         @if ($isDeleted)
-                            <p class="text-sm italic {{ $isMine ? 'text-cyan-100' : 'text-stone-400 dark:text-stone-500' }}">
+                            <p class="text-sm italic {{ $isMine ? 'text-messages-100' : 'text-stone-400 dark:text-stone-500' }}">
                                 {{ __('This message was deleted.') }}
                             </p>
                         @else
@@ -334,7 +344,7 @@ new #[Title('Messages')] class extends Component {
                 </div>
 
                 @if ($isMine && ! $isDeleted)
-                    <span class="mt-0.5 flex items-center gap-0.5 text-xs {{ $message['read_at'] ? 'text-cyan-600 dark:text-cyan-400' : 'text-stone-400 dark:text-stone-500' }}" data-test="read-receipt">
+                    <span class="mt-0.5 flex items-center gap-0.5 text-xs {{ $message['read_at'] ? 'text-messages-600 dark:text-messages-400' : 'text-stone-400 dark:text-stone-500' }}" data-test="read-receipt">
                         @if ($message['read_at'])
                             <flux:icon.check-circle variant="solid" class="size-3.5" />
                             {{ __('Seen') }}
@@ -363,7 +373,7 @@ new #[Title('Messages')] class extends Component {
     @else
     <form
         wire:submit="send"
-        class="border-t border-stone-200 pt-4 dark:border-stone-800"
+        class="shrink-0 border-t border-stone-200 pt-4 dark:border-stone-800"
         x-data="{ uploading: false, progress: 0 }"
         x-on:livewire-upload-start="uploading = true; progress = 0"
         x-on:livewire-upload-finish="uploading = false"
@@ -383,7 +393,7 @@ new #[Title('Messages')] class extends Component {
                         <flux:icon.x-mark class="size-2.5" />
                     </button>
                 </div>
-                <span x-show="uploading" style="display: none;" class="flex items-center gap-1.5 text-sm text-cyan-600 dark:text-cyan-400">
+                <span x-show="uploading" style="display: none;" class="flex items-center gap-1.5 text-sm text-messages-600 dark:text-messages-400">
                     <flux:icon.loading variant="micro" class="size-3.5" />
                     <span x-text="{{ Js::from(__('Uploading…')) }} + ' ' + progress + '%'"></span>
                 </span>
@@ -391,7 +401,7 @@ new #[Title('Messages')] class extends Component {
         @endif
 
         <div class="flex items-end gap-2">
-            <label class="cursor-pointer rounded-md p-2 text-stone-500 hover:bg-stone-100 hover:text-cyan-600 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-cyan-400">
+            <label class="cursor-pointer rounded-md p-2 text-stone-500 hover:bg-stone-100 hover:text-messages-600 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-messages-400">
                 <input type="file" wire:model="photo" accept="image/*" class="hidden">
                 <flux:icon.photo class="size-5" />
             </label>
@@ -401,12 +411,18 @@ new #[Title('Messages')] class extends Component {
                 wire:keydown.debounce.500ms="notifyTyping"
                 placeholder="{{ __('Write a message...') }}"
                 rows="1"
-                class="flex-1"
+                class="flex-1 !bg-stone-100 focus:!bg-stone-200 dark:!bg-stone-800 dark:focus:!bg-stone-700"
             />
 
-            <flux:button type="submit" variant="primary" color="cyan" wire:loading.attr="disabled" wire:target="send">
-                {{ __('Send') }}
-            </flux:button>
+            <flux:button
+                type="submit"
+                variant="primary"
+                icon="paper-airplane"
+                wire:loading.attr="disabled"
+                wire:target="send"
+                aria-label="{{ __('Send') }}"
+                class="!bg-messages-600 hover:!bg-messages-500 dark:!bg-messages-600 dark:hover:!bg-messages-500 w-8! gap-0! ps-0! pe-0!"
+            />
         </div>
 
         @error('body') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror

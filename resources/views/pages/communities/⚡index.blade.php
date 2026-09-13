@@ -31,7 +31,7 @@ new #[Title('Communities')] class extends Component {
         <flux:heading size="xl">{{ __('Communities') }}</flux:heading>
 
         <a href="{{ route('communities.create') }}" wire:navigate>
-            <flux:button variant="primary" color="cyan">{{ __('Create community') }}</flux:button>
+            <flux:button variant="primary" class="!bg-communities-600 hover:!bg-communities-500">{{ __('Create community') }}</flux:button>
         </a>
     </div>
 
@@ -42,9 +42,9 @@ new #[Title('Communities')] class extends Component {
             <a
                 href="{{ route('communities.show', $community) }}"
                 wire:navigate
-                class="flex min-w-0 items-start gap-3 rounded-xl bg-white border border-stone-200 p-4 hover:bg-stone-50 dark:bg-stone-900 dark:border-stone-800 dark:hover:bg-stone-800"
+                class="surface-card flex min-w-0 items-start gap-3 p-4 hover:border-communities-600/40 dark:hover:border-communities-500/40"
             >
-                <div class="size-12 shrink-0 overflow-hidden rounded-xl bg-stone-200 dark:bg-stone-700">
+                <div class="size-12 shrink-0 overflow-hidden rounded-md bg-stone-200 dark:bg-stone-700">
                     @if ($community->avatarUrl())
                         <img src="{{ $community->avatarUrl() }}" class="size-full object-cover">
                     @else

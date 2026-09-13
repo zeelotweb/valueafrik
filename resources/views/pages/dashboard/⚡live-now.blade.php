@@ -43,7 +43,7 @@ new class extends Component {
                 <p class="truncate text-xs text-stone-500 dark:text-stone-400">{{ $stream->host->name }}</p>
             </div>
 
-            <flux:badge size="sm" color="cyan">{{ __('Live') }}</flux:badge>
+            <flux:badge size="sm" color="pink">{{ __('Live') }}</flux:badge>
         </a>
     @empty
         <div class="rounded-md border border-dashed border-stone-300 p-4 text-center dark:border-stone-700">

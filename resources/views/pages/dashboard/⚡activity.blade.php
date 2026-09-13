@@ -26,7 +26,7 @@ new class extends Component {
              wrong person if you clicked the partner's side. --}}
         <div
             wire:key="activity-{{ $post->id }}"
-            class="flex items-center gap-3 rounded-md border border-cyan-200 p-3 dark:border-cyan-900"
+            class="flex items-center gap-3 rounded-md border border-score-400/40 p-3 dark:border-score-900"
         >
             <div class="flex -space-x-2">
                 @foreach ([$post->initiator, $post->partner] as $person)
@@ -48,10 +48,10 @@ new class extends Component {
                     &amp;
                     <a href="{{ route('profile.show', $post->partner) }}" wire:navigate class="hover:underline">{{ $post->partner->name }}</a>
                 </p>
-                <p class="truncate text-xs text-cyan-700 dark:text-cyan-400">{{ $post->theme }}</p>
+                <p class="truncate text-xs text-score-700 dark:text-score-400">{{ $post->theme }}</p>
             </div>
 
-            <flux:icon.arrows-right-left class="size-4 shrink-0 text-cyan-600 dark:text-cyan-400" />
+            <flux:icon.arrows-right-left class="size-4 shrink-0 text-score-600 dark:text-score-400" />
         </div>
     @empty
         <div class="rounded-md border border-dashed border-stone-300 p-4 text-center dark:border-stone-700">

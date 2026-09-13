@@ -147,10 +147,10 @@ new class extends Component {
                 <flux:subheading>{{ __('Pending join requests') }}</flux:subheading>
                 <div class="mt-2 space-y-2">
                     @foreach ($pendingRequests as $requester)
-                        <div class="flex items-center justify-between rounded-lg bg-white border border-stone-200 p-3 dark:bg-stone-900 dark:border-stone-800">
+                        <div class="surface-card flex items-center justify-between p-3">
                             <span class="text-sm font-medium text-stone-900 dark:text-white">{{ $requester->name }}</span>
                             <div class="flex gap-2">
-                                <flux:button size="sm" variant="primary" color="cyan" wire:click="approve({{ $requester->id }})">
+                                <flux:button size="sm" variant="primary" wire:click="approve({{ $requester->id }})" class="!bg-communities-600 hover:!bg-communities-500">
                                     {{ __('Approve') }}
                                 </flux:button>
                                 <flux:button size="sm" variant="ghost" wire:click="reject({{ $requester->id }})">
@@ -172,11 +172,11 @@ new class extends Component {
             <div class="mt-2 space-y-2">
                 @foreach ($activeMembers as $member)
                     @if ($member->id !== $community->owner_id)
-                        <div class="flex items-center justify-between rounded-lg bg-white border border-stone-200 p-3 dark:bg-stone-900 dark:border-stone-800">
+                        <div class="surface-card flex items-center justify-between p-3">
                             <div class="flex items-center gap-2">
                                 <span class="text-sm font-medium text-stone-900 dark:text-white">{{ $member->name }}</span>
                                 @if ($member->pivot->role === 'monitor')
-                                    <flux:badge size="sm" color="cyan">{{ __('Monitor') }}</flux:badge>
+                                    <flux:badge size="sm" color="zinc">{{ __('Monitor') }}</flux:badge>
                                 @endif
                             </div>
 

@@ -117,7 +117,7 @@ new class extends Component {
     @forelse ($posts as $post)
         @php $isMine = $post->user_id === Auth::id(); @endphp
 
-        <div class="rounded-xl bg-white border border-stone-200 p-4 dark:bg-stone-900 dark:border-stone-800" wire:key="community-post-{{ $post->id }}">
+        <div class="surface-card p-4" wire:key="community-post-{{ $post->id }}">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <a href="{{ route('profile.show', $post->user) }}" wire:navigate class="size-10 shrink-0 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">

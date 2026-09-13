@@ -313,7 +313,7 @@ new #[Title('Live')] class extends Component {
             wire:key="live-session-{{ $session->id }}-ringing"
             x-data="{ deadline: @js($this->ringDeadline), secondsLeft: 0, tick() { this.secondsLeft = Math.max(0, Math.round((new Date(this.deadline) - new Date()) / 1000)); } }"
             x-init="tick(); let interval = setInterval(tick, 1000); $cleanup(() => clearInterval(interval))"
-            class="mt-10 flex flex-col items-center gap-4 rounded-xl border border-stone-200 bg-white p-10 text-center dark:border-stone-800 dark:bg-stone-900"
+            class="surface-card mt-10 flex flex-col items-center gap-4 p-10 text-center"
         >
             @if ($this->otherParty)
                 <a href="{{ route('profile.show', $this->otherParty) }}" wire:navigate class="size-20 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
@@ -544,11 +544,11 @@ new #[Title('Live')] class extends Component {
                     @if ($this->pendingCollaboratorRequests->isNotEmpty() || $this->approvedCollaborators->isNotEmpty())
                         <div class="mb-3 space-y-2">
                             @foreach ($this->pendingCollaboratorRequests as $request)
-                                <div class="flex items-center justify-between gap-3 rounded-lg border border-cyan-200 bg-cyan-50 px-3 py-2 text-sm dark:border-cyan-900 dark:bg-cyan-950">
-                                    <span class="text-cyan-800 dark:text-cyan-300">{{ $request->user->name }} {{ __('wants to collaborate') }}</span>
+                                <div class="flex items-center justify-between gap-3 rounded-lg border border-live-200 bg-live-50 px-3 py-2 text-sm dark:border-live-900 dark:bg-live-950">
+                                    <span class="text-live-800 dark:text-live-300">{{ $request->user->name }} {{ __('wants to collaborate') }}</span>
                                     <div class="flex items-center gap-2">
                                         <flux:button size="sm" variant="ghost" wire:click="removeCollaborator({{ $request->user_id }})">{{ __('Deny') }}</flux:button>
-                                        <flux:button size="sm" variant="primary" color="cyan" wire:click="approveCollaborator({{ $request->user_id }})">{{ __('Approve') }}</flux:button>
+                                        <flux:button size="sm" variant="primary" wire:click="approveCollaborator({{ $request->user_id }})" class="!bg-live-600 hover:!bg-live-500">{{ __('Approve') }}</flux:button>
                                     </div>
                                 </div>
                             @endforeach
@@ -562,13 +562,13 @@ new #[Title('Live')] class extends Component {
                         </div>
                     @endif
                 @elseif ($this->myCollaborationStatus === 'pending')
-                    <div class="mb-3 rounded-lg border border-cyan-200 bg-cyan-50 px-3 py-2 text-sm text-cyan-700 dark:border-cyan-900 dark:bg-cyan-950 dark:text-cyan-300">
+                    <div class="mb-3 rounded-lg border border-live-200 bg-live-50 px-3 py-2 text-sm text-live-700 dark:border-live-900 dark:bg-live-950 dark:text-live-300">
                         {{ __('Waiting for the host to approve your request to collaborate…') }}
                     </div>
                 @elseif ($this->canRequestCollaboration)
                     <div class="mb-3 flex items-center justify-between gap-3 rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm dark:border-stone-800 dark:bg-stone-900">
                         <span class="text-stone-600 dark:text-stone-400">{{ __('Want to join the broadcast?') }}</span>
-                        <flux:button size="sm" variant="primary" color="cyan" wire:click="requestCollaboration">{{ __('Request to collaborate') }}</flux:button>
+                        <flux:button size="sm" variant="primary" wire:click="requestCollaboration" class="!bg-live-600 hover:!bg-live-500">{{ __('Request to collaborate') }}</flux:button>
                     </div>
                 @endif
             @endif

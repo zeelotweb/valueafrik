@@ -57,7 +57,7 @@ new #[Title('Community')] class extends Component {
                     size="sm"
                     variant="ghost"
                     icon="pencil"
-                    class="!bg-white/90 !text-stone-900 shadow-sm backdrop-blur hover:!bg-white dark:!bg-stone-900/80 dark:!text-white dark:hover:!bg-stone-900 max-sm:w-8! max-sm:gap-0! max-sm:ps-0! max-sm:pe-0!"
+                    class="btn-overlay-neutral max-sm:w-8! max-sm:gap-0! max-sm:ps-0! max-sm:pe-0!"
                 >
                     <span class="hidden sm:inline">{{ __('Edit community') }}</span>
                 </flux:button>
@@ -90,7 +90,7 @@ new #[Title('Community')] class extends Component {
         <div class="mt-8">
             @if ($community->canPost(Auth::user()))
                 <flux:modal.trigger name="community-composer-{{ $community->id }}">
-                    <flux:button icon="pencil-square" variant="primary" color="cyan" class="mb-6">{{ __('Post to :name', ['name' => $community->name]) }}</flux:button>
+                    <flux:button icon="pencil-square" variant="primary" class="mb-6">{{ __('Post to :name', ['name' => $community->name]) }}</flux:button>
                 </flux:modal.trigger>
             @endif
 

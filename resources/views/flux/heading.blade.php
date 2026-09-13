@@ -14,7 +14,13 @@ $classes = Flux::classes()
         default => '[:where(&)]:text-zinc-800 [:where(&)]:dark:text-white',
     })
     ->add(match ($size) {
-        'xl' => 'text-2xl [&:has(+[data-flux-subheading])]:mb-2 [[data-flux-subheading]+&]:mt-2',
+        // font-display only at xl — that's the size page-level titles use
+        // (Discover, Communities, Notifications, a profile name...). Below
+        // that, size="lg"/base are dense in-page section labels, where a
+        // serif works against scanability rather than for it — see the
+        // color-key comment in app.css for the same reasoning applied to
+        // color instead of type.
+        'xl' => 'font-display text-2xl [&:has(+[data-flux-subheading])]:mb-2 [[data-flux-subheading]+&]:mt-2',
         'lg' => 'text-base [&:has(+[data-flux-subheading])]:mb-2 [[data-flux-subheading]+&]:mt-2',
         default => 'text-sm [&:has(+[data-flux-subheading])]:mb-2 [[data-flux-subheading]+&]:mt-2',
     })

@@ -46,7 +46,7 @@ new class extends Component {
 
 <div class="space-y-2" wire:key="bridge-post-invites">
     @forelse ($invites as $invite)
-        <div class="flex flex-wrap items-center justify-between gap-3 rounded-md border border-cyan-200 p-4 dark:border-cyan-900" wire:key="invite-{{ $invite->id }}">
+        <div class="flex flex-wrap items-center justify-between gap-3 rounded-md border border-score-400/40 p-4 dark:border-score-900" wire:key="invite-{{ $invite->id }}">
             <div class="min-w-0 flex-1">
                 <p class="text-sm text-stone-900 dark:text-white">
                     <span class="font-medium">{{ $invite->initiator->name }}</span>
@@ -55,7 +55,7 @@ new class extends Component {
                 </p>
             </div>
             <div class="flex shrink-0 gap-2">
-                <flux:button size="sm" variant="primary" color="cyan" wire:click="accept({{ $invite->id }})">
+                <flux:button size="sm" variant="primary" wire:click="accept({{ $invite->id }})" class="!bg-score-600 hover:!bg-score-500">
                     {{ __('Accept') }}
                 </flux:button>
                 <flux:button size="sm" variant="ghost" wire:click="decline({{ $invite->id }})">

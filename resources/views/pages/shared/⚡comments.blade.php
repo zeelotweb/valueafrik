@@ -309,7 +309,7 @@ new class extends Component {
     <button
         type="button"
         wire:click="openModal"
-        class="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm font-medium text-stone-500 transition hover:text-cyan-600 dark:text-stone-400 dark:hover:text-cyan-400"
+        class="flex items-center gap-1.5 rounded-md px-2 py-1 text-sm font-medium text-stone-500 transition hover:text-stone-900 dark:text-stone-400 dark:hover:text-white"
         data-test="comments-toggle"
     >
         <flux:icon.chat-bubble-left class="size-4" />
@@ -373,7 +373,7 @@ new class extends Component {
                                             @endif
                                         </span>
                                         @if ($comment->user_id === Auth::id() && $editingCommentId !== $comment->id)
-                                            <button type="button" wire:click="startEdit({{ $comment->id }})" class="text-stone-400 hover:text-cyan-600 dark:hover:text-cyan-400">
+                                            <button type="button" wire:click="startEdit({{ $comment->id }})" class="text-stone-400 hover:text-stone-900 dark:hover:text-white">
                                                 <flux:icon.pencil class="size-3.5" />
                                             </button>
                                             <button type="button" wire:click="delete({{ $comment->id }})" wire:confirm="{{ __('Delete this comment?') }}" class="text-stone-400 hover:text-red-600 dark:hover:text-red-400">
@@ -389,7 +389,7 @@ new class extends Component {
                                         @error('editBody') <p class="text-xs text-red-600">{{ $message }}</p> @enderror
                                         <div class="flex items-center justify-end gap-2">
                                             <flux:button type="button" size="sm" variant="ghost" wire:click="cancelEdit">{{ __('Cancel') }}</flux:button>
-                                            <flux:button type="submit" size="sm" variant="primary" color="cyan" wire:loading.attr="disabled" wire:target="update">{{ __('Save') }}</flux:button>
+                                            <flux:button type="submit" size="sm" variant="primary" wire:loading.attr="disabled" wire:target="update">{{ __('Save') }}</flux:button>
                                         </div>
                                     </form>
                                 @else
@@ -403,7 +403,7 @@ new class extends Component {
                                 <button
                                     type="button"
                                     wire:click="openReplies({{ $comment->id }})"
-                                    class="text-xs font-medium text-stone-500 transition hover:text-cyan-600 dark:text-stone-400 dark:hover:text-cyan-400"
+                                    class="text-xs font-medium text-stone-500 transition hover:text-stone-900 dark:text-stone-400 dark:hover:text-white"
                                     data-test="reply-button"
                                 >
                                     {{ __('Reply') }}
@@ -428,7 +428,7 @@ new class extends Component {
             <div class="shrink-0 border-t border-stone-200 p-3 dark:border-stone-800">
                 <form wire:submit="post" class="flex items-end gap-2">
                     @include('partials.mention-textarea', ['wireModel' => 'body', 'placeholder' => __('Write a comment…'), 'rows' => 1, 'class' => 'flex-1'])
-                    <flux:button type="submit" icon="paper-airplane" variant="primary" color="cyan" wire:loading.attr="disabled" wire:target="post" aria-label="{{ __('Send') }}" data-test="send-comment" />
+                    <flux:button type="submit" icon="paper-airplane" variant="primary" wire:loading.attr="disabled" wire:target="post" aria-label="{{ __('Send') }}" data-test="send-comment" />
                 </form>
                 @error('body') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
             </div>
@@ -489,7 +489,7 @@ new class extends Component {
                                             @endif
                                         </span>
                                         @if ($reply->user_id === Auth::id() && $editingCommentId !== $reply->id)
-                                            <button type="button" wire:click="startEdit({{ $reply->id }})" class="text-stone-400 hover:text-cyan-600 dark:hover:text-cyan-400">
+                                            <button type="button" wire:click="startEdit({{ $reply->id }})" class="text-stone-400 hover:text-stone-900 dark:hover:text-white">
                                                 <flux:icon.pencil class="size-3.5" />
                                             </button>
                                             <button type="button" wire:click="delete({{ $reply->id }})" wire:confirm="{{ __('Delete this reply?') }}" class="text-stone-400 hover:text-red-600 dark:hover:text-red-400">
@@ -505,7 +505,7 @@ new class extends Component {
                                         @error('editBody') <p class="text-xs text-red-600">{{ $message }}</p> @enderror
                                         <div class="flex items-center justify-end gap-2">
                                             <flux:button type="button" size="sm" variant="ghost" wire:click="cancelEdit">{{ __('Cancel') }}</flux:button>
-                                            <flux:button type="submit" size="sm" variant="primary" color="cyan" wire:loading.attr="disabled" wire:target="update">{{ __('Save') }}</flux:button>
+                                            <flux:button type="submit" size="sm" variant="primary" wire:loading.attr="disabled" wire:target="update">{{ __('Save') }}</flux:button>
                                         </div>
                                     </form>
                                 @else
@@ -532,7 +532,7 @@ new class extends Component {
                 <div class="shrink-0 border-t border-stone-200 p-3 dark:border-stone-800">
                     <form wire:submit="postReply" class="flex items-end gap-2">
                         @include('partials.mention-textarea', ['wireModel' => 'replyBody', 'placeholder' => __('Write a reply…'), 'rows' => 1, 'class' => 'flex-1'])
-                        <flux:button type="submit" icon="paper-airplane" variant="primary" color="cyan" wire:loading.attr="disabled" wire:target="postReply" aria-label="{{ __('Send') }}" data-test="send-reply" />
+                        <flux:button type="submit" icon="paper-airplane" variant="primary" wire:loading.attr="disabled" wire:target="postReply" aria-label="{{ __('Send') }}" data-test="send-reply" />
                     </form>
                     @error('replyBody') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                 </div>

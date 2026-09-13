@@ -29,7 +29,7 @@ new #[Title('Live')] class extends Component {
             <a
                 href="{{ route('live.show', $stream) }}"
                 wire:navigate
-                class="flex items-center gap-3 rounded-xl bg-white border border-stone-200 p-4 hover:bg-stone-50 dark:bg-stone-900 dark:border-stone-800 dark:hover:bg-stone-800"
+                class="surface-card flex items-center gap-3 p-4 hover:border-live-500/40 dark:hover:border-live-400/40"
             >
                 <div class="size-12 shrink-0 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
                     @if ($stream->host->profile?->avatarUrl())
@@ -48,7 +48,7 @@ new #[Title('Live')] class extends Component {
                     <p class="mt-0.5 truncate text-sm text-stone-500 dark:text-stone-400">{{ $stream->host->name }}</p>
                 </div>
 
-                <flux:badge size="sm" color="cyan">{{ __('Live') }}</flux:badge>
+                <flux:badge size="sm" color="pink">{{ __('Live') }}</flux:badge>
             </a>
         @empty
             <div class="col-span-2 rounded-lg border border-dashed border-stone-300 p-6 text-center dark:border-stone-800">

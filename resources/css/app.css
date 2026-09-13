@@ -93,17 +93,22 @@
     --color-communities-900: var(--color-orange-900);
     --color-communities-950: var(--color-orange-950);
 
-    --color-messages-50: var(--color-violet-50);
-    --color-messages-100: var(--color-violet-100);
-    --color-messages-200: var(--color-violet-200);
-    --color-messages-300: var(--color-violet-300);
-    --color-messages-400: var(--color-violet-400);
-    --color-messages-500: var(--color-violet-500);
-    --color-messages-600: var(--color-violet-600);
-    --color-messages-700: var(--color-violet-700);
-    --color-messages-800: var(--color-violet-800);
-    --color-messages-900: var(--color-violet-900);
-    --color-messages-950: var(--color-violet-950);
+    /* A custom, deliberately muted plum — not aliased to Tailwind's violet
+       scale like live/communities are. Vivid violet read as too loud a
+       statement for a category as ordinary as "Messages"; toning down the
+       saturation keeps the hue (still clearly its own color, distinct from
+       the other four) without it reading as a deliberate vivid purple. */
+    --color-messages-50: #f5f3f7;
+    --color-messages-100: #ebe7f0;
+    --color-messages-200: #d7cfe1;
+    --color-messages-300: #bfb2cf;
+    --color-messages-400: #a08fb8;
+    --color-messages-500: #85729f;
+    --color-messages-600: #6b5885;
+    --color-messages-700: #55466a;
+    --color-messages-800: #423653;
+    --color-messages-900: #332a40;
+    --color-messages-950: #211b2a;
 
     --color-zinc-50: #fafafa;
     --color-zinc-100: #f5f5f5;
@@ -231,6 +236,38 @@ select:focus[data-flux-control] {
 
 .scrollbar-hide::-webkit-scrollbar {
     display: none;
+}
+
+/**
+ * For a scrollable area that needs to stay a real, grabbable scrollbar —
+ * a message thread, not a carousel with its own arrow buttons — thinned
+ * and recolored to sit quietly in the flat palette instead of the native
+ * chunky default, rather than removed outright.
+ */
+.scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-stone-300) transparent;
+}
+
+.dark .scrollbar-thin {
+    scrollbar-color: var(--color-stone-700) transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: var(--color-stone-300);
+    border-radius: 3px;
+}
+
+.dark .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: var(--color-stone-700);
 }
 
 /* Slow, subtle drift for decorative background blobs (welcome page hero) —

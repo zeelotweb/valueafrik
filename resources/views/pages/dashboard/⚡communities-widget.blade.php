@@ -64,7 +64,7 @@ new class extends Component {
                 <div class="flex items-center gap-2">
                     <span class="truncate font-medium text-stone-900 dark:text-white">{{ $community->name }}</span>
                     @if ($community->pivot->role !== 'member')
-                        <flux:badge size="sm" color="cyan">{{ ucfirst($community->pivot->role) }}</flux:badge>
+                        <flux:badge size="sm" color="orange">{{ ucfirst($community->pivot->role) }}</flux:badge>
                     @endif
                 </div>
                 <p class="mt-0.5 truncate text-sm text-stone-500 dark:text-stone-400">

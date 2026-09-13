@@ -57,13 +57,13 @@ new class extends Component {
         <div class="flex items-center justify-between border-b border-stone-200 px-3 py-2 dark:border-stone-700">
             <span class="text-sm font-semibold text-stone-900 dark:text-white">{{ __('Notifications') }}</span>
             @if ($count > 0)
-                <button type="button" wire:click="markAllRead" class="text-xs text-cyan-600 hover:underline dark:text-cyan-400">
+                <button type="button" wire:click="markAllRead" class="text-xs font-medium text-stone-600 hover:text-stone-900 hover:underline dark:text-stone-400 dark:hover:text-white">
                     {{ __('Mark all as read') }}
                 </button>
             @endif
         </div>
 
-        <div class="max-h-96 overflow-y-auto">
+        <div class="scrollbar-thin max-h-96 overflow-y-auto">
             @forelse ($recent as $notification)
                 <button
                     type="button"
@@ -72,7 +72,7 @@ new class extends Component {
                     class="flex w-full items-start gap-2.5 px-3 py-2.5 text-start hover:bg-stone-50 dark:hover:bg-stone-800"
                 >
                     @if (! $notification->read_at)
-                        <span class="mt-1.5 size-2 shrink-0 rounded-full bg-cyan-600"></span>
+                        <span class="mt-1.5 size-2 shrink-0 rounded-full bg-stone-900 dark:bg-white"></span>
                     @else
                         <span class="mt-1.5 size-2 shrink-0"></span>
                     @endif
@@ -92,7 +92,7 @@ new class extends Component {
         <a
             href="{{ route('notifications.index') }}"
             wire:navigate
-            class="block border-t border-stone-200 px-3 py-2 text-center text-sm font-medium text-cyan-600 hover:bg-stone-50 dark:border-stone-700 dark:text-cyan-400 dark:hover:bg-stone-800"
+            class="block border-t border-stone-200 px-3 py-2 text-center text-sm font-medium text-stone-700 hover:bg-stone-50 hover:text-stone-900 dark:border-stone-700 dark:text-stone-300 dark:hover:bg-stone-800 dark:hover:text-white"
         >
             {{ __('View more') }}
         </a>
