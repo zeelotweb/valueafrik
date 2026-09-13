@@ -319,8 +319,17 @@ new #[Title('Messages')] class extends Component {
             @endphp
 
             <div class="flex flex-col {{ $isMine ? 'items-end' : 'items-start' }}" wire:key="message-{{ $message['id'] }}">
-                <div class="flex items-end gap-1 {{ $isMine ? 'flex-row-reverse' : 'flex-row' }}">
-                    <div class="max-w-[85%] rounded-2xl px-4 py-2 {{ $isMine ? 'bg-messages-600 text-white' : 'bg-stone-100 text-stone-900 dark:bg-stone-800 dark:text-stone-100' }}">
+                {{-- max-w lives here, not on the bubble below — this row is
+                     a flex item of a flex-col with items-end/items-start,
+                     so it's already cross-axis shrink-to-fit sized against
+                     a definite width. A % max-width on the bubble instead
+                     (one level deeper) resolves against THIS row's width
+                     before that shrink-to-fit sizing has settled, which
+                     reads as indeterminate and makes the text wrap earlier
+                     than the real 85% limit — sometimes mid-sentence with
+                     room to spare. --}}
+                <div class="flex max-w-[85%] items-end gap-1 {{ $isMine ? 'flex-row-reverse' : 'flex-row' }}">
+                    <div class="min-w-0 rounded-2xl px-4 py-2 {{ $isMine ? 'bg-messages-600 text-white' : 'bg-stone-100 text-stone-900 dark:bg-stone-800 dark:text-stone-100' }}">
                         @if ($isDeleted)
                             <p class="text-sm italic {{ $isMine ? 'text-messages-100' : 'text-stone-400 dark:text-stone-500' }}">
                                 {{ __('This message was deleted.') }}
