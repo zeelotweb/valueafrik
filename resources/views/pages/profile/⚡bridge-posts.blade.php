@@ -6,6 +6,7 @@ use App\Notifications\BridgePostCompleted;
 use App\Services\ImageOptimizer;
 use App\Support\SafeNotifier;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -75,17 +76,24 @@ new class extends Component {
         }
 
         // isComplete() just checks both bodies are non-empty, which stays
-        // true forever once reached — without this guard, either side
-        // re-submitting (e.g. to add another photo) re-triggers the
-        // completion award and notification every time.
-        if ($bridgePost->fresh()->isComplete()
-            && ! $bridgePost->initiator->hasEarnedBridgeScoreFor('bridge_post_completed', $bridgePost)) {
-            $bridgePost->initiator->awardBridgeScore('bridge_post_completed', $bridgePost);
-            $bridgePost->partner->awardBridgeScore('bridge_post_completed', $bridgePost);
+        // true forever once reached — without the hasEarnedBridgeScoreFor
+        // guard, either side re-submitting (e.g. to add another photo)
+        // re-triggers the completion award and notification every time.
+        // Locked + wrapped in a transaction because a double-submit (slow
+        // network retry, two tabs) could otherwise have both requests pass
+        // that same check before either has recorded the award.
+        DB::transaction(function () use ($side) {
+            $bridgePost = BridgePost::whereKey($this->editingId)->lockForUpdate()->first();
 
-            $other = $side === 'initiator' ? $bridgePost->partner : $bridgePost->initiator;
-            SafeNotifier::send($other, new BridgePostCompleted($bridgePost, Auth::user()));
-        }
+            if ($bridgePost && $bridgePost->isComplete()
+                && ! $bridgePost->initiator->hasEarnedBridgeScoreFor('bridge_post_completed', $bridgePost)) {
+                $bridgePost->initiator->awardBridgeScore('bridge_post_completed', $bridgePost);
+                $bridgePost->partner->awardBridgeScore('bridge_post_completed', $bridgePost);
+
+                $other = $side === 'initiator' ? $bridgePost->partner : $bridgePost->initiator;
+                SafeNotifier::send($other, new BridgePostCompleted($bridgePost, Auth::user()));
+            }
+        });
 
         $this->modal('bridge-post-side-'.$this->editingId)->close();
 
@@ -191,7 +199,7 @@ new class extends Component {
 
                     <div class="flex items-center justify-end gap-2">
                         <flux:button type="button" variant="ghost" wire:click="cancelSide">{{ __('Cancel') }}</flux:button>
-                        <flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="submitSide">
+                        <flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="submitSide" class="!bg-score-600 hover:!bg-score-500">
                             {{ __('Post my side') }}
                         </flux:button>
                     </div>

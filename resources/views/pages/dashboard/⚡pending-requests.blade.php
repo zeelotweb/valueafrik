@@ -16,9 +16,13 @@ new class extends Component {
         $community->members()->updateExistingPivot($userId, ['status' => 'active']);
 
         $requester = User::find($userId);
-        $requester?->awardBridgeScore('community_joined', $community);
+        if ($requester && ! $requester->hasEarnedBridgeScoreFor('community_joined', $community)) {
+            $requester->awardBridgeScore('community_joined', $community);
+        }
 
         Flux::toast(variant: 'success', text: __(':name approved to join :community.', ['name' => $requester?->name, 'community' => $community->name]));
+
+        $this->dispatch('community-membership-changed');
     }
 
     public function reject(int $communityId, int $userId): void

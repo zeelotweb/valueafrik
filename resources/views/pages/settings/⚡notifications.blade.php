@@ -136,7 +136,7 @@ new #[Title('Notifications')] class extends Component {
                         x-on:click="subscribed ? disable() : enable()"
                         x-bind:disabled="loading"
                         variant="primary"
-                        x-bind:class="subscribed ? '!bg-stone-600 hover:!bg-stone-500' : ''"
+                        class="btn-flat-primary"
                         data-test="push-toggle-button"
                     >
                         <span x-show="!loading" x-text="subscribed ? {{ Js::from(__('Disable')) }} : {{ Js::from(__('Enable')) }}"></span>

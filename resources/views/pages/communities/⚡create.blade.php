@@ -80,7 +80,7 @@ new #[Title('Create a community')] class extends Component {
                 <flux:radio value="view_only" :label="__('View only')" description="{{ __('Only you and monitors can post; members can view.') }}" />
             </flux:radio.group>
 
-            <flux:button type="submit" variant="primary" color="cyan" wire:loading.attr="disabled">
+            <flux:button type="submit" variant="primary" wire:loading.attr="disabled" class="!bg-communities-600 hover:!bg-communities-500">
                 {{ __('Create community') }}
             </flux:button>
         </form>

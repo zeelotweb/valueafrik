@@ -4,7 +4,7 @@ use Livewire\Component;
 
 new class extends Component {}; ?>
 
-<section class="mt-10 rounded-xl border border-red-200 bg-red-50/40 p-5 dark:border-red-900/50 dark:bg-red-950/10">
+<section class="mt-10 rounded-md border border-red-200 bg-red-50/40 p-5 dark:border-red-900/50 dark:bg-red-950/10">
     <div class="flex items-center gap-2 text-red-700 dark:text-red-400">
         <flux:icon.exclamation-triangle class="size-4.5" />
         <flux:heading class="text-red-700 dark:text-red-400">{{ __('Danger zone') }}</flux:heading>

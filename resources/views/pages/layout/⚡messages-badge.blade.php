@@ -19,6 +19,6 @@ new class extends Component {
 
 <span>
     @if ($count > 0)
-        <flux:badge size="sm" color="cyan" class="ms-auto">{{ $count }}</flux:badge>
+        <flux:badge size="sm" class="ms-auto !bg-messages-600 !text-white">{{ $count }}</flux:badge>
     @endif
 </span>

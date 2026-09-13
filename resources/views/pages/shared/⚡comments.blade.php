@@ -106,8 +106,14 @@ new class extends Component {
     #[Computed]
     public function replyParent(): ?Comment
     {
+        // Scoped through $this->commentable rather than a bare
+        // Comment::find() — viewingReplyFor is a public property Livewire
+        // will apply a client-supplied update to ahead of any method call,
+        // so this must not trust it points at a comment on THIS commentable
+        // (which could otherwise leak a comment's body/author from a post
+        // in a community the viewer can't access).
         return $this->viewingReplyFor
-            ? Comment::with(['user.profile', 'hashtags', 'mentions.user'])->find($this->viewingReplyFor)
+            ? $this->commentable->comments()->whereNull('parent_id')->with(['user.profile', 'hashtags', 'mentions.user'])->find($this->viewingReplyFor)
             : null;
     }
 
@@ -118,7 +124,7 @@ new class extends Component {
             return collect();
         }
 
-        return Comment::where('parent_id', $this->viewingReplyFor)
+        return $this->commentable->comments()->where('parent_id', $this->viewingReplyFor)
             ->withCount(['votes as upvotes_count' => fn ($query) => $query->where('type', CommentVote::TYPE_UP)])
             ->withCount(['votes as downvotes_count' => fn ($query) => $query->where('type', CommentVote::TYPE_DOWN)])
             ->addSelect(['my_vote_type' => CommentVote::select('type')
@@ -171,6 +177,8 @@ new class extends Component {
 
     public function openReplies(int $commentId): void
     {
+        abort_unless($this->commentable->comments()->whereNull('parent_id')->whereKey($commentId)->exists(), 404);
+
         $this->viewingReplyFor = $commentId;
         $this->repliesLoaded = $this->repliesPerPage;
 
@@ -212,7 +220,7 @@ new class extends Component {
 
         $this->validate(['replyBody' => ['required', 'string', 'max:2000']]);
 
-        $parent = Comment::findOrFail($this->viewingReplyFor);
+        $parent = $this->commentable->comments()->whereNull('parent_id')->findOrFail($this->viewingReplyFor);
 
         $reply = $this->commentable->comments()->create([
             'user_id' => Auth::id(),
@@ -297,7 +305,11 @@ new class extends Component {
 
     private function vote(int $commentId, string $type): void
     {
-        $comment = Comment::findOrFail($commentId);
+        // Scoped through $this->commentable — same reasoning as
+        // replyParent()/repliesWindow() above, so a vote can't be cast on
+        // (and can't disclose the existence of) a comment attached to
+        // content the viewer can't otherwise reach.
+        $comment = $this->commentable->comments()->findOrFail($commentId);
 
         $comment->voteAs(Auth::user(), $type);
 
@@ -389,7 +401,7 @@ new class extends Component {
                                         @error('editBody') <p class="text-xs text-red-600">{{ $message }}</p> @enderror
                                         <div class="flex items-center justify-end gap-2">
                                             <flux:button type="button" size="sm" variant="ghost" wire:click="cancelEdit">{{ __('Cancel') }}</flux:button>
-                                            <flux:button type="submit" size="sm" variant="primary" wire:loading.attr="disabled" wire:target="update">{{ __('Save') }}</flux:button>
+                                            <flux:button type="submit" size="sm" variant="primary" wire:loading.attr="disabled" wire:target="update" class="btn-flat-primary">{{ __('Save') }}</flux:button>
                                         </div>
                                     </form>
                                 @else
@@ -428,7 +440,7 @@ new class extends Component {
             <div class="shrink-0 border-t border-stone-200 p-3 dark:border-stone-800">
                 <form wire:submit="post" class="flex items-end gap-2">
                     @include('partials.mention-textarea', ['wireModel' => 'body', 'placeholder' => __('Write a comment…'), 'rows' => 1, 'class' => 'flex-1'])
-                    <flux:button type="submit" icon="paper-airplane" variant="primary" wire:loading.attr="disabled" wire:target="post" aria-label="{{ __('Send') }}" data-test="send-comment" />
+                    <flux:button type="submit" icon="paper-airplane" variant="primary" wire:loading.attr="disabled" wire:target="post" aria-label="{{ __('Send') }}" data-test="send-comment" class="btn-flat-primary" />
                 </form>
                 @error('body') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
             </div>
@@ -505,7 +517,7 @@ new class extends Component {
                                         @error('editBody') <p class="text-xs text-red-600">{{ $message }}</p> @enderror
                                         <div class="flex items-center justify-end gap-2">
                                             <flux:button type="button" size="sm" variant="ghost" wire:click="cancelEdit">{{ __('Cancel') }}</flux:button>
-                                            <flux:button type="submit" size="sm" variant="primary" wire:loading.attr="disabled" wire:target="update">{{ __('Save') }}</flux:button>
+                                            <flux:button type="submit" size="sm" variant="primary" wire:loading.attr="disabled" wire:target="update" class="btn-flat-primary">{{ __('Save') }}</flux:button>
                                         </div>
                                     </form>
                                 @else
@@ -532,7 +544,7 @@ new class extends Component {
                 <div class="shrink-0 border-t border-stone-200 p-3 dark:border-stone-800">
                     <form wire:submit="postReply" class="flex items-end gap-2">
                         @include('partials.mention-textarea', ['wireModel' => 'replyBody', 'placeholder' => __('Write a reply…'), 'rows' => 1, 'class' => 'flex-1'])
-                        <flux:button type="submit" icon="paper-airplane" variant="primary" wire:loading.attr="disabled" wire:target="postReply" aria-label="{{ __('Send') }}" data-test="send-reply" />
+                        <flux:button type="submit" icon="paper-airplane" variant="primary" wire:loading.attr="disabled" wire:target="postReply" aria-label="{{ __('Send') }}" data-test="send-reply" class="btn-flat-primary" />
                     </form>
                     @error('replyBody') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                 </div>

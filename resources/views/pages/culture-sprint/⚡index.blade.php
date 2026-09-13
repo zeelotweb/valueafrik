@@ -280,17 +280,17 @@ new #[Title('Culture Sprint')] class extends Component {
         @if (! $this->session && ! $waiting)
             {{-- Lobby: choose a line before taking a number --}}
             @if ($this->rootsIncomplete)
-                <div class="rounded-xl border border-dashed border-stone-300 p-6 text-center dark:border-stone-700">
+                <div class="rounded-md border border-dashed border-stone-300 p-6 text-center dark:border-stone-700">
                     <flux:text>{{ __("Finish your Roots first — it's what gives your match something to actually meet.") }}</flux:text>
                     <div class="mt-3">
                         <a href="{{ route('roots.edit') }}" wire:navigate>
-                            <flux:button size="sm" variant="primary" color="cyan">{{ __('Finish your Roots') }}</flux:button>
+                            <flux:button size="sm" variant="primary" class="!bg-live-600 hover:!bg-live-500">{{ __('Finish your Roots') }}</flux:button>
                         </a>
                     </div>
                 </div>
             @else
-                <div class="rounded-xl border border-stone-200 bg-white p-6 dark:border-stone-800 dark:bg-stone-900">
-                    <flux:icon.globe-alt class="size-8 text-cyan-600 dark:text-cyan-400" />
+                <div class="surface-card p-6">
+                    <flux:icon.globe-alt class="size-8 text-live-600 dark:text-live-400" />
                     <p class="mt-3 text-sm text-stone-600 dark:text-stone-400">
                         {{ __("You'll be paired with someone else waiting on the same topic. You each get twenty seconds to share what it means in your culture — then it's over.") }}
                     </p>
@@ -309,7 +309,7 @@ new #[Title('Culture Sprint')] class extends Component {
                             @endforeach
                         </flux:select>
 
-                        <flux:button type="submit" wire:loading.attr="disabled" variant="primary" color="cyan">
+                        <flux:button type="submit" wire:loading.attr="disabled" variant="primary" class="!bg-live-600 hover:!bg-live-500">
                             {{ __('Signal intent') }}
                         </flux:button>
                     </form>
@@ -324,9 +324,9 @@ new #[Title('Culture Sprint')] class extends Component {
                 wire:poll.10s
                 x-data="{ dots: '' }"
                 x-init="setInterval(() => dots = dots.length >= 3 ? '' : dots + '.', 400)"
-                class="flex flex-col items-center gap-4 rounded-xl border border-stone-200 bg-white p-10 text-center dark:border-stone-800 dark:bg-stone-900"
+                class="surface-card flex flex-col items-center gap-4 p-10 text-center"
             >
-                <flux:icon.loading class="size-6 text-cyan-600 dark:text-cyan-400" />
+                <flux:icon.loading class="size-6 text-live-600 dark:text-live-400" />
                 <p class="text-sm text-stone-600 dark:text-stone-400">
                     {{ __('Waiting for a match on') }} <span class="font-semibold text-stone-900 dark:text-white">{{ $topic }}</span>
                     @if ($region)
@@ -346,9 +346,9 @@ new #[Title('Culture Sprint')] class extends Component {
                 wire:key="culture-sprint-{{ $this->session->id }}-matched"
                 x-data="{ deadline: @js($this->acceptDeadline), secondsLeft: 0, tick() { this.secondsLeft = Math.max(0, Math.round((new Date(this.deadline) - new Date()) / 1000)); } }"
                 x-init="tick(); let i = setInterval(tick, 1000); $cleanup(() => clearInterval(i))"
-                class="flex flex-col items-center gap-4 rounded-xl border border-cyan-200 bg-white p-10 text-center dark:border-cyan-900 dark:bg-stone-900"
+                class="flex flex-col items-center gap-4 rounded-md border border-live-200 bg-white p-10 text-center dark:border-live-900 dark:bg-stone-900"
             >
-                <span class="rounded-full bg-cyan-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-cyan-700 dark:bg-cyan-950 dark:text-cyan-400">
+                <span class="rounded-full bg-live-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-live-700 dark:bg-live-950 dark:text-live-400">
                     {{ __('Matched!') }}
                 </span>
 
@@ -368,7 +368,7 @@ new #[Title('Culture Sprint')] class extends Component {
 
                 <div class="rounded-lg bg-stone-100 px-4 py-2 dark:bg-stone-800">
                     <p class="text-xs text-stone-500 dark:text-stone-400">{{ __('Topic') }}</p>
-                    <p class="text-lg font-bold text-cyan-700 dark:text-cyan-400">{{ $this->session->culture_word }}</p>
+                    <p class="text-lg font-bold text-live-700 dark:text-live-400">{{ $this->session->culture_word }}</p>
                 </div>
 
                 @if ($this->iAccepted)
@@ -379,7 +379,7 @@ new #[Title('Culture Sprint')] class extends Component {
                     <p class="text-xs text-stone-400 dark:text-stone-500" x-text="secondsLeft + ' {{ __('s') }}'"></p>
                     <div class="flex items-center gap-3">
                         <flux:button wire:click="respond(false)" variant="danger">{{ __('Skip') }}</flux:button>
-                        <flux:button wire:click="respond(true)" variant="primary" color="cyan">{{ __("I'm ready") }}</flux:button>
+                        <flux:button wire:click="respond(true)" variant="primary" class="!bg-live-600 hover:!bg-live-500">{{ __("I'm ready") }}</flux:button>
                     </div>
                 @endif
             </div>
@@ -584,9 +584,9 @@ new #[Title('Culture Sprint')] class extends Component {
             @endif
         @else
             {{-- Ended (completed, declined, canceled, or missed) --}}
-            <div class="flex flex-col items-center gap-3 rounded-xl border border-stone-200 bg-white p-10 text-center dark:border-stone-800 dark:bg-stone-900">
+            <div class="surface-card flex flex-col items-center gap-3 p-10 text-center">
                 @if ($this->session?->status === LiveSession::STATUS_ENDED)
-                    <flux:icon.check-circle class="size-8 text-cyan-600 dark:text-cyan-400" />
+                    <flux:icon.check-circle class="size-8 text-live-600 dark:text-live-400" />
                     <p class="font-semibold text-stone-900 dark:text-white">{{ __('Sprint complete!') }}</p>
                     <p class="text-sm text-stone-500 dark:text-stone-400">{{ __('You just learned something new — nice work.') }}</p>
                 @elseif ($this->session?->status === LiveSession::STATUS_DECLINED)
@@ -613,14 +613,14 @@ new #[Title('Culture Sprint')] class extends Component {
 
                 <div class="mt-2 flex items-center gap-3">
                     @if ($this->session?->status === LiveSession::STATUS_ENDED && $this->otherParty)
-                        <flux:button wire:click="requestRematch" variant="primary" color="cyan">
+                        <flux:button wire:click="requestRematch" variant="primary" class="!bg-live-600 hover:!bg-live-500">
                             {{ __('Go again') }}
                         </flux:button>
                         <flux:button wire:click="backToLobby" variant="ghost">
                             {{ __('Pick another topic') }}
                         </flux:button>
                     @else
-                        <flux:button wire:click="backToLobby" variant="primary" color="cyan">
+                        <flux:button wire:click="backToLobby" variant="primary" class="!bg-live-600 hover:!bg-live-500">
                             {{ __('Pick another topic') }}
                         </flux:button>
                     @endif

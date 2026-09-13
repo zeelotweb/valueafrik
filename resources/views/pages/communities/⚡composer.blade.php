@@ -151,7 +151,7 @@ new class extends Component {
                 <div class="flex items-center justify-end gap-2">
                     <flux:button type="button" wire:click="cancel" variant="ghost">{{ __('Cancel') }}</flux:button>
 
-                    <flux:button type="submit" variant="primary" color="cyan" wire:loading.attr="disabled" wire:target="post">
+                    <flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="post" class="btn-flat-primary">
                         {{ $editingPostId ? __('Save') : __('Post') }}
                     </flux:button>
                 </div>

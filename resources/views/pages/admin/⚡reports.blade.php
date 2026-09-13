@@ -89,27 +89,27 @@ new #[Title('Admin — Reports')] class extends Component {
     <flux:subheading>{{ __('Content reported across every community on the platform.') }}</flux:subheading>
 
     <div class="mt-4 flex items-center gap-2">
-        <flux:button size="sm" :variant="$filter === 'open' ? 'primary' : 'ghost'" color="cyan" wire:click="setFilter('open')">
+        <flux:button size="sm" :variant="$filter === 'open' ? 'primary' : 'ghost'" class="{{ $filter === 'open' ? 'btn-flat-primary' : '' }}" wire:click="setFilter('open')">
             {{ __('Open') }} ({{ $openCount }})
         </flux:button>
-        <flux:button size="sm" :variant="$filter === 'resolved' ? 'primary' : 'ghost'" color="cyan" wire:click="setFilter('resolved')">
+        <flux:button size="sm" :variant="$filter === 'resolved' ? 'primary' : 'ghost'" class="{{ $filter === 'resolved' ? 'btn-flat-primary' : '' }}" wire:click="setFilter('resolved')">
             {{ __('Resolved') }}
         </flux:button>
-        <flux:button size="sm" :variant="$filter === 'all' ? 'primary' : 'ghost'" color="cyan" wire:click="setFilter('all')">
+        <flux:button size="sm" :variant="$filter === 'all' ? 'primary' : 'ghost'" class="{{ $filter === 'all' ? 'btn-flat-primary' : '' }}" wire:click="setFilter('all')">
             {{ __('All') }}
         </flux:button>
     </div>
 
     <div class="mt-6 space-y-3">
         @forelse ($reports as $report)
-            <div class="rounded-xl bg-white border border-stone-200 p-4 dark:bg-stone-900 dark:border-stone-800" wire:key="report-{{ $report->id }}">
+            <div class="surface-card p-4" wire:key="report-{{ $report->id }}">
                 <div class="flex items-start justify-between gap-4">
                     <div class="min-w-0">
                         <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
                             <span class="font-medium text-stone-900 dark:text-white">{{ $report->reporter->name }}</span>
                             <span class="text-stone-400">{{ __('reported a post in') }}</span>
                             @if ($report->community)
-                                <a href="{{ route('communities.show', $report->community) }}" wire:navigate class="font-medium text-cyan-600 hover:underline dark:text-cyan-400">{{ $report->community->name }}</a>
+                                <a href="{{ route('communities.show', $report->community) }}" wire:navigate class="font-medium text-communities-700 hover:underline dark:text-communities-400">{{ $report->community->name }}</a>
                             @endif
                             <flux:badge size="sm" :color="$report->status === 'open' ? 'amber' : 'zinc'">
                                 {{ $report->status === 'open' ? __('Open') : __('Resolved') }}

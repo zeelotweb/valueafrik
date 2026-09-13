@@ -260,9 +260,9 @@ new #[Title('Welcome')] class extends Component {
 
         <div class="mt-6 grid gap-3 sm:grid-cols-2">
             @forelse ($this->suggestedCommunities as $community)
-                <div class="flex min-w-0 items-center gap-3 rounded-xl bg-white border border-stone-200 p-4 dark:bg-stone-900 dark:border-stone-800">
+                <div class="surface-card flex min-w-0 items-center gap-3 p-4">
                     <a href="{{ route('communities.show', $community) }}" wire:navigate class="flex min-w-0 flex-1 items-center gap-3">
-                        <div class="size-12 shrink-0 overflow-hidden rounded-xl bg-stone-200 dark:bg-stone-700">
+                        <div class="size-12 shrink-0 overflow-hidden rounded-md bg-stone-200 dark:bg-stone-700">
                             @if ($community->avatarUrl())
                                 <img src="{{ $community->avatarUrl() }}" class="size-full object-cover">
                             @else

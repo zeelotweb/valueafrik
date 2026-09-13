@@ -41,13 +41,21 @@ new class extends Component {
 
             $viewer->following()->attach($this->user->id);
 
-            $viewer->awardBridgeScore('follow', $this->user);
+            // Scoped to this specific pair — unfollowing never claws the
+            // point back, so without this guard, follow/unfollow/follow
+            // repeatedly re-awards every time. Once earned for this pair it
+            // stays earned; it just doesn't re-earn.
+            if (! $viewer->hasEarnedBridgeScoreFor('follow', $this->user)) {
+                $viewer->awardBridgeScore('follow', $this->user);
 
-            if ($viewer->isCrossHeritageWith($this->user)) {
-                $viewer->awardBridgeScore('follow_cross_heritage_bonus', $this->user);
+                if ($viewer->isCrossHeritageWith($this->user)) {
+                    $viewer->awardBridgeScore('follow_cross_heritage_bonus', $this->user);
+                }
             }
 
-            $this->user->awardBridgeScore('followed_by_someone', $viewer);
+            if (! $this->user->hasEarnedBridgeScoreFor('followed_by_someone', $viewer)) {
+                $this->user->awardBridgeScore('followed_by_someone', $viewer);
+            }
 
             SafeNotifier::send($this->user, new NewFollower($viewer));
 

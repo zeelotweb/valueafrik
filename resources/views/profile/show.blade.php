@@ -165,7 +165,7 @@ $countryFlag = \App\Support\Countries::flag($profile?->country);
                     @if ($isOwnProfile)
                         <div class="mb-6 flex flex-wrap gap-2">
                             <flux:modal.trigger name="wall-composer">
-                                <flux:button icon="pencil-square" variant="primary">{{ __('Post to Wall') }}</flux:button>
+                                <flux:button icon="pencil-square" variant="primary" class="btn-flat-primary">{{ __('Post to Wall') }}</flux:button>
                             </flux:modal.trigger>
 
                             <flux:modal.trigger name="bridge-post-composer">

@@ -4,7 +4,7 @@
 
 <div class="flex items-start gap-8 max-md:flex-col">
     <div class="w-full pb-4 md:w-[240px] md:shrink-0">
-        <div class="flex items-center gap-3 rounded-xl bg-white border border-stone-200 p-3 dark:bg-stone-900 dark:border-stone-800">
+        <div class="surface-card flex items-center gap-3 p-3">
             <div class="size-11 shrink-0 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
                 @if ($user->profile?->avatarUrl())
                     <img src="{{ $user->profile->avatarUrl() }}" class="size-full object-cover">
@@ -20,7 +20,7 @@
             </div>
         </div>
 
-        <nav class="mt-4 space-y-0.5 rounded-xl bg-white border border-stone-200 p-2 dark:bg-stone-900 dark:border-stone-800">
+        <nav class="surface-card mt-4 space-y-0.5 p-2">
             @foreach ([
                 ['route' => 'profile.edit', 'label' => __('Profile'), 'icon' => 'user'],
                 ['route' => 'roots.edit', 'label' => __('Roots'), 'icon' => 'identification'],

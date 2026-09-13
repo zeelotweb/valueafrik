@@ -26,8 +26,18 @@ new #[Title('Messages')] class extends Component {
         abort_unless(! $conversation || $conversation->participants->contains(Auth::id()), 403);
 
         $this->isDirectLink = $conversation !== null;
+
+        // conversations.updated_at never bumps when a new message is sent
+        // (Message has no $touches on Conversation), so ordering by it can
+        // land on a stale thread instead of the one actually last active —
+        // order by the latest message's timestamp instead, same signal the
+        // list pane sorts by in with() below.
         $this->selectedConversationId = $conversation?->id
-            ?? Auth::user()->conversations()->whereHas('messages')->latest('conversations.updated_at')->value('conversations.id');
+            ?? Auth::user()->conversations()
+                ->whereHas('messages')
+                ->withMax('messages', 'created_at')
+                ->orderByDesc('messages_max_created_at')
+                ->value('conversations.id');
     }
 
     public function select(int $conversationId): void
@@ -68,6 +78,12 @@ new #[Title('Messages')] class extends Component {
         $this->search = '';
         unset($this->searchResults);
         $this->selectedConversationId = $conversation->id;
+
+        // Without this, mobile ends up with neither pane showing anything
+        // new: the list pane's own visibility rule only hides for a direct
+        // link, and the thread pane's only shows for one — so on a phone,
+        // starting a conversation from search silently goes nowhere.
+        $this->isDirectLink = true;
     }
 
     public function with(): array
@@ -120,7 +136,7 @@ new #[Title('Messages')] class extends Component {
             'hidden lg:flex' => $isDirectLink,
         ])>
             <div class="border-b border-stone-200 p-3 dark:border-stone-800">
-                <flux:input wire:model.live.debounce.300ms="search" icon="magnifying-glass" size="sm" placeholder="{{ __('New message to…') }}" class="!bg-stone-100 focus:!bg-stone-200 dark:!bg-stone-800 dark:focus:!bg-stone-700" />
+                <flux:input wire:model.live.debounce.300ms="search" icon="magnifying-glass" size="sm" placeholder="{{ __('New message to…') }}" class="messages-input" />
 
                 @if ($this->searchResults->isNotEmpty())
                     <div class="mt-2 space-y-0.5">

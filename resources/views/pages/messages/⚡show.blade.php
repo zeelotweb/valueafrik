@@ -12,6 +12,7 @@ use App\Notifications\NewMessageReceived;
 use App\Services\ImageOptimizer;
 use App\Support\SafeNotifier;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -76,9 +77,20 @@ new #[Title('Messages')] class extends Component {
         $this->reset('photo');
     }
 
+    /**
+     * $canMessage is a plain public property set once in mount() — Livewire
+     * lets a client-supplied property update override it ahead of a method
+     * call, so every action that depends on the block check re-derives it
+     * here instead of trusting the cached value.
+     */
+    protected function canActuallyMessage(): bool
+    {
+        return ! $this->otherParticipant || ! Auth::user()->hasBlockRelationWith($this->otherParticipant);
+    }
+
     public function send(): void
     {
-        abort_unless($this->canMessage, 403);
+        abort_unless($this->canActuallyMessage(), 403);
 
         $this->validate([
             'body' => ['nullable', 'string', 'max:5000'],
@@ -127,7 +139,7 @@ new #[Title('Messages')] class extends Component {
     public function startCall()
     {
         abort_unless($this->otherParticipant, 404);
-        abort_unless($this->canMessage, 403);
+        abort_unless($this->canActuallyMessage(), 403);
 
         $session = LiveSession::startCallWith(Auth::user(), $this->otherParticipant);
 
@@ -217,6 +229,24 @@ new #[Title('Messages')] class extends Component {
         $this->dispatch('other-typing');
     }
 
+    /**
+     * The reactions widget needs a real Message instance per row, but
+     * $messages is a plain array (for broadcast/serialization). Batches
+     * every visible message into one query instead of fetching each row's
+     * model individually in the render loop, and eager-loads the counts
+     * HasReactions falls back to a live query for otherwise.
+     */
+    #[Computed]
+    public function messageModels(): \Illuminate\Support\Collection
+    {
+        return Message::query()
+            ->whereIn('id', collect($this->messages)->pluck('id'))
+            ->withCount('reactions')
+            ->withExists(['reactions as user_reacted' => fn ($query) => $query->where('user_id', Auth::id())])
+            ->get()
+            ->keyBy('id');
+    }
+
     public function notifyTyping(): void
     {
         if (! $this->otherParticipant || ! $this->canMessage) {
@@ -290,7 +320,7 @@ new #[Title('Messages')] class extends Component {
 
             <div class="flex flex-col {{ $isMine ? 'items-end' : 'items-start' }}" wire:key="message-{{ $message['id'] }}">
                 <div class="flex items-end gap-1 {{ $isMine ? 'flex-row-reverse' : 'flex-row' }}">
-                    <div class="max-w-[75%] rounded-2xl px-4 py-2 {{ $isMine ? 'bg-messages-600 text-white' : 'bg-stone-100 text-stone-900 dark:bg-stone-800 dark:text-stone-100' }}">
+                    <div class="max-w-[85%] rounded-2xl px-4 py-2 {{ $isMine ? 'bg-messages-600 text-white' : 'bg-stone-100 text-stone-900 dark:bg-stone-800 dark:text-stone-100' }}">
                         @if ($isDeleted)
                             <p class="text-sm italic {{ $isMine ? 'text-messages-100' : 'text-stone-400 dark:text-stone-500' }}">
                                 {{ __('This message was deleted.') }}
@@ -354,7 +384,7 @@ new #[Title('Messages')] class extends Component {
                     </span>
                 @endif
 
-                @if (! $isDeleted && $messageModel = \App\Models\Message::find($message['id']))
+                @if (! $isDeleted && $messageModel = $this->messageModels->get($message['id']))
                     <livewire:pages::shared.reactions :reactable="$messageModel" :key="'message-reactions-'.$message['id']" />
                 @endif
             </div>
@@ -411,7 +441,7 @@ new #[Title('Messages')] class extends Component {
                 wire:keydown.debounce.500ms="notifyTyping"
                 placeholder="{{ __('Write a message...') }}"
                 rows="1"
-                class="flex-1 !bg-stone-100 focus:!bg-stone-200 dark:!bg-stone-800 dark:focus:!bg-stone-700"
+                class="messages-input flex-1"
             />
 
             <flux:button

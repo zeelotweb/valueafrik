@@ -170,7 +170,7 @@ new #[Title('Profile settings')] class extends Component {
 
             <div class="flex items-center gap-4">
                 <div class="flex items-center justify-end">
-                    <flux:button variant="primary" color="cyan" type="submit" class="w-full" data-test="update-profile-button">
+                    <flux:button variant="primary" type="submit" class="btn-flat-primary w-full" data-test="update-profile-button">
                         {{ __('Save') }}
                     </flux:button>
                 </div>
@@ -178,7 +178,7 @@ new #[Title('Profile settings')] class extends Component {
             </div>
         </form>
 
-            <section class="mt-10 rounded-xl border border-stone-200 bg-white p-5 dark:border-stone-800 dark:bg-stone-900">
+            <section class="surface-card mt-10 p-5">
                 <flux:heading>{{ __('Your data') }}</flux:heading>
                 <flux:subheading class="mt-1">
                     {{ __('Download a copy of everything tied to your account — your profile, posts, Bridge Posts, communities, and Bridge Score history.') }}

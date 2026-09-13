@@ -13,7 +13,7 @@
         x-show="overflowing"
         x-on:click="expanded = ! expanded"
         style="display: none;"
-        class="mt-0.5 text-xs font-medium text-cyan-600 hover:underline dark:text-cyan-400"
+        class="mt-0.5 text-xs font-medium text-stone-700 hover:text-stone-900 hover:underline dark:text-stone-300 dark:hover:text-white"
     >
         <span x-show="! expanded">{{ __('More') }}</span>
         <span x-show="expanded" style="display: none;">{{ __('Less') }}</span>

@@ -97,7 +97,7 @@ new #[Title('Connections')] class extends Component {
 
     <div class="mt-4 space-y-2" wire:key="connections-list-{{ $tab }}">
         @forelse ($this->people['items'] as $person)
-            <div class="flex min-w-0 items-center gap-3 rounded-xl bg-white border border-stone-200 p-4 dark:bg-stone-900 dark:border-stone-800" wire:key="connection-{{ $tab }}-{{ $person->id }}">
+            <div class="surface-card flex min-w-0 items-center gap-3 p-4" wire:key="connection-{{ $tab }}-{{ $person->id }}">
                 <a href="{{ route('profile.show', $person) }}" wire:navigate class="flex min-w-0 flex-1 items-center gap-3">
                     <div class="size-12 shrink-0 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
                         @if ($person->profile?->avatarUrl())

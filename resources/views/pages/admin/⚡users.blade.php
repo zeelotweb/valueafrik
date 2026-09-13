@@ -120,7 +120,7 @@ new #[Title('Admin — Users')] class extends Component {
                     <div class="flex items-center gap-2">
                         <a href="{{ route('profile.show', $user) }}" wire:navigate class="truncate font-medium text-stone-900 hover:underline dark:text-white">{{ $user->name }}</a>
                         @if ($user->isAdmin())
-                            <flux:badge size="sm" color="cyan">{{ __('Admin') }}</flux:badge>
+                            <flux:badge size="sm" color="zinc">{{ __('Admin') }}</flux:badge>
                         @endif
                         @if ($user->isBanned())
                             <flux:badge size="sm" color="red">{{ __('Banned') }}</flux:badge>

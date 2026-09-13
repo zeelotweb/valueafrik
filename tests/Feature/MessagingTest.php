@@ -250,6 +250,100 @@ test('a conversation with no messages yet does not clutter the inbox list, but s
         ->assertSee('Select a conversation, or search above to start one.');
 });
 
+// --- the merged inbox component's own routed entry points ------------------
+// (messages.index and messages.show both mount pages::messages.inbox — the
+// tests above exercise the embedded pages::messages.show child directly,
+// which skips the merged component's own mount()/select()/startConversationWith().)
+
+test('non participant cannot open a conversation directly via the merged inbox route', function () {
+    $a = User::factory()->create();
+    $b = User::factory()->create();
+    $intruder = User::factory()->create();
+
+    $conversation = Conversation::between($a, $b);
+
+    Livewire::actingAs($intruder)
+        ->test('pages::messages.inbox', ['conversation' => $conversation])
+        ->assertForbidden();
+});
+
+test('a direct conversation link is flagged as such, unlike the plain inbox route', function () {
+    $a = User::factory()->create();
+    $b = User::factory()->create();
+    $conversation = Conversation::between($a, $b);
+    $conversation->messages()->create(['user_id' => $b->id, 'body' => 'hi']);
+
+    Livewire::actingAs($a)
+        ->test('pages::messages.inbox', ['conversation' => $conversation])
+        ->assertSet('isDirectLink', true);
+
+    Livewire::actingAs($a)
+        ->test('pages::messages.inbox')
+        ->assertSet('isDirectLink', false);
+});
+
+test('select switches the active conversation for a participant', function () {
+    $a = User::factory()->create();
+    $b = User::factory()->create();
+    $c = User::factory()->create();
+
+    Conversation::between($a, $b)->messages()->create(['user_id' => $b->id, 'body' => 'first thread']);
+    $second = Conversation::between($a, $c);
+    $second->messages()->create(['user_id' => $c->id, 'body' => 'second thread']);
+
+    Livewire::actingAs($a)
+        ->test('pages::messages.inbox')
+        ->call('select', $second->id)
+        ->assertSet('selectedConversationId', $second->id);
+});
+
+test('select refuses to switch to a conversation the viewer is not part of', function () {
+    $a = User::factory()->create();
+    $b = User::factory()->create();
+    $c = User::factory()->create();
+
+    $notMine = Conversation::between($b, $c);
+
+    Livewire::actingAs($a)
+        ->test('pages::messages.inbox')
+        ->call('select', $notMine->id)
+        ->assertForbidden();
+});
+
+test('starting a conversation from search opens the thread pane, including on mobile', function () {
+    $a = User::factory()->create();
+    $b = User::factory()->create(['name' => 'Searchable Person']);
+
+    Livewire::actingAs($a)
+        ->test('pages::messages.inbox')
+        ->assertSet('isDirectLink', false)
+        ->set('search', 'Searchable')
+        ->call('startConversationWith', $b->id)
+        ->assertSet('isDirectLink', true)
+        ->assertSet('selectedConversationId', Conversation::between($a, $b)->id);
+});
+
+test('the inbox opens the conversation with the most recently sent message, not the most recently created conversation', function () {
+    $a = User::factory()->create();
+    $older = User::factory()->create(['name' => 'Older Thread']);
+    $newer = User::factory()->create(['name' => 'Newer Thread']);
+
+    $olderConversation = Conversation::between($a, $older);
+    $olderConversation->messages()->create(['user_id' => $older->id, 'body' => 'recent activity']);
+
+    // Created after $olderConversation (so conversations.updated_at would
+    // pick this one), but its message is backdated well before the other
+    // conversation's — the fix sorts by the latest message's own
+    // timestamp, so $olderConversation should still win.
+    $newerConversation = Conversation::between($a, $newer);
+    $backdated = $newerConversation->messages()->create(['user_id' => $newer->id, 'body' => 'stale activity']);
+    $backdated->forceFill(['created_at' => now()->subDays(5)])->save();
+
+    Livewire::actingAs($a)
+        ->test('pages::messages.inbox')
+        ->assertSet('selectedConversationId', $olderConversation->id);
+});
+
 test('opening a thread marks the other participants messages as read and broadcasts it', function () {
     Event::fake([MessagesRead::class]);
 

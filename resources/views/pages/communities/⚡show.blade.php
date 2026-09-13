@@ -90,7 +90,7 @@ new #[Title('Community')] class extends Component {
         <div class="mt-8">
             @if ($community->canPost(Auth::user()))
                 <flux:modal.trigger name="community-composer-{{ $community->id }}">
-                    <flux:button icon="pencil-square" variant="primary" class="mb-6">{{ __('Post to :name', ['name' => $community->name]) }}</flux:button>
+                    <flux:button icon="pencil-square" variant="primary" class="btn-flat-primary mb-6">{{ __('Post to :name', ['name' => $community->name]) }}</flux:button>
                 </flux:modal.trigger>
             @endif
 

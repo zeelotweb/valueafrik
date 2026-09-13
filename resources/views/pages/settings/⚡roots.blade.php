@@ -219,7 +219,7 @@ new #[Title('Roots')] class extends Component {
             </div>
 
             <div class="flex items-center gap-4">
-                <flux:button variant="primary" color="cyan" type="submit" data-test="save-roots-button">
+                <flux:button variant="primary" type="submit" class="btn-flat-primary" data-test="save-roots-button">
                     {{ __('Save') }}
                 </flux:button>
             </div>

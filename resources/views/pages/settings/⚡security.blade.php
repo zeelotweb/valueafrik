@@ -138,7 +138,7 @@ new #[Title('Security settings')] class extends Component {
             />
 
             <div class="flex items-center gap-4">
-                <flux:button variant="primary" color="cyan" type="submit" data-test="update-password-button">
+                <flux:button variant="primary" type="submit" class="btn-flat-primary" data-test="update-password-button">
                     {{ __('Save') }}
                 </flux:button>
             </div>
@@ -195,7 +195,7 @@ new #[Title('Security settings')] class extends Component {
                         required
                         data-test="two-factor-code-input"
                     />
-                    <flux:button variant="primary" color="cyan" type="submit" data-test="confirm-two-factor-button">
+                    <flux:button variant="primary" type="submit" class="btn-flat-primary" data-test="confirm-two-factor-button">
                         {{ __('Confirm') }}
                     </flux:button>
                 </form>
@@ -204,7 +204,7 @@ new #[Title('Security settings')] class extends Component {
                     {{ __('Two-factor authentication is not enabled yet. Enable it to require a code from your authenticator app when logging in.') }}
                 </flux:text>
 
-                <flux:button wire:click="enableTwoFactorAuthentication" variant="primary" color="cyan" data-test="enable-two-factor-button">
+                <flux:button wire:click="enableTwoFactorAuthentication" variant="primary" class="btn-flat-primary" data-test="enable-two-factor-button">
                     {{ __('Enable two-factor authentication') }}
                 </flux:button>
             @endif
@@ -266,7 +266,7 @@ new #[Title('Security settings')] class extends Component {
                         required
                         placeholder="{{ __('e.g. MacBook Touch ID') }}"
                     />
-                    <flux:button type="submit" variant="primary" color="cyan" x-bind:disabled="busy" data-test="add-passkey-button">
+                    <flux:button type="submit" variant="primary" x-bind:disabled="busy" class="btn-flat-primary" data-test="add-passkey-button">
                         {{ __('Add passkey') }}
                     </flux:button>
                 </form>

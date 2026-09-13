@@ -111,7 +111,7 @@ new class extends Component {
                 <flux:button variant="ghost">{{ __('Cancel') }}</flux:button>
             </flux:modal.close>
 
-            <flux:button wire:click="send" variant="primary" color="cyan" wire:loading.attr="disabled">
+            <flux:button wire:click="send" variant="primary" wire:loading.attr="disabled" class="!bg-score-600 hover:!bg-score-500">
                 {{ __('Send invite') }}
             </flux:button>
         </div>

@@ -270,6 +270,33 @@ select:focus[data-flux-control] {
     background-color: var(--color-stone-700);
 }
 
+/**
+ * Flux's own input/textarea components hardcode a cyan-tinted background
+ * (bg-cyan-50 etc.) on the inner <input>/<textarea> element itself, not on
+ * the wrapper — so a `class` prop passed to <flux:input>/<flux:textarea>
+ * never reaches it, no matter how it's written. This reaches through
+ * instead, scoped to just the Messages page's two inputs rather than
+ * overriding Flux's default everywhere.
+ */
+/* flux:input puts the class on a wrapper div around the real <input>;
+   flux:textarea puts it directly on the <textarea> itself — covering both
+   shapes rather than assuming either one. */
+:where(.messages-input, .messages-input :where(input, textarea)) {
+    background-color: var(--color-stone-100) !important;
+}
+
+:where(.messages-input, .messages-input :where(input, textarea)):focus {
+    background-color: var(--color-stone-200) !important;
+}
+
+.dark :where(.messages-input, .messages-input :where(input, textarea)) {
+    background-color: var(--color-stone-800) !important;
+}
+
+.dark :where(.messages-input, .messages-input :where(input, textarea)):focus {
+    background-color: var(--color-stone-700) !important;
+}
+
 /* Slow, subtle drift for decorative background blobs (welcome page hero) —
    barely perceptible, just enough to read as "alive" rather than static. */
 @keyframes drift {

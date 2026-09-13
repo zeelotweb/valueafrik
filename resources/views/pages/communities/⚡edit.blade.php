@@ -183,7 +183,7 @@ new #[Title('Edit community')] class extends Component {
         </flux:radio.group>
 
         <div class="flex items-center gap-3">
-            <flux:button type="submit" variant="primary" color="cyan" wire:loading.attr="disabled">
+            <flux:button type="submit" variant="primary" wire:loading.attr="disabled" class="!bg-communities-600 hover:!bg-communities-500">
                 {{ __('Save') }}
             </flux:button>
 
