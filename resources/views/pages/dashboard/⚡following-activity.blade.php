@@ -152,7 +152,7 @@ new class extends Component {
                 x-transition.opacity
                 x-cloak
                 @click="scroll(-1)"
-                class="absolute -left-3 top-1/2 z-10 flex size-9 -translate-y-1/2 items-center justify-center rounded-full bg-stone-900 text-white hover:bg-stone-700 dark:bg-white dark:text-stone-900 dark:hover:bg-stone-200"
+                class="btn-flat-primary absolute -left-3 top-1/2 z-10 flex size-9 -translate-y-1/2 items-center justify-center rounded-full"
                 aria-label="{{ __('Scroll left') }}"
             >
                 <flux:icon.chevron-left class="size-4" />
@@ -164,7 +164,7 @@ new class extends Component {
                 x-transition.opacity
                 x-cloak
                 @click="scroll(1)"
-                class="absolute -right-3 top-1/2 z-10 flex size-9 -translate-y-1/2 items-center justify-center rounded-full bg-stone-900 text-white hover:bg-stone-700 dark:bg-white dark:text-stone-900 dark:hover:bg-stone-200"
+                class="btn-flat-primary absolute -right-3 top-1/2 z-10 flex size-9 -translate-y-1/2 items-center justify-center rounded-full"
                 aria-label="{{ __('Scroll right') }}"
             >
                 <flux:icon.chevron-right class="size-4" />
@@ -275,7 +275,7 @@ new class extends Component {
                                     'absolute left-3 top-3 rounded-full px-2.5 py-1 text-[11px] font-semibold',
                                     'bg-white/90 dark:bg-stone-900/80' => true,
                                     'text-cyan-700 dark:text-cyan-400' => $item['type'] === 'wall_post',
-                                    'text-orange-700 dark:text-orange-400' => $item['type'] === 'community_post',
+                                    'text-communities-700 dark:text-communities-400' => $item['type'] === 'community_post',
                                 ])>
                                     {{ $item['type'] === 'community_post' ? $item['community']->name : __('Wall') }}
                                 </span>
@@ -287,19 +287,19 @@ new class extends Component {
                                 @class([
                                     'relative flex h-32 shrink-0 items-center justify-center',
                                     'bg-gradient-to-br from-cyan-100 to-cyan-50 dark:from-cyan-950 dark:to-stone-900' => $item['type'] === 'wall_post',
-                                    'bg-gradient-to-br from-orange-100 to-orange-50 dark:from-orange-950 dark:to-stone-900' => $item['type'] === 'community_post',
+                                    'bg-gradient-to-br from-communities-100 to-communities-50 dark:from-communities-950 dark:to-stone-900' => $item['type'] === 'community_post',
                                 ])
                             >
                                 <flux:icon
                                     :icon="$item['type'] === 'community_post' ? 'user-group' : 'pencil-square'"
-                                    class="size-10 {{ $item['type'] === 'community_post' ? 'text-orange-300 dark:text-orange-800' : 'text-cyan-300 dark:text-cyan-800' }}"
+                                    class="size-10 {{ $item['type'] === 'community_post' ? 'text-communities-300 dark:text-communities-800' : 'text-cyan-300 dark:text-cyan-800' }}"
                                 />
 
                                 <span @class([
                                     'absolute left-3 top-3 rounded-full px-2.5 py-1 text-[11px] font-semibold',
                                     'bg-white/90 dark:bg-stone-900/80' => true,
                                     'text-cyan-700 dark:text-cyan-400' => $item['type'] === 'wall_post',
-                                    'text-orange-700 dark:text-orange-400' => $item['type'] === 'community_post',
+                                    'text-communities-700 dark:text-communities-400' => $item['type'] === 'community_post',
                                 ])>
                                     {{ $item['type'] === 'community_post' ? $item['community']->name : __('Wall') }}
                                 </span>

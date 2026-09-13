@@ -16,14 +16,94 @@
        the page an actual hierarchy instead of one typeface doing every job. */
     --font-display: 'Fraunces', 'Instrument Sans', ui-serif, serif;
 
-    /* The one warm accent alongside cyan — used with intent (Bridge Score,
-       a single hero detail), never handed out per-section as decoration. */
-    --color-warm-50: #fdf6ec;
-    --color-warm-100: #faead1;
-    --color-warm-400: #e0a238;
-    --color-warm-500: #c4841f;
-    --color-warm-600: #a3691a;
-    --color-warm-950: #2e1f0c;
+    /*
+     * ---------------------------------------------------------------
+     * Color key — one meaning per color, defined once, used everywhere
+     * ---------------------------------------------------------------
+     * Every category below is a NAME, not a hue. Nothing in a .blade.php
+     * file should reference "amber" or "violet" directly for one of
+     * these concepts — it references `score`/`live`/`communities`/
+     * `messages`, and this file is the only place that says what color
+     * that currently resolves to. Changing what "Live" looks like
+     * platform-wide is a one-line edit here, not a grep across the app.
+     *
+     *   --color-score-*        Bridge Score, and anything that earns it
+     *                          (Start a Bridge Post, the Bridge Post
+     *                          card itself). A custom gold, not
+     *                          Tailwind's amber — picked deliberately so
+     *                          it doesn't collide with `communities`.
+     *   --color-live-*         Calls and streams (pink) — the "Live" tab
+     *                          and every 1:1/broadcast entry point.
+     *   --color-communities-*  Communities (orange) — the stat card, the
+     *                          Create Community action, the "community
+     *                          post" tag in activity feeds.
+     *   --color-messages-*     Messages (violet) — the stat card, the
+     *                          Message action on a profile.
+     *   --color-cyan-*         Reserved. NOT a general UI accent —
+     *                          restricted to the wordmark, usernames,
+     *                          onboarding links, and "where am I"
+     *                          navigation state (sidebar, tabs). Using
+     *                          cyan for a new button or badge is
+     *                          probably a mistake; reach for one of the
+     *                          categories above, or plain black/white.
+     *   Primary actions        Not a color category — the highest-
+     *                          emphasis action on a screen (Follow,
+     *                          Edit Roots, Edit profile) is solid
+     *                          black/white via `.btn-flat-primary`,
+     *                          not a hue. See that class below.
+     *
+     * Adding a NEW category should be rare — five is already close to
+     * what a first-time visitor can learn in one session. Prefer
+     * reusing an existing category's meaning over inventing a sixth.
+     */
+    --color-score-50: #fdf6ec;
+    --color-score-100: #faead1;
+    --color-score-400: #e0a238;
+    --color-score-500: #c4841f;
+    --color-score-600: #a3691a;
+    --color-score-700: #8a5715;
+    --color-score-900: #4d2f0e;
+    --color-score-950: #2e1f0c;
+
+    /* Full scale aliased for each — so any shade (hover states, dark-mode
+       variants, opacity modifiers) just works without coming back here
+       every time a new one is needed. Swapping the underlying Tailwind
+       color later is still a one-line change per category. */
+    --color-live-50: var(--color-pink-50);
+    --color-live-100: var(--color-pink-100);
+    --color-live-200: var(--color-pink-200);
+    --color-live-300: var(--color-pink-300);
+    --color-live-400: var(--color-pink-400);
+    --color-live-500: var(--color-pink-500);
+    --color-live-600: var(--color-pink-600);
+    --color-live-700: var(--color-pink-700);
+    --color-live-800: var(--color-pink-800);
+    --color-live-900: var(--color-pink-900);
+    --color-live-950: var(--color-pink-950);
+
+    --color-communities-50: var(--color-orange-50);
+    --color-communities-100: var(--color-orange-100);
+    --color-communities-200: var(--color-orange-200);
+    --color-communities-300: var(--color-orange-300);
+    --color-communities-400: var(--color-orange-400);
+    --color-communities-500: var(--color-orange-500);
+    --color-communities-600: var(--color-orange-600);
+    --color-communities-700: var(--color-orange-700);
+    --color-communities-800: var(--color-orange-800);
+    --color-communities-900: var(--color-orange-900);
+    --color-communities-950: var(--color-orange-950);
+
+    --color-messages-50: var(--color-violet-50);
+    --color-messages-100: var(--color-violet-100);
+    --color-messages-200: var(--color-violet-200);
+    --color-messages-300: var(--color-violet-300);
+    --color-messages-400: var(--color-violet-400);
+    --color-messages-500: var(--color-violet-500);
+    --color-messages-600: var(--color-violet-600);
+    --color-messages-700: var(--color-violet-700);
+    --color-messages-800: var(--color-violet-800);
+    --color-messages-900: var(--color-violet-900);
+    --color-messages-950: var(--color-violet-950);
 
     --color-zinc-50: #fafafa;
     --color-zinc-100: #f5f5f5;
@@ -100,6 +180,30 @@ select:focus[data-flux-control] {
  */
 .surface-card {
     @apply rounded-md border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-900;
+}
+
+/*
+ * Primary-action buttons (Edit Roots, Follow, the "jump out" scroll
+ * arrows) aren't a color category — they're the highest-emphasis
+ * action on a screen, so they're solid black/white rather than
+ * competing with score/live/communities/messages for a hue. Three
+ * variants for the three contexts these appear in; change the
+ * black/white choice itself in exactly these three places.
+ */
+.btn-flat-primary {
+    @apply bg-stone-900! text-white! hover:bg-stone-700! dark:bg-white! dark:text-stone-900! dark:hover:bg-stone-200!;
+}
+
+/* Same primary treatment, but sitting on an arbitrary cover photo — needs
+   the blur/opacity/shadow a plain surface doesn't. */
+.btn-overlay-primary {
+    @apply bg-stone-900/90! text-white! shadow-sm backdrop-blur hover:bg-stone-900! dark:bg-white/90! dark:text-stone-900! dark:hover:bg-white!;
+}
+
+/* The secondary (non-primary) action on a cover photo — Edit profile,
+   "Following" once already followed, the block/more-options trigger. */
+.btn-overlay-neutral {
+    @apply bg-white/90! text-stone-900! shadow-sm backdrop-blur hover:bg-white! dark:bg-stone-900/80! dark:text-white! dark:hover:bg-stone-900!;
 }
 
 /* A reaction emoji drifting up and fading out over the call canvas. */

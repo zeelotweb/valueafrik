@@ -34,7 +34,7 @@ new class extends Component {
             size="sm"
             variant="ghost"
             icon="chat-bubble-left-right"
-            class="{{ $overlay ? '!bg-violet-50/90 !text-violet-800 shadow-sm backdrop-blur hover:!bg-violet-50 dark:!bg-violet-950/80 dark:!text-violet-300 dark:hover:!bg-violet-950' : '' }} max-sm:w-8! max-sm:gap-0! max-sm:ps-0! max-sm:pe-0!"
+            class="{{ $overlay ? '!bg-messages-50/90 !text-messages-800 shadow-sm backdrop-blur hover:!bg-messages-50 dark:!bg-messages-950/80 dark:!text-messages-300 dark:hover:!bg-messages-950' : '' }} max-sm:w-8! max-sm:gap-0! max-sm:ps-0! max-sm:pe-0!"
             data-test="message-button"
         >
             <span class="hidden sm:inline">{{ __('Message') }}</span>

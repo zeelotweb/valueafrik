@@ -20,11 +20,11 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
             // Bridge Post is the one quick action that shares Bridge Score's
             // warm accent — it's literally how that score gets earned, so the
             // color is doing the same job as it does on the stat card.
-            $bridgePostActionClass = '!bg-warm-100 !text-warm-700 hover:!bg-warm-100/70 dark:!bg-warm-950 dark:!text-warm-400 dark:hover:!bg-warm-950/70';
-            $streamActionClass = '!bg-pink-50 !text-pink-700 hover:!bg-pink-100 dark:!bg-pink-950 dark:!text-pink-400 dark:hover:!bg-pink-950/70';
+            $bridgePostActionClass = '!bg-score-100 !text-score-700 hover:!bg-score-100/70 dark:!bg-score-950 dark:!text-score-400 dark:hover:!bg-score-950/70';
+            $streamActionClass = '!bg-live-50 !text-live-700 hover:!bg-live-100 dark:!bg-live-950 dark:!text-live-400 dark:hover:!bg-live-950/70';
             // Same reasoning as Bridge Post/Bridge Score: this button creates
             // the exact thing the Communities stat card counts.
-            $communityActionClass = '!bg-orange-50 !text-orange-700 hover:!bg-orange-100 dark:!bg-orange-950 dark:!text-orange-400 dark:hover:!bg-orange-950/70';
+            $communityActionClass = '!bg-communities-50 !text-communities-700 hover:!bg-communities-100 dark:!bg-communities-950 dark:!text-communities-400 dark:hover:!bg-communities-950/70';
         @endphp
 
         {{-- Quick actions --}}
@@ -44,7 +44,7 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
             </a>
 
             <a href="{{ route('roots.edit') }}" wire:navigate>
-                <flux:button size="sm" variant="ghost" icon="identification" class="!bg-stone-900 !text-white hover:!bg-stone-700 dark:!bg-white dark:!text-stone-900 dark:hover:!bg-stone-200">{{ __('Edit Roots') }}</flux:button>
+                <flux:button size="sm" variant="ghost" icon="identification" class="btn-flat-primary">{{ __('Edit Roots') }}</flux:button>
             </a>
         </div>
 
@@ -64,9 +64,9 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
             <a
                 href="{{ route('profile.show', $user) }}"
                 wire:navigate
-                class="surface-card w-fit min-w-40 p-5 hover:border-warm-500/40 dark:hover:border-warm-400/40"
+                class="surface-card w-fit min-w-40 p-5 hover:border-score-500/40 dark:hover:border-score-400/40"
             >
-                <div class="flex items-center gap-2 text-warm-600 dark:text-warm-400">
+                <div class="flex items-center gap-2 text-score-600 dark:text-score-400">
                     <flux:icon.sparkles class="size-5" />
                     <span class="text-sm font-medium">{{ __('Bridge Score') }}</span>
                 </div>
@@ -79,9 +79,9 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
             <a
                 href="{{ route('communities.index') }}"
                 wire:navigate
-                class="surface-card w-fit min-w-40 p-5 hover:border-orange-600/40 dark:hover:border-orange-500/40"
+                class="surface-card w-fit min-w-40 p-5 hover:border-communities-600/40 dark:hover:border-communities-500/40"
             >
-                <div class="flex items-center gap-2 text-orange-700 dark:text-orange-400">
+                <div class="flex items-center gap-2 text-communities-700 dark:text-communities-400">
                     <flux:icon.user-group class="size-5" />
                     <span class="text-sm font-medium">{{ __('Communities') }}</span>
                 </div>
@@ -94,9 +94,9 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
             <a
                 href="{{ route('messages.index') }}"
                 wire:navigate
-                class="surface-card w-fit min-w-40 p-5 hover:border-violet-600/40 dark:hover:border-violet-400/40"
+                class="surface-card w-fit min-w-40 p-5 hover:border-messages-600/40 dark:hover:border-messages-400/40"
             >
-                <div class="flex items-center gap-2 text-violet-700 dark:text-violet-400">
+                <div class="flex items-center gap-2 text-messages-700 dark:text-messages-400">
                     <flux:icon.chat-bubble-left-right class="size-5" />
                     <span class="text-sm font-medium">{{ __('Messages') }}</span>
                 </div>

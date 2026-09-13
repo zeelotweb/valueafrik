@@ -41,7 +41,7 @@ new class extends Component {
         size="sm"
         variant="ghost"
         icon="ellipsis-vertical"
-        class="{{ $overlay ? '!bg-white/90 !text-stone-900 shadow-sm backdrop-blur hover:!bg-white dark:!bg-stone-900/80 dark:!text-white dark:hover:!bg-stone-900' : '' }}"
+        class="{{ $overlay ? 'btn-overlay-neutral' : '' }}"
         aria-label="{{ __('More options') }}"
         data-test="profile-more-menu"
     />

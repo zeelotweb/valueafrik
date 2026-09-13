@@ -27,7 +27,7 @@ $countryFlag = \App\Support\Countries::flag($profile?->country);
             <div class="absolute top-3 end-3 flex w-fit items-center gap-1.5 sm:top-4 sm:end-4 sm:gap-2">
                 @if ($isOwnProfile)
                     <a href="{{ route('profile.edit') }}" wire:navigate>
-                        <flux:button size="sm" variant="ghost" icon="pencil" class="!bg-white/90 !text-stone-900 shadow-sm backdrop-blur hover:!bg-white dark:!bg-stone-900/80 dark:!text-white dark:hover:!bg-stone-900 max-sm:w-8! max-sm:gap-0! max-sm:ps-0! max-sm:pe-0!">
+                        <flux:button size="sm" variant="ghost" icon="pencil" class="btn-overlay-neutral max-sm:w-8! max-sm:gap-0! max-sm:ps-0! max-sm:pe-0!">
                             <span class="hidden sm:inline">{{ __('Edit profile') }}</span>
                         </flux:button>
                     </a>
@@ -63,7 +63,7 @@ $countryFlag = \App\Support\Countries::flag($profile?->country);
             @endphp
 
             <div class="mt-3 flex flex-wrap items-center gap-2">
-                <span class="inline-flex items-center gap-1.5 rounded-full bg-warm-100 px-3 py-1 text-sm font-medium text-warm-700 dark:bg-warm-950 dark:text-warm-400">
+                <span class="inline-flex items-center gap-1.5 rounded-full bg-score-100 px-3 py-1 text-sm font-medium text-score-700 dark:bg-score-950 dark:text-score-400">
                     <flux:icon.sparkles class="size-3.5" />
                     {{ trans_choice('1 bridge point|:count bridge points', $bridgeScore) }}
                 </span>
@@ -169,7 +169,7 @@ $countryFlag = \App\Support\Countries::flag($profile?->country);
                             </flux:modal.trigger>
 
                             <flux:modal.trigger name="bridge-post-composer">
-                                <flux:button icon="arrows-right-left" variant="ghost" class="!bg-warm-100 !text-warm-700 hover:!bg-warm-100/70 dark:!bg-warm-950 dark:!text-warm-400 dark:hover:!bg-warm-950/70">{{ __('Start a Bridge Post') }}</flux:button>
+                                <flux:button icon="arrows-right-left" variant="ghost" class="!bg-score-100 !text-score-700 hover:!bg-score-100/70 dark:!bg-score-950 dark:!text-score-400 dark:hover:!bg-score-950/70">{{ __('Start a Bridge Post') }}</flux:button>
                             </flux:modal.trigger>
                         </div>
 

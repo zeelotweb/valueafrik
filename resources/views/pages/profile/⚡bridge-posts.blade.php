@@ -134,10 +134,10 @@ new class extends Component {
             $partnerMedia = $post->media->where('user_id', $post->partner_id);
         @endphp
 
-        <div class="overflow-hidden rounded-md border border-warm-400/40 dark:border-warm-900" wire:key="bridge-post-{{ $post->id }}">
-            <div class="flex items-center gap-2 bg-warm-50 px-4 py-2 dark:bg-warm-950/40">
-                <flux:icon.arrows-right-left class="size-4 text-warm-600 dark:text-warm-400" />
-                <span class="text-sm font-medium text-warm-700 dark:text-warm-400">{{ __('Bridge Post') }} — {{ $post->theme }}</span>
+        <div class="overflow-hidden rounded-md border border-score-400/40 dark:border-score-900" wire:key="bridge-post-{{ $post->id }}">
+            <div class="flex items-center gap-2 bg-score-50 px-4 py-2 dark:bg-score-950/40">
+                <flux:icon.arrows-right-left class="size-4 text-score-600 dark:text-score-400" />
+                <span class="text-sm font-medium text-score-700 dark:text-score-400">{{ __('Bridge Post') }} — {{ $post->theme }}</span>
             </div>
 
             <div class="grid divide-y divide-stone-200 sm:grid-cols-2 sm:divide-x sm:divide-y-0 dark:divide-stone-800">

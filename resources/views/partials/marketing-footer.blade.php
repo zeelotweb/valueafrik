@@ -15,6 +15,9 @@
                     <li><a href="{{ route('discover.index') }}" class="hover:text-stone-900 dark:hover:text-white">Discover</a></li>
                     <li><a href="{{ route('communities.index') }}" class="hover:text-stone-900 dark:hover:text-white">Communities</a></li>
                     <li><a href="{{ route('live.index') }}" class="hover:text-stone-900 dark:hover:text-white">Live</a></li>
+                    @auth
+                        <li><a href="{{ route('lab.dashboard') }}" class="hover:text-stone-900 dark:hover:text-white" wire:navigate>Dashboard (Lab)</a></li>
+                    @endauth
                 </ul>
             </div>
 

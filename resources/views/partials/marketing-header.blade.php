@@ -8,7 +8,7 @@
 
         <div class="flex items-center gap-3 text-sm">
             @auth
-                <a href="{{ url('/dashboard') }}" title="Dashboard" class="flex size-9 items-center justify-center rounded-md bg-stone-900 text-white hover:bg-stone-700 dark:bg-white dark:text-stone-900 dark:hover:bg-stone-200">
+                <a href="{{ url('/dashboard') }}" title="Dashboard" class="btn-flat-primary flex size-9 items-center justify-center rounded-md">
                     <flux:icon.home class="size-5" />
                 </a>
             @else

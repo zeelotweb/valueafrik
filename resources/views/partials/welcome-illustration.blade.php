@@ -97,10 +97,10 @@
                     </div>
                     <div class="min-w-0">
                         <p class="truncate font-semibold">{{ $item['user']->name }}</p>
-                        <p class="text-sm text-warm-600 dark:text-warm-400">{{ $badge['name'] ?? '' }}</p>
+                        <p class="text-sm text-score-600 dark:text-score-400">{{ $badge['name'] ?? '' }}</p>
                     </div>
                 </div>
-                <p class="font-display mt-4 text-4xl font-semibold tracking-tight text-warm-600 dark:text-warm-400">
+                <p class="font-display mt-4 text-4xl font-semibold tracking-tight text-score-600 dark:text-score-400">
                     {{ $item['user']->bridgeScore() }}
                 </p>
                 <p class="mt-1 text-sm text-stone-500 dark:text-stone-400">bridge points earned through real exchange</p>

@@ -42,7 +42,7 @@ $pillars = [
                         <path d="M0 140 L 260 140 L 420 40 L 780 40 L 940 140 L 1200 140" stroke="currentColor" stroke-width="2" />
                         <path d="M0 170 L 260 170 L 420 70 L 780 70 L 940 170 L 1200 170" stroke="currentColor" stroke-width="2" />
                     </svg>
-                    <span class="absolute top-10 right-[8%] size-2 rounded-full bg-warm-400/60 dark:bg-warm-400/40"></span>
+                    <span class="absolute top-10 right-[8%] size-2 rounded-full bg-score-400/60 dark:bg-score-400/40"></span>
                     <span class="absolute top-24 right-[18%] size-1.5 rounded-full bg-cyan-500/50 dark:bg-cyan-400/40"></span>
                 </div>
 
@@ -233,7 +233,7 @@ $pillars = [
                         >
                             <span @class([
                                 'flex size-10 items-center justify-center rounded-md',
-                                'bg-warm-100 text-warm-600 dark:bg-warm-950 dark:text-warm-400' => $pillar['warm'],
+                                'bg-score-100 text-score-600 dark:bg-score-950 dark:text-score-400' => $pillar['warm'],
                                 'bg-cyan-50 text-cyan-700 dark:bg-cyan-950 dark:text-cyan-400' => ! $pillar['warm'],
                             ])>
                                 <flux:icon :icon="$pillar['icon']" class="size-5" />
@@ -296,7 +296,7 @@ $pillars = [
                             </p>
                         </div>
                         <div class="surface-card p-6 text-center sm:text-start">
-                            <span class="mx-auto flex size-11 items-center justify-center rounded-md bg-warm-100 text-warm-600 sm:mx-0 dark:bg-warm-950 dark:text-warm-400">
+                            <span class="mx-auto flex size-11 items-center justify-center rounded-md bg-score-100 text-score-600 sm:mx-0 dark:bg-score-950 dark:text-score-400">
                                 <flux:icon.trophy class="size-5" />
                             </span>
                             <h3 class="mt-3 font-semibold text-stone-900 dark:text-white">Recognition that means something</h3>

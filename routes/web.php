@@ -23,6 +23,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::middleware(['auth', 'verified', EnsureOnboardingComplete::class])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
 
+    // Experimental layout only — reuses the same real, tested widgets as
+    // the live dashboard, just rearranged, so we can try structural ideas
+    // without risking the page people already rely on. Not linked from
+    // the main nav on purpose; footer link only.
+    Route::view('lab/dashboard', 'lab.dashboard')->name('lab.dashboard');
+
     Route::get('profile', fn () => redirect()->route('profile.show', Auth::user()));
     Route::get('u/{user}', ProfileShowController::class)->name('profile.show');
     Route::livewire('u/{user}/connections', 'pages::profile.connections')->name('profile.connections');
