@@ -298,3 +298,70 @@ test('the back button on a finished stream goes to the live directory', function
         ->test('pages::live.show', ['liveSession' => $session])
         ->assertSeeHtml(route('live.index'));
 });
+
+// --- in-call safety: report and block (calls only, not streams) -----------
+
+test('a participant can report the other party from inside a live call', function () {
+    $host = User::factory()->create();
+    $callee = User::factory()->create();
+    $session = LiveSession::create([
+        'host_id' => $host->id,
+        'callee_id' => $callee->id,
+        'room_name' => 'room-report-call',
+        'type' => LiveSession::TYPE_CALL,
+        'status' => LiveSession::STATUS_LIVE,
+        'started_at' => now(),
+    ]);
+
+    Livewire::actingAs($host)
+        ->test('pages::live.show', ['liveSession' => $session])
+        ->call('startReport')
+        ->assertSet('reportingOtherParty', true)
+        ->set('reportReason', 'Made me uncomfortable.')
+        ->call('submitReport')
+        ->assertHasNoErrors();
+
+    $report = \App\Models\CommunityReport::first();
+
+    expect($report)->not->toBeNull();
+    expect($report->reporter_id)->toBe($host->id);
+    expect($report->reportable_type)->toBe(User::class);
+    expect($report->reportable_id)->toBe($callee->id);
+});
+
+test('blocking the other party from inside a live call ends the call and records the block', function () {
+    $host = User::factory()->create();
+    $callee = User::factory()->create();
+    $session = LiveSession::create([
+        'host_id' => $host->id,
+        'callee_id' => $callee->id,
+        'room_name' => 'room-block-call',
+        'type' => LiveSession::TYPE_CALL,
+        'status' => LiveSession::STATUS_LIVE,
+        'started_at' => now(),
+    ]);
+
+    Livewire::actingAs($host)
+        ->test('pages::live.show', ['liveSession' => $session])
+        ->call('blockOtherParty');
+
+    expect($host->fresh()->hasBlocked($callee))->toBeTrue();
+    expect($session->fresh()->status)->toBe(LiveSession::STATUS_ENDED);
+});
+
+test('report and block are not reachable on a stream, which has no single other party', function () {
+    $host = User::factory()->create();
+    $viewer = User::factory()->create();
+    $session = LiveSession::create([
+        'host_id' => $host->id,
+        'room_name' => 'room-stream-safety',
+        'type' => LiveSession::TYPE_STREAM,
+        'status' => LiveSession::STATUS_LIVE,
+        'started_at' => now(),
+    ]);
+
+    Livewire::actingAs($viewer)
+        ->test('pages::live.show', ['liveSession' => $session])
+        ->call('startReport')
+        ->assertNotFound();
+});

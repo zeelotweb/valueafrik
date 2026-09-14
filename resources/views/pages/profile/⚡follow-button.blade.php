@@ -39,7 +39,16 @@ new class extends Component {
         } else {
             abort_if($viewer->hasBlockRelationWith($this->user), 403);
 
-            $viewer->following()->attach($this->user->id);
+            try {
+                $viewer->following()->attach($this->user->id);
+            } catch (\Illuminate\Database\UniqueConstraintViolationException) {
+                // A concurrent request already recorded this follow — the
+                // desired state is reached either way, so stop here rather
+                // than risk a duplicate award below.
+                unset($this->isFollowing);
+
+                return;
+            }
 
             // Scoped to this specific pair — unfollowing never claws the
             // point back, so without this guard, follow/unfollow/follow

@@ -30,7 +30,12 @@ new class extends Component {
         if ($existing) {
             $existing->delete();
         } else {
-            $this->bookmarkable->bookmarks()->create(['user_id' => $user->id]);
+            try {
+                $this->bookmarkable->bookmarks()->create(['user_id' => $user->id]);
+            } catch (\Illuminate\Database\UniqueConstraintViolationException) {
+                // A concurrent request (double-click, two tabs) already
+                // created this bookmark row — nothing left to do.
+            }
         }
 
         unset($this->bookmarked);

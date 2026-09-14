@@ -75,6 +75,39 @@ test('an admin can remove reported content, which also resolves the report', fun
     expect(\App\Models\CommunityPost::withTrashed()->find($postId)->trashed())->toBeTrue();
 });
 
+test('an admin sees a reported person distinctly from a reported post, without a remove-content option', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+    $reporter = User::factory()->create();
+    $reportedUser = User::factory()->create(['name' => 'Reported In A Call']);
+
+    $report = new CommunityReport(['reporter_id' => $reporter->id, 'reason' => 'Harassed me on a call.']);
+    $report->reportable()->associate($reportedUser);
+    $report->save();
+
+    Livewire::actingAs($admin)
+        ->test('pages::admin.reports')
+        ->assertSee('Reported In A Call')
+        ->assertSee('Harassed me on a call.')
+        ->assertDontSeeHtml('wire:click="removeContent('.$report->id.')"');
+});
+
+test('removeContent refuses to run against a reported person, not just a reported post', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+    $reporter = User::factory()->create();
+    $reportedUser = User::factory()->create();
+
+    $report = new CommunityReport(['reporter_id' => $reporter->id, 'reason' => 'Bad behavior.']);
+    $report->reportable()->associate($reportedUser);
+    $report->save();
+
+    Livewire::actingAs($admin)
+        ->test('pages::admin.reports')
+        ->call('removeContent', $report->id)
+        ->assertForbidden();
+
+    expect($reportedUser->fresh())->not->toBeNull();
+});
+
 test('a non-admin cannot dismiss or remove reports', function () {
     $user = User::factory()->create();
     $report = reportedCommunityPost();

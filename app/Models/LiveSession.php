@@ -192,10 +192,17 @@ class LiveSession extends Model
         abort_unless($this->canView($user), 403);
         abort_unless($user->canCollaborateOnStreams(), 403);
 
-        $row = $this->collaborators()->firstOrCreate(
-            ['user_id' => $user->id],
-            ['requested_at' => now()],
-        );
+        try {
+            $row = $this->collaborators()->firstOrCreate(
+                ['user_id' => $user->id],
+                ['requested_at' => now()],
+            );
+        } catch (\Illuminate\Database\UniqueConstraintViolationException) {
+            // A concurrent request already created this row — fetch it
+            // since this method's return type promises a real record
+            // either way, and skip re-broadcasting a duplicate event.
+            return $this->collaborators()->where('user_id', $user->id)->firstOrFail();
+        }
 
         self::broadcastCollaboration($this, $user, 'requested');
 

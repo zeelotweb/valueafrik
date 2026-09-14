@@ -1,8 +1,10 @@
 <?php
 
+use App\Models\CommunityReport;
 use App\Models\LiveSession;
 use App\Models\User;
 use App\Services\LiveKitToken;
+use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Computed;
@@ -14,6 +16,8 @@ new #[Title('Live')] class extends Component {
     public string $token = '';
     public string $wsUrl = '';
     public bool $configured = true;
+    public bool $reportingOtherParty = false;
+    public string $reportReason = '';
 
     public function mount(LiveSession $liveSession): void
     {
@@ -214,6 +218,56 @@ new #[Title('Live')] class extends Component {
 
             return;
         }
+
+        $this->endSession();
+    }
+
+    /**
+     * Calls only — a stream has no single "other party" to report/block,
+     * that's a separate, bigger design problem (per-participant controls
+     * for a multi-viewer room) than a 1:1 call's simple pairing.
+     */
+    public function startReport(): void
+    {
+        abort_unless($this->session->type === LiveSession::TYPE_CALL, 404);
+
+        $this->reportingOtherParty = true;
+        $this->reportReason = '';
+    }
+
+    public function cancelReport(): void
+    {
+        $this->reportingOtherParty = false;
+        $this->reportReason = '';
+    }
+
+    public function submitReport(): void
+    {
+        abort_unless($this->session->type === LiveSession::TYPE_CALL, 404);
+
+        $otherParty = $this->otherParty;
+        abort_if(! $otherParty, 404);
+
+        $this->validate(['reportReason' => ['required', 'string', 'max:1000']]);
+
+        $report = new CommunityReport(['reporter_id' => Auth::id(), 'reason' => $this->reportReason]);
+        $report->reportable()->associate($otherParty);
+        $report->save();
+
+        $this->reportingOtherParty = false;
+        $this->reportReason = '';
+
+        Flux::toast(variant: 'success', text: __('Report submitted to platform admins.'));
+    }
+
+    public function blockOtherParty(): void
+    {
+        abort_unless($this->session->type === LiveSession::TYPE_CALL, 404);
+
+        $otherParty = $this->otherParty;
+        abort_if(! $otherParty, 404);
+
+        Auth::user()->block($otherParty);
 
         $this->endSession();
     }
@@ -638,6 +692,23 @@ new #[Title('Live')] class extends Component {
 
                 <template x-if="connected">
                     <div class="absolute inset-x-0 bottom-4 flex flex-col items-center gap-2">
+                        @if ($reportingOtherParty)
+                            {{-- max-w only, no w-full — this div is a flex
+                                 child inside an absolutely-positioned
+                                 (inset-x-0), items-center parent with no
+                                 definite width of its own to resolve a
+                                 percentage against, the same class of bug
+                                 already fixed once for message bubbles. --}}
+                            <div class="mx-4 max-w-sm rounded-lg bg-black/85 p-3 backdrop-blur-sm" wire:click.outside="cancelReport">
+                                <flux:textarea wire:model="reportReason" :label="__('Why are you reporting this person?')" rows="2" class="messages-input" />
+                                <div class="mt-2 flex justify-end gap-2">
+                                    <flux:button size="sm" variant="ghost" wire:click="cancelReport">{{ __('Cancel') }}</flux:button>
+                                    <flux:button size="sm" variant="danger" wire:click="submitReport">{{ __('Submit report') }}</flux:button>
+                                </div>
+                                @error('reportReason') <p class="mt-1 text-sm text-red-400">{{ $message }}</p> @enderror
+                            </div>
+                        @endif
+
                         <div
                             x-show="showReactions"
                             x-transition
@@ -708,6 +779,27 @@ new #[Title('Live')] class extends Component {
                                 <flux:icon x-show="!(fullscreen || cssFullscreen)" icon="arrows-pointing-out" class="size-5" />
                                 <flux:icon x-show="fullscreen || cssFullscreen" icon="arrows-pointing-in" class="size-5" x-cloak />
                             </button>
+
+                            @if ($session->type === LiveSession::TYPE_CALL)
+                                <button
+                                    type="button"
+                                    wire:click="startReport"
+                                    class="flex size-10 items-center justify-center rounded-md bg-white/10 text-white hover:bg-white/20"
+                                    aria-label="{{ __('Report') }}"
+                                >
+                                    <flux:icon icon="flag" class="size-5" />
+                                </button>
+
+                                <button
+                                    type="button"
+                                    wire:click="blockOtherParty"
+                                    wire:confirm="{{ __('Block :name and end this call? They will no longer be able to follow or message you.', ['name' => $this->otherParty?->name]) }}"
+                                    class="flex size-10 items-center justify-center rounded-md bg-white/10 text-white hover:bg-white/20"
+                                    aria-label="{{ __('Block') }}"
+                                >
+                                    <flux:icon icon="no-symbol" class="size-5" />
+                                </button>
+                            @endif
 
                             <button
                                 type="button"

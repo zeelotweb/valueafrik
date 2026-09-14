@@ -245,6 +245,66 @@ test('a non-participant cannot end another pair\'s live sprint by tampering acti
     expect($session->fresh()->status)->toBe(LiveSession::STATUS_LIVE);
 });
 
+// --- in-call safety: report and block --------------------------------------
+
+test('a participant can report their match from inside the live session', function () {
+    $a = readyForSprint('Host Person');
+    $b = readyForSprint('Callee Person');
+    $session = LiveSession::startSprintMatch($a, $b, 'Food');
+    $session->respondToSprint($a, true);
+    $session->respondToSprint($b, true);
+
+    Livewire::actingAs($a)
+        ->test('pages::culture-sprint.index')
+        ->set('activeSessionId', $session->id)
+        ->call('startReport')
+        ->assertSet('reportingOtherParty', true)
+        ->set('reportReason', 'Said something inappropriate.')
+        ->call('submitReport')
+        ->assertHasNoErrors()
+        ->assertSet('reportingOtherParty', false);
+
+    $report = \App\Models\CommunityReport::first();
+
+    expect($report)->not->toBeNull();
+    expect($report->reporter_id)->toBe($a->id);
+    expect($report->reportable_type)->toBe(User::class);
+    expect($report->reportable_id)->toBe($b->id);
+    expect($report->community_id)->toBeNull();
+});
+
+test('reporting from a live session requires a reason', function () {
+    $a = readyForSprint('Host Person');
+    $b = readyForSprint('Callee Person');
+    $session = LiveSession::startSprintMatch($a, $b, 'Food');
+    $session->respondToSprint($a, true);
+    $session->respondToSprint($b, true);
+
+    Livewire::actingAs($a)
+        ->test('pages::culture-sprint.index')
+        ->set('activeSessionId', $session->id)
+        ->call('submitReport')
+        ->assertHasErrors('reportReason');
+
+    expect(\App\Models\CommunityReport::count())->toBe(0);
+});
+
+test('blocking a match from inside the live session ends the sprint and records the block', function () {
+    $a = readyForSprint('Host Person');
+    $b = readyForSprint('Callee Person');
+    $session = LiveSession::startSprintMatch($a, $b, 'Food');
+    $session->respondToSprint($a, true);
+    $session->respondToSprint($b, true);
+
+    Livewire::actingAs($a)
+        ->test('pages::culture-sprint.index')
+        ->set('activeSessionId', $session->id)
+        ->call('blockOtherParty');
+
+    expect($a->fresh()->hasBlocked($b))->toBeTrue();
+    expect($session->fresh()->status)->toBe(LiveSession::STATUS_ENDED);
+});
+
 test('a forged onCallStatusUpdated payload for a session the caller is not part of is ignored', function () {
     $a = readyForSprint('Host Person');
     $b = readyForSprint('Callee Person');

@@ -1,6 +1,9 @@
 <?php
 
+use App\Models\CommunityPost;
 use App\Models\CommunityReport;
+use App\Models\User;
+use App\Models\WallPost;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -57,6 +60,11 @@ new #[Title('Admin — Reports')] class extends Component {
 
         $report = CommunityReport::with('reportable')->findOrFail($reportId);
 
+        // A reported person, not a reported post — deleting a user account
+        // from here would be far more destructive than "remove content"
+        // implies; that's admin/⚡users.blade.php's job, not this button's.
+        abort_if($report->reportable instanceof User, 403);
+
         $report->reportable?->delete();
 
         $report->update([
@@ -71,7 +79,16 @@ new #[Title('Admin — Reports')] class extends Component {
     public function with(): array
     {
         $reports = CommunityReport::query()
-            ->with(['reporter.profile', 'community', 'reportable.user', 'resolver'])
+            ->with([
+                'reporter.profile',
+                'community',
+                'resolver',
+                'reportable' => fn ($morphTo) => $morphTo->morphWith([
+                    CommunityPost::class => ['user'],
+                    WallPost::class => ['user'],
+                    User::class => ['profile'],
+                ]),
+            ])
             ->when($this->filter === 'open', fn ($q) => $q->where('status', 'open'))
             ->when($this->filter === 'resolved', fn ($q) => $q->where('status', 'resolved'))
             ->latest()
@@ -107,9 +124,14 @@ new #[Title('Admin — Reports')] class extends Component {
                     <div class="min-w-0">
                         <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
                             <span class="font-medium text-stone-900 dark:text-white">{{ $report->reporter->name }}</span>
-                            <span class="text-stone-400">{{ __('reported a post in') }}</span>
-                            @if ($report->community)
-                                <a href="{{ route('communities.show', $report->community) }}" wire:navigate class="font-medium text-communities-700 hover:underline dark:text-communities-400">{{ $report->community->name }}</a>
+                            @if ($report->reportable instanceof \App\Models\User)
+                                <span class="text-stone-400">{{ __('reported a person') }}</span>
+                            @else
+                                <span class="text-stone-400">{{ __('reported a post') }}</span>
+                                @if ($report->community)
+                                    <span class="text-stone-400">{{ __('in') }}</span>
+                                    <a href="{{ route('communities.show', $report->community) }}" wire:navigate class="font-medium text-communities-700 hover:underline dark:text-communities-400">{{ $report->community->name }}</a>
+                                @endif
                             @endif
                             <flux:badge size="sm" :color="$report->status === 'open' ? 'amber' : 'zinc'">
                                 {{ $report->status === 'open' ? __('Open') : __('Resolved') }}
@@ -120,7 +142,13 @@ new #[Title('Admin — Reports')] class extends Component {
                             <span class="font-medium">{{ __('Reason:') }}</span> {{ $report->reason }}
                         </p>
 
-                        @if ($report->reportable)
+                        @if ($report->reportable instanceof \App\Models\User)
+                            <div class="mt-2 rounded-lg bg-stone-100 p-3 text-sm text-stone-600 dark:bg-stone-800 dark:text-stone-400">
+                                <span class="font-medium">{{ __('Reported user:') }}</span>
+                                <a href="{{ route('profile.show', $report->reportable) }}" wire:navigate class="hover:underline">{{ $report->reportable->name }}</a>
+                                {{ __('— reported during a live call or Culture Sprint match, not tied to a specific post.') }}
+                            </div>
+                        @elseif ($report->reportable)
                             <div class="mt-2 rounded-lg bg-stone-100 p-3 text-sm text-stone-600 dark:bg-stone-800 dark:text-stone-400">
                                 <span class="font-medium">{{ $report->reportable->user?->name ?? __('Unknown author') }}:</span>
                                 {{ Str::limit($report->reportable->body, 200) ?: __('(photo only)') }}
@@ -142,7 +170,7 @@ new #[Title('Admin — Reports')] class extends Component {
                             <flux:button size="sm" variant="ghost" wire:click="dismiss({{ $report->id }})">
                                 {{ __('Dismiss') }}
                             </flux:button>
-                            @if ($report->reportable)
+                            @if ($report->reportable && ! ($report->reportable instanceof \App\Models\User))
                                 <flux:button size="sm" variant="danger" wire:click="removeContent({{ $report->id }})" wire:confirm="{{ __('Remove this content? This cannot be undone.') }}">
                                     {{ __('Remove content') }}
                                 </flux:button>

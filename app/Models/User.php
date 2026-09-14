@@ -250,7 +250,12 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     {
         abort_if($this->id === $user->id, 403);
 
-        $this->blocking()->syncWithoutDetaching($user->id);
+        try {
+            $this->blocking()->syncWithoutDetaching($user->id);
+        } catch (\Illuminate\Database\UniqueConstraintViolationException) {
+            // A concurrent request already recorded this block — the
+            // desired state is reached either way.
+        }
 
         $this->following()->detach($user->id);
         $this->followers()->detach($user->id);
@@ -287,7 +292,12 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     {
         abort_if($this->id === $user->id, 403);
 
-        $this->muting()->syncWithoutDetaching($user->id);
+        try {
+            $this->muting()->syncWithoutDetaching($user->id);
+        } catch (\Illuminate\Database\UniqueConstraintViolationException) {
+            // A concurrent request already recorded this mute — the
+            // desired state is reached either way.
+        }
     }
 
     public function unmute(User $user): void
