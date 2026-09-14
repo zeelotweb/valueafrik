@@ -27,6 +27,16 @@ new class extends Component {
             return ['liveFriends' => collect(), 'items' => collect(), 'isFollowingAnyone' => false];
         }
 
+        // A passive, ambient feed — same reasoning as the community post
+        // feed — so a muted follow's content is left out here even though
+        // the follow itself stays intact.
+        $mutedIds = $viewer->muting()->pluck('users.id');
+        $followingIds = $followingIds->diff($mutedIds);
+
+        if ($followingIds->isEmpty()) {
+            return ['liveFriends' => collect(), 'items' => collect(), 'isFollowingAnyone' => true];
+        }
+
         $liveFriends = LiveSession::query()
             ->where('type', LiveSession::TYPE_STREAM)
             ->where('status', LiveSession::STATUS_LIVE)
@@ -37,6 +47,7 @@ new class extends Component {
 
         $wallPosts = WallPost::query()
             ->whereIn('user_id', $followingIds)
+            ->whereDoesntHave('hides', fn ($q) => $q->where('user_id', $viewer->id))
             ->with(['user.profile', 'media'])
             ->latest()
             ->limit(10)
@@ -56,6 +67,7 @@ new class extends Component {
 
         $communityPosts = CommunityPost::query()
             ->whereIn('user_id', $followingIds)
+            ->whereDoesntHave('hides', fn ($q) => $q->where('user_id', $viewer->id))
             ->with([
                 'user.profile',
                 'media',

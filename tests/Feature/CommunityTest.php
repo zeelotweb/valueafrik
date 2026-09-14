@@ -234,6 +234,59 @@ test('a member can report a post and it logs for the community', function () {
     expect($report->status)->toBe('open');
 });
 
+test('the community feed excludes posts from muted and blocked members', function () {
+    $owner = User::factory()->create();
+    $community = createCommunity($owner);
+    $viewer = User::factory()->create();
+    $muted = User::factory()->create();
+    $blocked = User::factory()->create();
+    $community->members()->attach([$viewer->id, $muted->id, $blocked->id], ['role' => 'member', 'status' => 'active']);
+    $community->posts()->create(['user_id' => $muted->id, 'body' => 'from a muted member']);
+    $community->posts()->create(['user_id' => $blocked->id, 'body' => 'from a blocked member']);
+    $community->posts()->create(['user_id' => $owner->id, 'body' => 'from everyone else']);
+
+    $viewer->mute($muted);
+    $viewer->block($blocked);
+
+    $component = Livewire::actingAs($viewer)->test('pages::communities.posts', ['community' => $community]);
+
+    $component->assertDontSee('from a muted member')
+        ->assertDontSee('from a blocked member')
+        ->assertSee('from everyone else');
+});
+
+test('hiding a community post removes it only for the viewer who hid it', function () {
+    $owner = User::factory()->create();
+    $community = createCommunity($owner);
+    $viewer = User::factory()->create();
+    $community->members()->attach($viewer->id, ['role' => 'member', 'status' => 'active']);
+    $post = $community->posts()->create(['user_id' => $owner->id, 'body' => 'hide this one']);
+
+    Livewire::actingAs($viewer)
+        ->test('pages::communities.posts', ['community' => $community])
+        ->call('hidePost', $post->id)
+        ->assertDontSee('hide this one');
+
+    Livewire::actingAs($owner)
+        ->test('pages::communities.posts', ['community' => $community])
+        ->assertSee('hide this one');
+});
+
+test('blocking a community post author from the dropdown severs the same relationship the profile block button uses', function () {
+    $owner = User::factory()->create();
+    $community = createCommunity($owner);
+    $viewer = User::factory()->create();
+    $author = User::factory()->create();
+    $community->members()->attach([$viewer->id, $author->id], ['role' => 'member', 'status' => 'active']);
+    $post = $community->posts()->create(['user_id' => $author->id, 'body' => 'block me']);
+
+    Livewire::actingAs($viewer)
+        ->test('pages::communities.posts', ['community' => $community])
+        ->call('toggleBlock', $post->id);
+
+    expect($viewer->fresh()->hasBlocked($author))->toBeTrue();
+});
+
 test('post author and moderators can delete a community post but other members cannot', function () {
     $owner = User::factory()->create();
     $community = createCommunity($owner);

@@ -190,3 +190,113 @@ test('a user cannot delete another users wall post', function () {
 
     expect($owner->wallPosts()->count())->toBe(1);
 });
+
+// --- post options: hide / mute / block / report ----------------------------
+
+test('hiding a post removes it from the viewers own list, not from the author\'s', function () {
+    $author = User::factory()->create();
+    $viewer = User::factory()->create();
+    $post = $author->wallPosts()->create(['body' => 'Hide me']);
+
+    Livewire::actingAs($viewer)
+        ->test('pages::profile.wall-posts', ['user' => $author])
+        ->call('hidePost', $post->id)
+        ->assertDontSee('Hide me');
+
+    expect($post->isHiddenFor($viewer))->toBeTrue();
+    expect($post->isHiddenFor($author))->toBeFalse();
+
+    Livewire::actingAs($author)
+        ->test('pages::profile.wall-posts', ['user' => $author])
+        ->assertSee('Hide me');
+});
+
+test('hiding the same post twice does not error', function () {
+    $author = User::factory()->create();
+    $viewer = User::factory()->create();
+    $post = $author->wallPosts()->create(['body' => 'Hide me']);
+
+    $post->hideFor($viewer);
+    $post->hideFor($viewer);
+
+    expect($post->hides()->where('user_id', $viewer->id)->count())->toBe(1);
+});
+
+test('muting a wall post author removes their posts from the dashboard feed but not their own wall', function () {
+    $author = User::factory()->create(['name' => 'Muted Author']);
+    $viewer = User::factory()->create();
+    $viewer->following()->attach($author->id);
+    $author->wallPosts()->create(['body' => 'Should disappear from the feed']);
+
+    $viewer->mute($author);
+
+    Livewire::actingAs($viewer)
+        ->test('pages::dashboard.following-activity')
+        ->assertDontSee('Should disappear from the feed');
+
+    Livewire::actingAs($viewer)
+        ->test('pages::profile.wall-posts', ['user' => $author])
+        ->assertSee('Should disappear from the feed');
+});
+
+test('toggling mute from a post flips the state back and forth', function () {
+    $author = User::factory()->create();
+    $viewer = User::factory()->create();
+    $post = $author->wallPosts()->create(['body' => 'Whatever']);
+
+    $component = Livewire::actingAs($viewer)->test('pages::profile.wall-posts', ['user' => $author]);
+
+    $component->call('toggleMute', $post->id);
+    expect($viewer->fresh()->hasMuted($author))->toBeTrue();
+
+    $component->call('toggleMute', $post->id);
+    expect($viewer->fresh()->hasMuted($author))->toBeFalse();
+});
+
+test('a user cannot mute themselves from their own post', function () {
+    $user = User::factory()->create();
+    $post = $user->wallPosts()->create(['body' => 'Mine']);
+
+    Livewire::actingAs($user)
+        ->test('pages::profile.wall-posts', ['user' => $user])
+        ->call('toggleMute', $post->id)
+        ->assertForbidden();
+});
+
+test('blocking from a post uses the same block relationship as the profile block button', function () {
+    $author = User::factory()->create();
+    $viewer = User::factory()->create();
+    $post = $author->wallPosts()->create(['body' => 'Block me']);
+
+    Livewire::actingAs($viewer)
+        ->test('pages::profile.wall-posts', ['user' => $author])
+        ->call('toggleBlock', $post->id);
+
+    expect($viewer->fresh()->hasBlocked($author))->toBeTrue();
+
+    Livewire::actingAs($viewer)
+        ->test('pages::profile.wall-posts', ['user' => $author])
+        ->call('toggleBlock', $post->id);
+
+    expect($viewer->fresh()->hasBlocked($author))->toBeFalse();
+});
+
+test('a wall post can be reported with no community attached', function () {
+    $author = User::factory()->create();
+    $viewer = User::factory()->create();
+    $post = $author->wallPosts()->create(['body' => 'Report me']);
+
+    Livewire::actingAs($viewer)
+        ->test('pages::profile.wall-posts', ['user' => $author])
+        ->call('startReport', $post->id)
+        ->set('reportReason', 'This is spam.')
+        ->call('submitReport')
+        ->assertHasNoErrors();
+
+    $report = \App\Models\CommunityReport::first();
+
+    expect($report)->not->toBeNull();
+    expect($report->community_id)->toBeNull();
+    expect($report->reason)->toBe('This is spam.');
+    expect($report->reportable_id)->toBe($post->id);
+});

@@ -15,6 +15,10 @@ new class extends Component {
 
     public int $loaded = 10;
 
+    public ?int $reportingPostId = null;
+
+    public string $reportReason = '';
+
     #[On('wall-post-created')]
     public function refresh(): void
     {
@@ -43,6 +47,81 @@ new class extends Component {
         }
 
         $post->delete();
+
+        unset($this->postsWindow, $this->hasMore);
+    }
+
+    public function hidePost(int $postId): void
+    {
+        $post = WallPost::findOrFail($postId);
+
+        $post->hideFor(Auth::user());
+
+        unset($this->postsWindow, $this->hasMore);
+    }
+
+    public function toggleMute(int $postId): void
+    {
+        $post = WallPost::findOrFail($postId);
+        $viewer = Auth::user();
+
+        abort_if($viewer->id === $post->user_id, 403);
+
+        if ($viewer->hasMuted($post->user)) {
+            $viewer->unmute($post->user);
+        } else {
+            $viewer->mute($post->user);
+        }
+
+        unset($this->postsWindow, $this->hasMore);
+    }
+
+    public function toggleBlock(int $postId): void
+    {
+        $post = WallPost::findOrFail($postId);
+        $viewer = Auth::user();
+
+        abort_if($viewer->id === $post->user_id, 403);
+
+        if ($viewer->hasBlocked($post->user)) {
+            $viewer->unblock($post->user);
+        } else {
+            $viewer->block($post->user);
+        }
+
+        unset($this->postsWindow, $this->hasMore);
+    }
+
+    public function startReport(int $postId): void
+    {
+        $this->reportingPostId = $postId;
+        $this->reportReason = '';
+    }
+
+    public function cancelReport(): void
+    {
+        $this->reportingPostId = null;
+        $this->reportReason = '';
+    }
+
+    public function submitReport(): void
+    {
+        $this->validate(['reportReason' => ['required', 'string', 'max:1000']]);
+
+        $post = WallPost::findOrFail($this->reportingPostId);
+
+        $report = new \App\Models\CommunityReport([
+            'reporter_id' => Auth::id(),
+            'reason' => $this->reportReason,
+        ]);
+
+        $report->reportable()->associate($post);
+        $report->save();
+
+        $this->reportingPostId = null;
+        $this->reportReason = '';
+
+        \Flux\Flux::toast(variant: 'success', text: __('Report submitted to platform admins.'));
     }
 
     /**
@@ -56,7 +135,11 @@ new class extends Component {
         // Eager-loaded here so the nested reactions/comments/bookmark
         // components don't each fire their own count/exists query per
         // post — see HasReactions/HasComments/HasBookmarks.
+        // Visiting a profile is deliberate, unlike scrolling a feed — so
+        // unlike the community post feed, muted/blocked authors aren't
+        // filtered here. What this viewer has individually hidden still is.
         return $this->user->wallPosts()
+            ->whereDoesntHave('hides', fn ($q) => $q->where('user_id', Auth::id()))
             ->with(['user.profile', 'media', 'hashtags', 'mentions.user'])
             ->withCount(['reactions', 'comments'])
             ->withExists([
@@ -84,7 +167,7 @@ new class extends Component {
 
 <div class="space-y-4" wire:key="wall-posts-{{ $user->id }}">
     @forelse ($posts as $post)
-        <div class="surface-card p-4" wire:key="wall-post-{{ $post->id }}">
+        <div id="post-{{ $post->id }}" class="surface-card p-4 target:ring-2 target:ring-score-500" wire:key="wall-post-{{ $post->id }}">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <a href="{{ route('profile.show', $post->user) }}" wire:navigate class="size-10 shrink-0 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
@@ -107,30 +190,28 @@ new class extends Component {
                     </div>
                 </div>
 
-                @if (Auth::id() === $post->user_id)
-                    <div class="flex items-center gap-1">
-                        <flux:button
-                            size="sm"
-                            variant="ghost"
-                            wire:click="$dispatch('edit-wall-post', { postId: {{ $post->id }} })"
-                        >
-                            <flux:icon.pencil class="size-4" />
-                        </flux:button>
-
-                        <flux:button
-                            size="sm"
-                            variant="ghost"
-                            wire:click="delete({{ $post->id }})"
-                            wire:confirm="{{ __('Delete this post?') }}"
-                        >
-                            <flux:icon.trash class="size-4" />
-                        </flux:button>
-                    </div>
-                @endif
+                @include('partials.post-options-menu', [
+                    'post' => $post,
+                    'isMine' => Auth::id() === $post->user_id,
+                    'canDelete' => Auth::id() === $post->user_id,
+                    'shareUrl' => route('profile.show', $post->user).'#post-'.$post->id,
+                    'editDispatchEvent' => 'edit-wall-post',
+                ])
             </div>
 
             @if ($post->body)
                 <p class="mt-3 whitespace-pre-line text-stone-700 dark:text-stone-300">{!! \App\Support\RichText::render($post->body, $post->hashtags, $post->mentions) !!}</p>
+            @endif
+
+            @if ($reportingPostId === $post->id)
+                <div class="mt-3 rounded-lg bg-white border border-stone-200 p-3 dark:bg-stone-900 dark:border-stone-800">
+                    <flux:textarea wire:model="reportReason" :label="__('Why are you reporting this?')" rows="2" />
+                    <div class="mt-2 flex justify-end gap-2">
+                        <flux:button size="sm" variant="ghost" wire:click="cancelReport">{{ __('Cancel') }}</flux:button>
+                        <flux:button size="sm" variant="danger" wire:click="submitReport">{{ __('Submit report') }}</flux:button>
+                    </div>
+                    @error('reportReason') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                </div>
             @endif
 
             @include('partials.media-grid', ['media' => $post->media])

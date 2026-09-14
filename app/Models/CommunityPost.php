@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Concerns\HasBookmarks;
 use App\Concerns\HasComments;
 use App\Concerns\HasHashtags;
+use App\Concerns\HasHides;
 use App\Concerns\HasMentions;
 use App\Concerns\HasReactions;
 use Illuminate\Database\Eloquent\Model;
@@ -14,7 +15,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CommunityPost extends Model
 {
-    use HasBookmarks, HasComments, HasHashtags, HasMentions, HasReactions, SoftDeletes;
+    use HasBookmarks, HasComments, HasHashtags, HasHides, HasMentions, HasReactions, SoftDeletes;
 
     protected $fillable = [
         'community_id',

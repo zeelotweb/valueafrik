@@ -261,6 +261,40 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
         $this->blocking()->detach($user->id);
     }
 
+    /**
+     * Unlike a block, muting doesn't touch the follow graph or stop
+     * messaging/calls — it only quiets someone's content out of passive
+     * feeds (the dashboard's following activity, a community's post feed).
+     * Visiting their profile directly still shows everything, same as
+     * following someone you've never actually looked at.
+     */
+    public function muting(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'muted_users', 'muter_id', 'muted_id')->withTimestamps();
+    }
+
+    public function mutedBy(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'muted_users', 'muted_id', 'muter_id')->withTimestamps();
+    }
+
+    public function hasMuted(User $user): bool
+    {
+        return $this->muting()->whereKey($user->id)->exists();
+    }
+
+    public function mute(User $user): void
+    {
+        abort_if($this->id === $user->id, 403);
+
+        $this->muting()->syncWithoutDetaching($user->id);
+    }
+
+    public function unmute(User $user): void
+    {
+        $this->muting()->detach($user->id);
+    }
+
     public function wallPosts(): HasMany
     {
         return $this->hasMany(WallPost::class);

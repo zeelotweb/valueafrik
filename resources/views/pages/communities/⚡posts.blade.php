@@ -46,6 +46,49 @@ new class extends Component {
         }
 
         $post->delete();
+
+        unset($this->postsWindow, $this->hasMore);
+    }
+
+    public function hidePost(int $postId): void
+    {
+        $post = CommunityPost::whereKey($postId)->where('community_id', $this->community->id)->firstOrFail();
+
+        $post->hideFor(Auth::user());
+
+        unset($this->postsWindow, $this->hasMore);
+    }
+
+    public function toggleMute(int $postId): void
+    {
+        $post = CommunityPost::whereKey($postId)->where('community_id', $this->community->id)->firstOrFail();
+        $viewer = Auth::user();
+
+        abort_if($viewer->id === $post->user_id, 403);
+
+        if ($viewer->hasMuted($post->user)) {
+            $viewer->unmute($post->user);
+        } else {
+            $viewer->mute($post->user);
+        }
+
+        unset($this->postsWindow, $this->hasMore);
+    }
+
+    public function toggleBlock(int $postId): void
+    {
+        $post = CommunityPost::whereKey($postId)->where('community_id', $this->community->id)->firstOrFail();
+        $viewer = Auth::user();
+
+        abort_if($viewer->id === $post->user_id, 403);
+
+        if ($viewer->hasBlocked($post->user)) {
+            $viewer->unblock($post->user);
+        } else {
+            $viewer->block($post->user);
+        }
+
+        unset($this->postsWindow, $this->hasMore);
     }
 
     public function startReport(int $postId): void
@@ -84,10 +127,23 @@ new class extends Component {
     #[Computed]
     public function postsWindow()
     {
+        $viewer = Auth::user();
+
+        // A community feed is passive consumption — scrolling past whoever
+        // posts, not a deliberate visit to one person — so muted and
+        // blocked authors are filtered out here entirely, on top of
+        // whatever this viewer has individually hidden. None of this
+        // applies on a profile's own Wall, since visiting it is deliberate.
+        $mutedOrBlockedIds = $viewer->muting()->pluck('users.id')
+            ->merge($viewer->blocking()->pluck('users.id'))
+            ->merge($viewer->blockedBy()->pluck('users.id'));
+
         // Eager-loaded here so the nested reactions/comments/bookmark
         // components don't each fire their own count/exists query per
         // post — see HasReactions/HasComments/HasBookmarks.
         return $this->community->posts()
+            ->whereNotIn('user_id', $mutedOrBlockedIds)
+            ->whereDoesntHave('hides', fn ($q) => $q->where('user_id', $viewer->id))
             ->with(['user.profile', 'media', 'hashtags', 'mentions.user'])
             ->withCount(['reactions', 'comments'])
             ->withExists([
@@ -117,7 +173,7 @@ new class extends Component {
     @forelse ($posts as $post)
         @php $isMine = $post->user_id === Auth::id(); @endphp
 
-        <div class="surface-card p-4" wire:key="community-post-{{ $post->id }}">
+        <div id="post-{{ $post->id }}" class="surface-card p-4 target:ring-2 target:ring-score-500" wire:key="community-post-{{ $post->id }}">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <a href="{{ route('profile.show', $post->user) }}" wire:navigate class="size-10 shrink-0 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-700">
@@ -140,34 +196,13 @@ new class extends Component {
                     </div>
                 </div>
 
-                <div class="flex items-center gap-1">
-                    @if (! $isMine)
-                        <flux:button size="sm" variant="ghost" wire:click="startReport({{ $post->id }})">
-                            <flux:icon.flag class="size-4" />
-                        </flux:button>
-                    @endif
-
-                    @if ($isMine)
-                        <flux:button
-                            size="sm"
-                            variant="ghost"
-                            wire:click="$dispatch('edit-community-post', { postId: {{ $post->id }} })"
-                        >
-                            <flux:icon.pencil class="size-4" />
-                        </flux:button>
-                    @endif
-
-                    @if ($isMine || $community->canModerate(Auth::user()))
-                        <flux:button
-                            size="sm"
-                            variant="ghost"
-                            wire:click="delete({{ $post->id }})"
-                            wire:confirm="{{ __('Delete this post?') }}"
-                        >
-                            <flux:icon.trash class="size-4" />
-                        </flux:button>
-                    @endif
-                </div>
+                @include('partials.post-options-menu', [
+                    'post' => $post,
+                    'isMine' => $isMine,
+                    'canDelete' => $isMine || $community->canModerate(Auth::user()),
+                    'shareUrl' => route('communities.show', $community).'#post-'.$post->id,
+                    'editDispatchEvent' => 'edit-community-post',
+                ])
             </div>
 
             @if ($post->body)
