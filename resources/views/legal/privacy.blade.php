@@ -196,7 +196,7 @@
                         <h2 class="font-display text-xl font-semibold text-stone-900 dark:text-white">11. Contact us</h2>
                         <p class="mt-2">
                             If you have questions about this Privacy Policy, how we handle your information, or want
-                            to exercise a right described in Section 5, <a href="https://zeelotweb.com/contact?source=valueafrik" target="_blank" rel="noopener" class="font-medium text-cyan-600 hover:underline dark:text-cyan-400">contact ZeelotWeb</a>, the company behind valueAFRIK — this opens in a new tab, so valueAFRIK stays right where you left it.
+                            to exercise a right described in Section 5, <a href="https://zeelot.net/contact?source=valueafrik" target="_blank" rel="noopener" class="font-medium text-cyan-600 hover:underline dark:text-cyan-400">contact ZeelotWeb</a>, the company behind valueAFRIK — this opens in a new tab, so valueAFRIK stays right where you left it.
                         </p>
                         <p class="mt-2">valueAFRIK is a product of ZeelotWeb, based in Columbus, Ohio, USA.</p>
                         <p class="mt-2 rounded-lg bg-stone-100 px-3 py-2 font-mono text-xs text-stone-500 dark:bg-stone-900 dark:text-stone-400">

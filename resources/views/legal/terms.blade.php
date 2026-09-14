@@ -245,7 +245,7 @@
                     <div>
                         <h2 class="font-display text-xl font-semibold text-stone-900 dark:text-white">17. Contact us</h2>
                         <p class="mt-2">
-                            Questions about these Terms? <a href="https://zeelotweb.com/contact?source=valueafrik" target="_blank" rel="noopener" class="font-medium text-cyan-600 hover:underline dark:text-cyan-400">Contact ZeelotWeb</a>, the company behind valueAFRIK — this opens in a new tab, so valueAFRIK stays right where you left it.
+                            Questions about these Terms? <a href="https://zeelot.net/contact?source=valueafrik" target="_blank" rel="noopener" class="font-medium text-cyan-600 hover:underline dark:text-cyan-400">Contact ZeelotWeb</a>, the company behind valueAFRIK — this opens in a new tab, so valueAFRIK stays right where you left it.
                         </p>
                         <p class="mt-2">valueAFRIK is a product of ZeelotWeb, based in Columbus, Ohio, USA.</p>
                         <p class="mt-2 rounded-lg bg-stone-100 px-3 py-2 font-mono text-xs text-stone-500 dark:bg-stone-900 dark:text-stone-400">
