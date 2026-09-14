@@ -23,7 +23,6 @@ $pillars = [
     </head>
     <body
         x-data="{ modalOpen: false, active: 0, total: {{ count($showcaseItems) }}, heroPaused: false }"
-        x-on:keydown.escape.window="modalOpen = false"
         x-init="if (total > 1) { setInterval(() => { if (! modalOpen && ! heroPaused) active = (active + 1) % total }, 5000) }"
         class="min-h-screen bg-stone-50 text-stone-900 antialiased dark:bg-stone-950 dark:text-stone-100"
     >
@@ -350,7 +349,6 @@ $pillars = [
                 x-transition.opacity
                 style="display: none;"
                 class="fixed inset-0 z-50 flex items-center justify-center bg-stone-950/70 p-4"
-                x-on:click.self="modalOpen = false"
             >
                 <div class="relative w-full max-w-lg">
                     <button
