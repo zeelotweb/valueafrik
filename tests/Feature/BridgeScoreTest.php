@@ -5,6 +5,7 @@ use App\Models\Conversation;
 use App\Models\Heritage;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Livewire;
 
 function communityFor(User $owner, array $attributes = []): Community
@@ -125,6 +126,22 @@ test('following within the same heritage does not award the cross heritage bonus
         ->call('toggle');
 
     expect($follower->fresh()->bridgeScore())->toBe(config('bridge_score.points.follow'));
+});
+
+test('follow/unfollow toggling is throttled per viewer-target pair to stop a notification-spam loop', function () {
+    $follower = User::factory()->create();
+    $followed = User::factory()->create();
+
+    for ($i = 0; $i < 6; $i++) {
+        RateLimiter::hit('follow-toggle:'.$follower->id.':'.$followed->id, 60);
+    }
+
+    Livewire::actingAs($follower)
+        ->test('pages::profile.follow-button', ['user' => $followed])
+        ->call('toggle')
+        ->assertStatus(429);
+
+    expect($follower->fresh()->isFollowing($followed))->toBeFalse();
 });
 
 test('unfollowing does not deduct previously earned points', function () {

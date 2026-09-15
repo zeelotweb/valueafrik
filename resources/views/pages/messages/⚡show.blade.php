@@ -12,6 +12,7 @@ use App\Notifications\NewMessageReceived;
 use App\Services\ImageOptimizer;
 use App\Support\SafeNotifier;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -88,9 +89,20 @@ new #[Title('Messages')] class extends Component {
         return ! $this->otherParticipant || ! Auth::user()->hasBlockRelationWith($this->otherParticipant);
     }
 
+    /**
+     * Caps how many messages one user can send across all their
+     * conversations per minute — guards against flooding a participant's
+     * inbox in a tight loop, not normal back-and-forth chatting.
+     */
+    private const MAX_MESSAGES_PER_MINUTE = 60;
+
     public function send(): void
     {
         abort_unless($this->canActuallyMessage(), 403);
+
+        $throttleKey = 'send-message:'.Auth::id();
+        abort_if(RateLimiter::tooManyAttempts($throttleKey, self::MAX_MESSAGES_PER_MINUTE), 429);
+        RateLimiter::hit($throttleKey, 60);
 
         $this->validate([
             'body' => ['nullable', 'string', 'max:5000'],

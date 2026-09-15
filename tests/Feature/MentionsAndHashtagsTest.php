@@ -161,3 +161,41 @@ test('the mention search endpoint matches by username or name', function () {
     $response->assertOk();
     expect(collect($response->json())->pluck('username'))->toContain($target->username);
 });
+
+test('the mention search endpoint excludes users in a block relationship', function () {
+    $user = User::factory()->create();
+    $blocked = User::factory()->create(['name' => 'Zuri Adeyemi']);
+    $user->block($blocked);
+
+    $response = $this->actingAs($user)->getJson(route('mentions.search', ['q' => 'zuri']));
+
+    $response->assertOk();
+    expect(collect($response->json())->pluck('username'))->not->toContain($blocked->username);
+});
+
+test('the topics page never leaks a private community post to a non-member', function () {
+    $owner = User::factory()->create();
+    $community = $owner->ownedCommunities()->create([
+        'name' => 'Secret Community',
+        'slug' => 'secret-community-'.uniqid(),
+        'visibility' => Community::VISIBILITY_PRIVATE,
+        'participation_level' => Community::PARTICIPATION_POST,
+    ]);
+    $community->members()->attach($owner->id, ['role' => 'owner', 'status' => 'active']);
+
+    $post = $community->posts()->create(['user_id' => $owner->id, 'body' => 'Very #privatetag secret content.']);
+    RichText::syncHashtags($post, $post->body);
+
+    $hashtag = Hashtag::where('name', 'privatetag')->firstOrFail();
+    $outsider = User::factory()->create();
+
+    Livewire::actingAs($outsider)
+        ->test('pages::topics.show', ['hashtag' => $hashtag])
+        ->assertDontSee('secret content');
+
+    // The owner (a member) still sees it — this is a visibility filter,
+    // not a wholesale hiding of the post from the topic index.
+    Livewire::actingAs($owner)
+        ->test('pages::topics.show', ['hashtag' => $hashtag])
+        ->assertSee('secret content');
+});

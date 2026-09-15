@@ -5,11 +5,20 @@ use App\Notifications\NewFollower;
 use App\Support\SafeNotifier;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
 new class extends Component {
+    /**
+     * Caps follow/unfollow toggles per viewer-target pair per minute —
+     * every follow sends the target a notification, so without this a
+     * follow/unfollow/follow loop can spam someone's notification feed
+     * indefinitely even though the Bridge Score award itself is deduped.
+     */
+    private const MAX_TOGGLES_PER_MINUTE = 6;
+
     public User $user;
     public bool $overlay = false;
     public bool $iconOnly = false;
@@ -31,6 +40,10 @@ new class extends Component {
         $viewer = Auth::user();
 
         abort_if($viewer->id === $this->user->id, 403);
+
+        $throttleKey = 'follow-toggle:'.$viewer->id.':'.$this->user->id;
+        abort_if(RateLimiter::tooManyAttempts($throttleKey, self::MAX_TOGGLES_PER_MINUTE), 429);
+        RateLimiter::hit($throttleKey, 60);
 
         if ($this->isFollowing) {
             $viewer->following()->detach($this->user->id);

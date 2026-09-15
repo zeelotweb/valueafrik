@@ -300,3 +300,20 @@ test('a wall post can be reported with no community attached', function () {
     expect($report->reason)->toBe('This is spam.');
     expect($report->reportable_id)->toBe($post->id);
 });
+
+test('reporting the same post twice from the same reporter does not create a duplicate open report', function () {
+    $author = User::factory()->create();
+    $viewer = User::factory()->create();
+    $post = $author->wallPosts()->create(['body' => 'Report me repeatedly']);
+
+    $component = Livewire::actingAs($viewer)->test('pages::profile.wall-posts', ['user' => $author]);
+
+    foreach (range(1, 5) as $i) {
+        $component
+            ->call('startReport', $post->id)
+            ->set('reportReason', 'This is spam.')
+            ->call('submitReport');
+    }
+
+    expect(\App\Models\CommunityReport::count())->toBe(1);
+});

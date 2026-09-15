@@ -74,10 +74,19 @@ class Message extends Model
      * everyone" convention (deleting someone else's message out from under
      * them, even in your own conversation, isn't something either side
      * should be able to do).
+     *
+     * Also removes any attached media from disk — toBroadcastArray() never
+     * serves it again after this, but the file's original URL would still
+     * work for anyone who already had it (browser history, a forwarded
+     * link) if it weren't actually deleted, not just hidden.
      */
     public function deleteForEveryone(User $user): void
     {
         abort_unless($user->id === $this->user_id, 403);
+
+        foreach ($this->media as $media) {
+            $media->deleteFiles();
+        }
 
         $this->update(['deleted_for_everyone_at' => now()]);
     }

@@ -3,7 +3,6 @@
 use App\Models\User;
 use App\Models\WallPost;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -43,7 +42,7 @@ new class extends Component {
         abort_if($post->user_id !== Auth::id(), 403);
 
         foreach ($post->media as $media) {
-            Storage::disk($media->disk)->delete($media->path);
+            $media->deleteFiles();
         }
 
         $post->delete();
@@ -110,13 +109,7 @@ new class extends Component {
 
         $post = WallPost::findOrFail($this->reportingPostId);
 
-        $report = new \App\Models\CommunityReport([
-            'reporter_id' => Auth::id(),
-            'reason' => $this->reportReason,
-        ]);
-
-        $report->reportable()->associate($post);
-        $report->save();
+        \App\Models\CommunityReport::file(Auth::user(), $post, $this->reportReason);
 
         $this->reportingPostId = null;
         $this->reportReason = '';

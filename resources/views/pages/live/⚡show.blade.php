@@ -250,9 +250,7 @@ new #[Title('Live')] class extends Component {
 
         $this->validate(['reportReason' => ['required', 'string', 'max:1000']]);
 
-        $report = new CommunityReport(['reporter_id' => Auth::id(), 'reason' => $this->reportReason]);
-        $report->reportable()->associate($otherParty);
-        $report->save();
+        CommunityReport::file(Auth::user(), $otherParty, $this->reportReason);
 
         $this->reportingOtherParty = false;
         $this->reportReason = '';

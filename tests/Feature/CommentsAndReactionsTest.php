@@ -342,6 +342,33 @@ test('unbookmarking a post on the bookmarks page removes it from the list immedi
     $component->assertDontSee('Unbookmark me');
 });
 
+test('a bookmarked private-community post disappears from the bookmarks page once the bookmarker leaves', function () {
+    $owner = User::factory()->create();
+    $community = $owner->ownedCommunities()->create([
+        'name' => 'Bookmark Privacy Test',
+        'slug' => 'bookmark-privacy-test-'.uniqid(),
+        'visibility' => Community::VISIBILITY_PRIVATE,
+        'participation_level' => Community::PARTICIPATION_POST,
+    ]);
+    $community->members()->attach($owner->id, ['role' => 'owner', 'status' => 'active']);
+
+    $member = User::factory()->create();
+    $community->members()->attach($member->id, ['role' => 'member', 'status' => 'active']);
+
+    $post = $community->posts()->create(['user_id' => $owner->id, 'body' => 'Members-only content']);
+    $post->bookmarks()->create(['user_id' => $member->id]);
+
+    Livewire::actingAs($member)
+        ->test('pages::bookmarks.index')
+        ->assertSee('Members-only content');
+
+    $community->members()->detach($member->id);
+
+    Livewire::actingAs($member)
+        ->test('pages::bookmarks.index')
+        ->assertDontSee('Members-only content');
+});
+
 test('picking an emoji reaction replaces a heart, and picking the heart replaces an emoji', function () {
     $author = User::factory()->create();
     $post = $author->wallPosts()->create(['body' => 'Hello wall.']);

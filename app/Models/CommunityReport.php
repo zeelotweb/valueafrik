@@ -43,4 +43,35 @@ class CommunityReport extends Model
     {
         return $this->morphTo();
     }
+
+    /**
+     * Files a report, unless this reporter already has an open one against
+     * this exact target — without this, submitReport() could be called in
+     * a loop to flood the admin queue with unlimited duplicate reports
+     * against the same post/person. Silently no-ops on a duplicate rather
+     * than erroring: the reporter's concern is already in the queue, so
+     * the UI can still say "submitted" without revealing the dedup.
+     */
+    public static function file(User $reporter, Model $reportable, string $reason, ?Community $community = null): void
+    {
+        $alreadyOpen = self::query()
+            ->where('reporter_id', $reporter->id)
+            ->where('reportable_type', $reportable->getMorphClass())
+            ->where('reportable_id', $reportable->getKey())
+            ->where('status', 'open')
+            ->exists();
+
+        if ($alreadyOpen) {
+            return;
+        }
+
+        $report = new self([
+            'community_id' => $community?->id,
+            'reporter_id' => $reporter->id,
+            'reason' => $reason,
+        ]);
+
+        $report->reportable()->associate($reportable);
+        $report->save();
+    }
 }

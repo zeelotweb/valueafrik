@@ -47,4 +47,21 @@ class Media extends Model
             ? Storage::disk($this->disk)->url($this->thumbnail_path)
             : $this->url();
     }
+
+    /**
+     * Removes both stored derivatives from disk — the full file and, if
+     * present, its thumbnail. Every deletion path (wall/community posts,
+     * messages) must call this instead of deleting $path alone, or the
+     * thumbnail derivative is orphaned on disk forever.
+     */
+    public function deleteFiles(): void
+    {
+        $disk = Storage::disk($this->disk);
+
+        $disk->delete($this->path);
+
+        if ($this->thumbnail_path) {
+            $disk->delete($this->thumbnail_path);
+        }
+    }
 }

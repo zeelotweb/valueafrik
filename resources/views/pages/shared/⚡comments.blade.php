@@ -5,6 +5,7 @@ use App\Models\CommentVote;
 use App\Support\RichText;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
@@ -21,6 +22,9 @@ use Livewire\Component;
  * later if it's ever needed).
  */
 new class extends Component {
+    /** Caps comments+replies per user per minute — guards against spam. */
+    private const MAX_COMMENTS_PER_MINUTE = 30;
+
     public Model $commentable;
     public bool $open = false;
     public string $body = '';
@@ -192,9 +196,17 @@ new class extends Component {
         $this->reset(['replyBody', 'editingCommentId', 'editBody']);
     }
 
+    private function throttleCommenting(): void
+    {
+        $throttleKey = 'post-comment:'.Auth::id();
+        abort_if(RateLimiter::tooManyAttempts($throttleKey, self::MAX_COMMENTS_PER_MINUTE), 429);
+        RateLimiter::hit($throttleKey, 60);
+    }
+
     public function post(): void
     {
         abort_if(Auth::user()->hasBlockRelationWith($this->commentable->user), 403);
+        $this->throttleCommenting();
 
         $this->validate(['body' => ['required', 'string', 'max:2000']]);
 
@@ -217,6 +229,7 @@ new class extends Component {
     {
         abort_unless($this->viewingReplyFor, 404);
         abort_if(Auth::user()->hasBlockRelationWith($this->commentable->user), 403);
+        $this->throttleCommenting();
 
         $this->validate(['replyBody' => ['required', 'string', 'max:2000']]);
 

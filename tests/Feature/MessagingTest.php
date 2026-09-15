@@ -8,6 +8,7 @@ use App\Models\Conversation;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 
@@ -534,6 +535,47 @@ test('the sender can delete their own message for everyone, and it broadcasts th
     Event::assertDispatched(MessageDeletedForEveryone::class, function (MessageDeletedForEveryone $event) use ($message) {
         return $event->message->is($message);
     });
+});
+
+test('deleting a message for everyone removes its photo from disk, not just from the app\'s display', function () {
+    $a = User::factory()->create();
+    $b = User::factory()->create();
+    $conversation = Conversation::between($a, $b);
+    $message = $conversation->messages()->create(['user_id' => $a->id, 'body' => null]);
+    $media = $message->media()->create([
+        'user_id' => $a->id,
+        'disk' => 'public',
+        'type' => 'image',
+        'path' => 'message-media/leaked.webp',
+        'thumbnail_path' => 'message-media/leaked-thumb.webp',
+        'mime_type' => 'image/webp',
+        'size' => 1234,
+    ]);
+    Storage::disk('public')->put($media->path, 'fake-image-bytes');
+    Storage::disk('public')->put($media->thumbnail_path, 'fake-thumb-bytes');
+
+    $message->deleteForEveryone($a);
+
+    Storage::disk('public')->assertMissing($media->path);
+    Storage::disk('public')->assertMissing($media->thumbnail_path);
+});
+
+test('sending is throttled per user to stop a message-flood loop', function () {
+    $a = User::factory()->create();
+    $b = User::factory()->create();
+    $conversation = Conversation::between($a, $b);
+
+    for ($i = 0; $i < 60; $i++) {
+        RateLimiter::hit('send-message:'.$a->id, 60);
+    }
+
+    Livewire::actingAs($a)
+        ->test('pages::messages.show', ['conversation' => $conversation])
+        ->set('body', 'One too many')
+        ->call('send')
+        ->assertStatus(429);
+
+    expect($conversation->messages()->count())->toBe(0);
 });
 
 test('a non-sender cannot delete someone else\'s message for everyone', function () {

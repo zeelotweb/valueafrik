@@ -32,12 +32,19 @@ new #[Title('Topic')] class extends Component {
             ->latest()
             ->get();
 
+        $viewer = Auth::user();
+
         $communityPosts = $this->hashtag->communityPosts()
             ->with([...$eagerLoad, 'community'])
             ->withCount($counts)
             ->withExists($exists)
             ->latest()
-            ->get();
+            ->get()
+            // A hashtag is shared across every post that used it, public or
+            // private — filter out posts from communities this viewer isn't
+            // allowed to see, the same check following-activity applies.
+            ->filter(fn ($post) => $post->community->canView($viewer))
+            ->values();
 
         $posts = $wallPosts->concat($communityPosts)->sortByDesc('created_at')->values();
 

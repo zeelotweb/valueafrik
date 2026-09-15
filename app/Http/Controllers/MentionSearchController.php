@@ -16,11 +16,15 @@ class MentionSearchController extends Controller
             return response()->json([]);
         }
 
+        $viewer = $request->user();
+        $blockedIds = $viewer->blocking()->pluck('users.id')->merge($viewer->blockedBy()->pluck('users.id'));
+
         $users = User::query()
             ->where(function ($q) use ($query) {
                 $q->where('username', 'like', $query.'%')
                     ->orWhere('name', 'like', $query.'%');
             })
+            ->whereNotIn('id', $blockedIds)
             ->with('profile')
             ->limit(6)
             ->get()

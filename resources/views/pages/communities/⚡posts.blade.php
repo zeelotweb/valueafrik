@@ -5,7 +5,6 @@ use App\Models\CommunityPost;
 use App\Models\CommunityReport;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -42,7 +41,7 @@ new class extends Component {
         abort_unless($post->user_id === Auth::id() || $this->community->canModerate(Auth::user()), 403);
 
         foreach ($post->media as $media) {
-            Storage::disk($media->disk)->delete($media->path);
+            $media->deleteFiles();
         }
 
         $post->delete();
@@ -109,14 +108,7 @@ new class extends Component {
 
         $post = CommunityPost::whereKey($this->reportingPostId)->where('community_id', $this->community->id)->firstOrFail();
 
-        $report = new CommunityReport([
-            'community_id' => $this->community->id,
-            'reporter_id' => Auth::id(),
-            'reason' => $this->reportReason,
-        ]);
-
-        $report->reportable()->associate($post);
-        $report->save();
+        CommunityReport::file(Auth::user(), $post, $this->reportReason, $this->community);
 
         $this->reportingPostId = null;
         $this->reportReason = '';
