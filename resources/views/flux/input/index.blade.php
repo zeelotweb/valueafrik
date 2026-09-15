@@ -111,11 +111,11 @@ $classes = Flux::classes()
         5 => 'pe-37',
         6 => 'pe-44',
     })
-    ->add(match ($variant) { // Background — faded cyan fill, no border; a
-        // darker shade of the same fill signals focus/active, and a red
-        // fill (same mechanic) signals a validation error, uniformly
-        // across every text field on the platform.
-        'outline' => 'bg-cyan-50 focus:bg-cyan-100 dark:bg-cyan-950/40 dark:focus:bg-cyan-950/70 dark:disabled:bg-white/[7%]',
+    ->add(match ($variant) { // Background — flat neutral-200 fill, no
+        // border; a darker shade of the same fill signals focus/active,
+        // and a red fill (same mechanic) signals a validation error,
+        // uniformly across every text field on the platform.
+        'outline' => 'bg-neutral-200 focus:bg-neutral-300 dark:bg-neutral-800/40 dark:focus:bg-neutral-800/70 dark:disabled:bg-white/[7%]',
         'filled'  => 'bg-zinc-800/5 dark:bg-white/10 dark:disabled:bg-white/[7%]',
     })
     ->add(match ($variant) { // Text color
