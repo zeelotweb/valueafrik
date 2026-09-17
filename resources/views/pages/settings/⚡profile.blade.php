@@ -30,7 +30,7 @@ new #[Title('Profile settings')] class extends Component {
     {
         $user = Auth::user();
 
-        $validated = $this->validate($this->profileRules($user->id));
+        $validated = $this->validate($this->profileRules($user->id, $this->email));
 
         $user->fill($validated);
 

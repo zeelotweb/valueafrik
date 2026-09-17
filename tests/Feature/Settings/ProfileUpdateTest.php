@@ -43,6 +43,46 @@ test('email verification status is unchanged when email address is unchanged', f
     expect($user->refresh()->email_verified_at)->not->toBeNull();
 });
 
+test('a regular user cannot rename themselves to the reserved brand name', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user);
+
+    Livewire::test('pages::settings.profile')
+        ->set('name', 'ValueAfrik')
+        ->set('email', $user->email)
+        ->call('updateProfileInformation')
+        ->assertHasErrors(['name']);
+
+    expect($user->fresh()->name)->not->toBe('ValueAfrik');
+});
+
+test('close variants of the reserved brand name are blocked too', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user);
+
+    Livewire::test('pages::settings.profile')
+        ->set('name', 'Value Afrik Official')
+        ->set('email', $user->email)
+        ->call('updateProfileInformation')
+        ->assertHasErrors(['name']);
+});
+
+test('the account holding the reserved brand email can rename themselves to it', function () {
+    $user = User::factory()->create(['email' => 'valueafrik@yahoo.com']);
+
+    $this->actingAs($user);
+
+    Livewire::test('pages::settings.profile')
+        ->set('name', 'valueAFRIK')
+        ->set('email', 'valueafrik@yahoo.com')
+        ->call('updateProfileInformation')
+        ->assertHasNoErrors();
+
+    expect($user->fresh()->name)->toBe('valueAFRIK');
+});
+
 test('user can delete their account', function () {
     $user = User::factory()->create();
 
