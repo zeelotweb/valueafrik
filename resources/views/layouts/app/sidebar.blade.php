@@ -74,6 +74,10 @@
                         <flux:sidebar.item icon="shield-exclamation" :href="route('admin.users')" :current="request()->routeIs('admin.users')" wire:navigate>
                             {{ __('Users') }}
                         </flux:sidebar.item>
+
+                        <flux:sidebar.item icon="bug-ant" :href="route('admin.bug-reports')" :current="request()->routeIs('admin.bug-reports')" wire:navigate>
+                            {{ __('Bug Reports') }}
+                        </flux:sidebar.item>
                     </flux:sidebar.group>
                 @endif
             </flux:sidebar.nav>
@@ -157,6 +161,10 @@
 
         @persist('incoming-call')
             <livewire:pages::layout.incoming-call :key="'incoming-call-'.auth()->id()" />
+        @endpersist
+
+        @persist('report-bug')
+            <livewire:pages::layout.report-bug :key="'report-bug-'.auth()->id()" />
         @endpersist
 
         @persist('media-viewer')

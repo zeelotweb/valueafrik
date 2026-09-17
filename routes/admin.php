@@ -8,4 +8,5 @@ Route::middleware(['auth', 'verified', EnsureIsAdmin::class])->prefix('admin')->
 
     Route::livewire('reports', 'pages::admin.reports')->name('reports');
     Route::livewire('users', 'pages::admin.users')->name('users');
+    Route::livewire('bug-reports', 'pages::admin.bug-reports')->name('bug-reports');
 });
