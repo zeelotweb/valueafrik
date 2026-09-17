@@ -100,11 +100,30 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     /**
      * Platform-wide moderator — distinct from a community owner/monitor,
      * which only has authority inside their own community. Granted via
-     * `php artisan admin:grant {email}`, never through any in-app UI.
+     * `php artisan admin:grant {email}`, or automatically to whoever
+     * registers first (see grantAdminIfFirstUser()) — never through any
+     * other in-app UI.
      */
     public function isAdmin(): bool
     {
         return (bool) $this->is_admin;
+    }
+
+    /**
+     * The very first person to register becomes the platform's founding
+     * admin automatically — every other account needs `admin:grant`. Called
+     * explicitly from each real registration path (password, Google,
+     * Facebook) rather than hooked into every User::create() call, so
+     * factories/seeders/tests creating a lone user don't unexpectedly get
+     * promoted. A tie between two simultaneous first signups isn't guarded
+     * against — the platform has no traffic yet at that point, so the
+     * actual risk of granting an extra admin here is effectively zero.
+     */
+    public static function grantAdminIfFirstUser(User $user): void
+    {
+        if (static::count() === 1) {
+            $user->forceFill(['is_admin' => true])->save();
+        }
     }
 
     /**

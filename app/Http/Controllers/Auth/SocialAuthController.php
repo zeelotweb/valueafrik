@@ -99,6 +99,8 @@ class SocialAuthController extends Controller
             'password' => Str::password(32),
         ]);
 
+        User::grantAdminIfFirstUser($user);
+
         // email_verified_at isn't mass-assignable (it's not in User::$fillable),
         // so it has to be set explicitly — Google/Facebook already verified
         // this address, there's nothing for us to re-confirm by email.

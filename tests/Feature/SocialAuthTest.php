@@ -90,6 +90,25 @@ test('google sign-in refuses to attach to an existing password account instead o
     expect(User::where('email', 'newcomer@example.com')->count())->toBe(1);
 });
 
+test('the very first person to sign up via google becomes the platform admin, same as password registration', function () {
+    Socialite::shouldReceive('driver->user')->andReturn(fakeGoogleUser());
+
+    $this->get(route('social.callback', 'google'));
+
+    $founder = User::where('email', 'newcomer@example.com')->firstOrFail();
+    expect($founder->isAdmin())->toBeTrue();
+});
+
+test('a google sign-up after other accounts already exist does not become admin', function () {
+    User::factory()->create(); // an existing user, so this signup isn't "first"
+
+    Socialite::shouldReceive('driver->user')->andReturn(fakeGoogleUser());
+    $this->get(route('social.callback', 'google'));
+
+    $user = User::where('email', 'newcomer@example.com')->firstOrFail();
+    expect($user->isAdmin())->toBeFalse();
+});
+
 test('a google user signed in this way can call another user without being blocked from their own call room', function () {
     Socialite::shouldReceive('driver->user')->andReturn(fakeGoogleUser());
     $this->get(route('social.callback', 'google'));

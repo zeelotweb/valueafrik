@@ -31,6 +31,8 @@ class CreateNewUser implements CreatesNewUsers
             'password' => $input['password'],
         ]);
 
+        User::grantAdminIfFirstUser($user);
+
         // Skip the email verification step in local dev so testing isn't
         // gated on checking an inbox. Production still requires it.
         if (app()->environment('local')) {
