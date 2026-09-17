@@ -394,7 +394,7 @@ new #[Title('Culture Sprint')] class extends Component {
             <div
                 wire:key="culture-sprint-{{ $this->session->id }}-matched"
                 x-data="{ deadline: @js($this->acceptDeadline), secondsLeft: 0, tick() { this.secondsLeft = Math.max(0, Math.round((new Date(this.deadline) - new Date()) / 1000)); } }"
-                x-init="tick(); let i = setInterval(tick, 1000); $cleanup(() => clearInterval(i))"
+                x-init="tick(); let i = setInterval(() => { if (! $el.isConnected) { clearInterval(i); return; } tick(); }, 1000)"
                 class="flex flex-col items-center gap-4 rounded-md border border-live-200 bg-white p-10 text-center dark:border-live-900 dark:bg-stone-900"
             >
                 <span class="rounded-full bg-live-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-live-700 dark:bg-live-950 dark:text-live-400">
@@ -480,8 +480,10 @@ new #[Title('Culture Sprint')] class extends Component {
                             document.addEventListener('fullscreenchange', () => this.fullscreen = !!document.fullscreenElement);
 
                             this.tick();
-                            let i = setInterval(() => this.tick(), 250);
-                            $cleanup(() => clearInterval(i));
+                            let i = setInterval(() => {
+                                if (! this.$el.isConnected) { clearInterval(i); return; }
+                                this.tick();
+                            }, 250);
                         },
 
                         tick() {

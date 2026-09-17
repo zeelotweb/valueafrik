@@ -329,6 +329,18 @@ new #[Title('Live')] class extends Component {
         aspect-ratio: auto;
         height: 100%;
     }
+
+    /* The rule above matches every tile, including the small floating
+       self-inset box a 1:1 call uses (live.js's isSelfInset tile) — without
+       this, fullscreen forces that fixed-width box to 100% height too,
+       stretching it into a tall sliver instead of its intended small
+       floating shape. Restore its own aspect ratio so only its position
+       (already `absolute`, sized by width) changes in fullscreen, not its
+       proportions. */
+    .stage-fullscreen [data-layout="spotlight"] [data-tile="you"] {
+        aspect-ratio: 3 / 4;
+        height: auto;
+    }
 </style>
 
 <div class="mx-auto w-full max-w-4xl">
@@ -364,7 +376,7 @@ new #[Title('Live')] class extends Component {
         <div
             wire:key="live-session-{{ $session->id }}-ringing"
             x-data="{ deadline: @js($this->ringDeadline), secondsLeft: 0, tick() { this.secondsLeft = Math.max(0, Math.round((new Date(this.deadline) - new Date()) / 1000)); } }"
-            x-init="tick(); let interval = setInterval(tick, 1000); $cleanup(() => clearInterval(interval))"
+            x-init="tick(); let interval = setInterval(() => { if (! $el.isConnected) { clearInterval(interval); return; } tick(); }, 1000)"
             class="surface-card mt-10 flex flex-col items-center gap-4 p-10 text-center"
         >
             @if ($this->otherParty)
