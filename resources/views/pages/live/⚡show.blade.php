@@ -188,7 +188,7 @@ new #[Title('Live')] class extends Component {
         $this->issueTokenIfLive();
 
         if (! $accept) {
-            $this->redirect(route('live.index'), navigate: true);
+            $this->redirect($this->backRoute, navigate: true);
         }
     }
 
@@ -202,7 +202,14 @@ new #[Title('Live')] class extends Component {
             $this->session->endOrCancel(Auth::user());
         }
 
-        $this->redirect(route('live.index'), navigate: true);
+        // backRoute(), not a hardcoded route('live.index') — a finished
+        // call sends whoever just ended it to the other person's profile,
+        // same place the "Back" button on this now-ended session would
+        // take them; only a stream/sprint actually belongs on the live
+        // directory. Ending a call used to always land here regardless of
+        // type, which is why it looked like calls and broadcasts were
+        // getting mixed up.
+        $this->redirect($this->backRoute, navigate: true);
     }
 
     /**
@@ -214,7 +221,7 @@ new #[Title('Live')] class extends Component {
     public function leaveRoom(): void
     {
         if ($this->session->type === LiveSession::TYPE_STREAM && Auth::id() !== $this->session->host_id) {
-            $this->redirect(route('live.index'), navigate: true);
+            $this->redirect($this->backRoute, navigate: true);
 
             return;
         }

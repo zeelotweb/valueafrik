@@ -397,7 +397,12 @@ test('accepting from the room page connects the call and issues a token', functi
     expect($session->fresh()->status)->toBe(LiveSession::STATUS_LIVE);
 });
 
-test('declining from the room page redirects to the live directory', function () {
+test('declining from the room page redirects to the other person\'s profile, not the live directory', function () {
+    // Regression guard: a finished call is personal — this used to
+    // hardcode route('live.index') regardless of session type, dumping a
+    // just-ended/declined call onto the live broadcast directory instead
+    // of back to the other person, and doing it inconsistently between
+    // whoever took the action and whoever was just sitting in the call.
     $host = User::factory()->create();
     $callee = User::factory()->create();
     $session = LiveSession::create([
@@ -408,7 +413,7 @@ test('declining from the room page redirects to the live directory', function ()
     Livewire::actingAs($callee)
         ->test('pages::live.show', ['liveSession' => $session])
         ->call('respond', false)
-        ->assertRedirect(route('live.index'));
+        ->assertRedirect(route('profile.show', $host));
 
     expect($session->fresh()->status)->toBe(LiveSession::STATUS_DECLINED);
 });
@@ -424,9 +429,36 @@ test('the callee, not just the host, can end a live call from the room page', fu
     Livewire::actingAs($callee)
         ->test('pages::live.show', ['liveSession' => $session])
         ->call('endSession')
-        ->assertRedirect(route('live.index'));
+        ->assertRedirect(route('profile.show', $host));
 
     expect($session->fresh()->status)->toBe(LiveSession::STATUS_ENDED);
+});
+
+test('ending a call as the host redirects to the callee\'s profile, not the live broadcast directory', function () {
+    $host = User::factory()->create();
+    $callee = User::factory()->create();
+    $session = LiveSession::create([
+        'host_id' => $host->id, 'callee_id' => $callee->id, 'room_name' => 'r17c',
+        'type' => LiveSession::TYPE_CALL, 'status' => LiveSession::STATUS_LIVE, 'started_at' => now(),
+    ]);
+
+    Livewire::actingAs($host)
+        ->test('pages::live.show', ['liveSession' => $session])
+        ->call('endSession')
+        ->assertRedirect(route('profile.show', $callee));
+});
+
+test('ending a stream still redirects to the live directory, since a stream has no single other party', function () {
+    $host = User::factory()->create();
+    $session = LiveSession::create([
+        'host_id' => $host->id, 'room_name' => 'r17d',
+        'type' => LiveSession::TYPE_STREAM, 'status' => LiveSession::STATUS_LIVE, 'started_at' => now(),
+    ]);
+
+    Livewire::actingAs($host)
+        ->test('pages::live.show', ['liveSession' => $session])
+        ->call('endSession')
+        ->assertRedirect(route('live.index'));
 });
 
 test('the control bar leave button lets a stream viewer leave without hitting the host-only guard', function () {
