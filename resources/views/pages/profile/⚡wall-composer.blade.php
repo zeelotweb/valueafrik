@@ -3,6 +3,7 @@
 use App\Models\WallPost;
 use App\Services\ImageOptimizer;
 use App\Support\RichText;
+use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -86,6 +87,8 @@ new class extends Component {
 
             $this->dispatch('wall-post-created');
 
+            Flux::toast(variant: 'success', text: __('Post updated.'));
+
             return;
         }
 
@@ -120,6 +123,8 @@ new class extends Component {
         $this->modal('wall-composer')->close();
 
         $this->dispatch('wall-post-created');
+
+        Flux::toast(variant: 'success', text: __('Posted to your wall.'));
     }
 }; ?>
 
