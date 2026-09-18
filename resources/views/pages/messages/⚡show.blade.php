@@ -13,6 +13,7 @@ use App\Services\ImageOptimizer;
 use App\Support\SafeNotifier;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -106,7 +107,7 @@ new #[Title('Messages')] class extends Component {
 
         $this->validate([
             'body' => ['nullable', 'string', 'max:5000'],
-            'photo' => ['nullable', 'image', 'max:8192'],
+            'photo' => ['nullable', 'image', 'max:20480', Rule::dimensions()->maxWidth(6000)->maxHeight(6000)],
         ]);
 
         if (blank($this->body) && ! $this->photo) {

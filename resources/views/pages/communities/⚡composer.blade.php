@@ -4,6 +4,7 @@ use App\Models\Community;
 use App\Services\ImageOptimizer;
 use App\Support\RichText;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -96,7 +97,7 @@ new class extends Component {
         $this->validate([
             'body' => ['nullable', 'string', 'max:5000'],
             'photos' => ['array', 'max:5'],
-            'photos.*' => ['image', 'max:8192'],
+            'photos.*' => ['image', 'max:20480', Rule::dimensions()->maxWidth(6000)->maxHeight(6000)],
         ]);
 
         if (blank($this->body) && empty($this->photos)) {

@@ -67,6 +67,41 @@ test('user can attach photos to a wall post', function () {
     Storage::disk('public')->assertExists($post->media->first()->path);
 });
 
+test('a photo up to the new 20MB cap is accepted', function () {
+    $user = User::factory()->create();
+
+    Livewire::actingAs($user)
+        ->test('pages::profile.wall-composer')
+        ->set('photos', [UploadedFile::fake()->image('big.jpg')->size(15 * 1024)])
+        ->call('post')
+        ->assertHasNoErrors();
+
+    expect($user->wallPosts()->first()->media)->toHaveCount(1);
+});
+
+test('a photo over the 20MB cap is still rejected', function () {
+    // Rejected at upload time (Livewire's own temporary-upload rule, see
+    // config/livewire.php) rather than by this component's own validate()
+    // call — the property never ends up populated, so the error shows up
+    // immediately on set(), not after call('post').
+    $user = User::factory()->create();
+
+    Livewire::actingAs($user)
+        ->test('pages::profile.wall-composer')
+        ->set('photos', [UploadedFile::fake()->image('too-big.jpg')->size(21 * 1024)])
+        ->assertHasErrors(['photos.0']);
+});
+
+test('a photo wider or taller than 6000px is rejected regardless of file size', function () {
+    $user = User::factory()->create();
+
+    Livewire::actingAs($user)
+        ->test('pages::profile.wall-composer')
+        ->set('photos', [UploadedFile::fake()->image('huge-dimensions.jpg', 7000, 4000)])
+        ->call('post')
+        ->assertHasErrors(['photos.0']);
+});
+
 test('user can remove a staged photo before posting', function () {
     $user = User::factory()->create();
 

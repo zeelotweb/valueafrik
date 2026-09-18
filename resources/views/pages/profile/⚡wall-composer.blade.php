@@ -5,6 +5,7 @@ use App\Services\ImageOptimizer;
 use App\Support\RichText;
 use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -65,7 +66,11 @@ new class extends Component {
             'body' => ['nullable', 'string', 'max:5000'],
             'visibility' => ['required', 'in:public,followers_only,private'],
             'photos' => ['array', 'max:5'],
-            'photos.*' => ['image', 'max:8192'],
+            // 6000x6000 caps the actual memory cost of decoding this on the
+            // way in (ImageOptimizer::MIN_MEMORY_LIMIT_BYTES is sized against
+            // this same ceiling) — the file-size cap alone doesn't guarantee
+            // that, since compression ratio varies by photo.
+            'photos.*' => ['image', 'max:20480', Rule::dimensions()->maxWidth(6000)->maxHeight(6000)],
         ]);
 
         if ($this->editingPostId) {

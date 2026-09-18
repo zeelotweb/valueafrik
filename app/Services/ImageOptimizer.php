@@ -33,14 +33,19 @@ class ImageOptimizer
 
     /**
      * The floor this raises PHP's memory_limit to before touching GD —
-     * decoding a modern phone photo (4000x3000+) plus the working buffers
-     * GD needs during a resize can spike well past the platform's default
-     * 128M. Octane reuses the same worker process across requests, so this
-     * only ever raises the ceiling for whichever workers happen to handle
-     * an image upload — it never lowers it, and it isn't undone afterward
-     * because a higher ceiling costs nothing for requests that don't need it.
+     * decoding a modern phone photo plus the working buffers GD needs
+     * during a resize can spike well past the platform's default 128M.
+     * Sized against the upload validation's own dimension cap (6000x6000,
+     * see the 'photos.*' rules): a raw decoded bitmap at that ceiling is
+     * ~137MB (width * height * 4 bytes/pixel), so 512M leaves real headroom
+     * for the decoder's own transient overhead on top of that, not just
+     * the bitmap itself. Octane reuses the same worker process across
+     * requests, so this only ever raises the ceiling for whichever workers
+     * happen to handle an image upload — it never lowers it, and it isn't
+     * undone afterward because a higher ceiling costs nothing for requests
+     * that don't need it.
      */
-    private const MIN_MEMORY_LIMIT_BYTES = 256 * 1024 * 1024;
+    private const MIN_MEMORY_LIMIT_BYTES = 512 * 1024 * 1024;
 
     /**
      * Animated GIFs and SVGs pass through untouched — re-encoding a GIF to

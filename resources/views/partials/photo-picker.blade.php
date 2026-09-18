@@ -55,7 +55,7 @@
     </div>
 
     <p class="mt-1 text-xs text-stone-400 dark:text-stone-500">
-        {{ trans_choice('Up to :max photo, :size MB each.|Up to :max photos, :size MB each.', $max, ['max' => $max, 'size' => $maxSizeMb ?? 8]) }}
+        {{ trans_choice('Up to :max photo, :size MB each.|Up to :max photos, :size MB each.', $max, ['max' => $max, 'size' => $maxSizeMb ?? 20]) }}
     </p>
 
     @error($property) <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror

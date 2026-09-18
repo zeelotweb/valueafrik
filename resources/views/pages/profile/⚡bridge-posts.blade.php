@@ -7,6 +7,7 @@ use App\Services\ImageOptimizer;
 use App\Support\SafeNotifier;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -59,7 +60,7 @@ new class extends Component {
         $this->validate([
             'sideBody' => ['required', 'string', 'max:3000'],
             'sidePhotos' => ['array', 'max:5'],
-            'sidePhotos.*' => ['image', 'max:8192'],
+            'sidePhotos.*' => ['image', 'max:20480', Rule::dimensions()->maxWidth(6000)->maxHeight(6000)],
         ]);
 
         $bridgePost->update(["{$side}_body" => $this->sideBody]);
