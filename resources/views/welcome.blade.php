@@ -22,8 +22,38 @@ $pillars = [
         @include('partials.head')
     </head>
     <body
-        x-data="{ modalOpen: false, active: 0, total: {{ count($showcaseItems) }}, heroPaused: false }"
-        x-init="if (total > 1) { setInterval(() => { if (! modalOpen && ! heroPaused) active = (active + 1) % total }, 5000) }"
+        x-data="{
+            modalOpen: false,
+            active: 0,
+            total: {{ count($showcaseItems) }},
+            heroPaused: false,
+            carouselInterval: null,
+            startCarousel() {
+                clearInterval(this.carouselInterval);
+
+                // Re-read the real count from the DOM instead of trusting
+                // this x-data's own `total` — Alpine's cross-navigation
+                // morph deliberately keeps existing component state alive
+                // rather than re-running x-init, so `total` (and `active`)
+                // would otherwise stay frozen at whatever they were the
+                // first time this session ever loaded the page. The actual
+                // showcase items are random and vary per request (see
+                // WelcomeShowcase::items()), so a stale `total` easily goes
+                // out of sync with what is really on the page, leaving
+                // `active` pointing at nothing — every item's crossfade
+                // condition false at once, stuck until the interval happens
+                // to wrap back into range or a hard reload resets it.
+                this.total = document.querySelectorAll('[data-showcase-item]').length;
+                this.active = 0;
+
+                if (this.total > 1) {
+                    this.carouselInterval = setInterval(() => {
+                        if (! this.modalOpen && ! this.heroPaused) this.active = (this.active + 1) % this.total;
+                    }, 5000);
+                }
+            },
+        }"
+        x-init="startCarousel(); window.addEventListener('livewire:navigated', () => startCarousel())"
         class="min-h-screen bg-stone-50 text-stone-900 antialiased dark:bg-stone-950 dark:text-stone-100"
     >
         @include('partials.marketing-header')
@@ -104,6 +134,7 @@ $pillars = [
                                 <div class="grid">
                                     @foreach ($showcaseItems as $index => $item)
                                         <div
+                                            data-showcase-item
                                             class="[grid-area:1/1] transition-opacity duration-500"
                                             x-bind:class="active === {{ $index }} ? 'opacity-100' : 'opacity-0 pointer-events-none'"
                                             aria-hidden="{{ $index === 0 ? 'false' : 'true' }}"
