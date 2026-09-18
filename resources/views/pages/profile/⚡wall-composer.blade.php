@@ -177,6 +177,21 @@ new class extends Component {
 
             @if (! $editingPostId)
                 @include('partials.photo-picker', ['photos' => $photos, 'property' => 'photos', 'removeMethod' => 'removePhoto', 'max' => 5])
+
+                <ul class="space-y-2 text-sm text-stone-500 dark:text-stone-400">
+                    <li class="flex gap-2">
+                        <flux:icon.camera class="size-4 shrink-0 translate-y-0.5 text-stone-400 dark:text-stone-500" />
+                        <span>{{ __('Share what\'s real — a real photo means more here than a polished one.') }}</span>
+                    </li>
+                    <li class="flex gap-2">
+                        <flux:icon.users class="size-4 shrink-0 translate-y-0.5 text-stone-400 dark:text-stone-500" />
+                        <span>{{ __('If someone else is in the photo, share only what you\'d be comfortable them seeing shared.') }}</span>
+                    </li>
+                    <li class="flex gap-2">
+                        <flux:icon.eye class="size-4 shrink-0 translate-y-0.5 text-stone-400 dark:text-stone-500" />
+                        <span>{{ __('Nothing here is ranked or boosted — whoever you choose above sees it, and no one else.') }}</span>
+                    </li>
+                </ul>
             @endif
 
             @error('body') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
