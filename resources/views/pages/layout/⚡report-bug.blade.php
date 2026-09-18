@@ -31,7 +31,15 @@ new class extends Component {
     }
 }; ?>
 
-<div class="fixed bottom-4 left-4 z-40" x-data="{ open: @entangle('open') }">
+{{--
+    Right, not left — the sidebar's own profile/avatar trigger sits at
+    bottom-left in the persistent app layout, and this used to sit directly
+    on top of it. bottom-20 (not bottom-4) clears the toast group, which
+    also renders bottom-right ("bottom end") — confirmed live that bottom-4
+    put this right where a toast appears, hiding it for the few seconds
+    the toast is visible.
+--}}
+<div class="fixed bottom-20 right-4 z-40" x-data="{ open: @entangle('open') }">
     <button
         type="button"
         x-show="!open"
