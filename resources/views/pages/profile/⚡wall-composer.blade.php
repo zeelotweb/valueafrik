@@ -14,6 +14,8 @@ new class extends Component {
 
     public string $body = '';
 
+    public string $visibility = WallPost::VISIBILITY_PUBLIC;
+
     public ?int $editingPostId = null;
 
     /** @var \Livewire\Features\SupportFileUploads\TemporaryUploadedFile[] */
@@ -38,6 +40,7 @@ new class extends Component {
 
         $this->editingPostId = $post->id;
         $this->body = $post->body ?? '';
+        $this->visibility = $post->visibility;
         $this->photos = [];
 
         $this->modal('wall-composer')->show();
@@ -51,7 +54,7 @@ new class extends Component {
      */
     public function cancel(): void
     {
-        $this->reset(['body', 'photos', 'editingPostId']);
+        $this->reset(['body', 'visibility', 'photos', 'editingPostId']);
 
         $this->modal('wall-composer')->close();
     }
@@ -60,6 +63,7 @@ new class extends Component {
     {
         $this->validate([
             'body' => ['nullable', 'string', 'max:5000'],
+            'visibility' => ['required', 'in:public,followers_only,private'],
             'photos' => ['array', 'max:5'],
             'photos.*' => ['image', 'max:8192'],
         ]);
@@ -75,13 +79,14 @@ new class extends Component {
 
             $post->update([
                 'body' => $this->body !== '' ? $this->body : null,
+                'visibility' => $this->visibility,
                 'edited_at' => now(),
             ]);
 
             RichText::syncHashtags($post, $this->body);
             RichText::syncMentions($post, $this->body, Auth::user());
 
-            $this->reset(['body', 'photos', 'editingPostId']);
+            $this->reset(['body', 'visibility', 'photos', 'editingPostId']);
 
             $this->modal('wall-composer')->close();
 
@@ -100,6 +105,7 @@ new class extends Component {
 
         $post = Auth::user()->wallPosts()->create([
             'body' => $this->body !== '' ? $this->body : null,
+            'visibility' => $this->visibility,
         ]);
 
         Auth::user()->awardBridgeScore('wall_post', $post);
@@ -118,7 +124,7 @@ new class extends Component {
             ]);
         }
 
-        $this->reset(['body', 'photos']);
+        $this->reset(['body', 'visibility', 'photos']);
 
         $this->modal('wall-composer')->close();
 
@@ -128,24 +134,63 @@ new class extends Component {
     }
 }; ?>
 
-<flux:modal name="wall-composer" class="max-w-lg" wire:close="cancel">
-    <form wire:submit="post" class="space-y-4">
-        <flux:heading size="lg">{{ $editingPostId ? __('Edit post') : __('Post to your wall') }}</flux:heading>
+{{--
+    Full screen below md (edge to edge, no floating card in a sea of
+    backdrop on a phone or small tablet) — h-dvh/w-full/rounded-none apply
+    at every size as the base, so there's nothing to "turn off" between
+    breakpoints. From md up it becomes a right-anchored drawer instead of
+    a centered card: full height, capped at half the viewport width,
+    flush against the screen's trailing edge. That's explicit inset
+    positioning (end-0/start-auto), not the dialog's default centering
+    margin — trying to constrain width while leaving the UA's own
+    margin:auto centering in place would just re-center a narrower box
+    instead of pinning it to the edge, so md:m-0 removes it outright.
 
-        @include('partials.mention-textarea', ['wireModel' => 'body', 'placeholder' => __('Share something on your wall...'), 'rows' => 4])
+    p-0! zeroes the dialog's own padding at every size — Flux's default
+    otherwise still applies its own p-6 fallback in the sm-to-md gap (and
+    p-4 below sm), leaving a visible inset border around what's supposed
+    to be edge-to-edge. Padding lives on the form below instead, which
+    also keeps it off the ✕ close button positioned relative to this same
+    dialog.
+--}}
+<flux:modal
+    name="wall-composer"
+    class="h-dvh max-h-none w-full max-w-none rounded-none p-0! md:inset-y-0 md:end-0 md:start-auto md:m-0 md:w-[50vw] md:rounded-s-2xl"
+    wire:close="cancel"
+>
+    <form wire:submit="post" class="flex h-full flex-col p-4 md:p-6">
+        <div class="flex items-center gap-3 pb-5">
+            <flux:avatar size="lg" circle :src="Auth::user()->profile?->avatarUrl()" />
+            <div class="min-w-0">
+                <flux:heading size="lg">{{ $editingPostId ? __('Edit post') : __('Post to your wall') }}</flux:heading>
+                <flux:text size="sm" class="truncate text-stone-500 dark:text-stone-400">{{ Auth::user()->name }}</flux:text>
+            </div>
+        </div>
 
-        @if (! $editingPostId)
-            @include('partials.photo-picker', ['photos' => $photos, 'property' => 'photos', 'removeMethod' => 'removePhoto', 'max' => 5])
-        @endif
+        <div class="flex-1 space-y-4 overflow-y-auto">
+            @include('partials.mention-textarea', ['wireModel' => 'body', 'placeholder' => __('Share something on your wall...'), 'rows' => 'auto'])
 
-        @error('body') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+            @if (! $editingPostId)
+                @include('partials.photo-picker', ['photos' => $photos, 'property' => 'photos', 'removeMethod' => 'removePhoto', 'max' => 5])
+            @endif
 
-        <div class="flex items-center justify-end gap-2">
-            <flux:button type="button" wire:click="cancel" variant="ghost">{{ __('Cancel') }}</flux:button>
+            @error('body') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+        </div>
 
-            <flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="post" class="btn-flat-primary">
-                {{ $editingPostId ? __('Save') : __('Post') }}
-            </flux:button>
+        <div class="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-stone-200 pt-4 dark:border-stone-800">
+            <flux:select wire:model="visibility" size="sm" class="w-auto!">
+                <flux:select.option value="public">{{ __('🌍 Public') }}</flux:select.option>
+                <flux:select.option value="followers_only">{{ __('👥 Followers only') }}</flux:select.option>
+                <flux:select.option value="private">{{ __('🔒 Only me') }}</flux:select.option>
+            </flux:select>
+
+            <div class="flex items-center gap-2">
+                <flux:button type="button" wire:click="cancel" variant="ghost">{{ __('Cancel') }}</flux:button>
+
+                <flux:button type="submit" variant="primary" wire:loading.attr="disabled" wire:target="post" class="btn-flat-primary">
+                    {{ $editingPostId ? __('Save') : __('Post') }}
+                </flux:button>
+            </div>
         </div>
     </form>
 </flux:modal>

@@ -25,14 +25,19 @@ new #[Title('Topic')] class extends Component {
             'bookmarks as user_bookmarked' => fn ($q) => $q->where('user_id', Auth::id()),
         ];
 
+        $viewer = Auth::user();
+
         $wallPosts = $this->hashtag->wallPosts()
             ->with($eagerLoad)
             ->withCount($counts)
             ->withExists($exists)
             ->latest()
-            ->get();
-
-        $viewer = Auth::user();
+            ->get()
+            // Same reasoning as the community-post filter below — a
+            // hashtag is shared across every post that used it regardless
+            // of that post's own visibility.
+            ->filter(fn ($post) => $post->canView($viewer))
+            ->values();
 
         $communityPosts = $this->hashtag->communityPosts()
             ->with([...$eagerLoad, 'community'])

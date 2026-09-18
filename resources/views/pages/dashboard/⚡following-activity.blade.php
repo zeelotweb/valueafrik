@@ -47,6 +47,11 @@ new class extends Component {
 
         $wallPosts = WallPost::query()
             ->whereIn('user_id', $followingIds)
+            // Every author here is someone the viewer follows by
+            // definition, so followers-only qualifies same as public —
+            // only a private wall post (not even shown to followers) is
+            // excluded from this feed.
+            ->whereIn('visibility', [WallPost::VISIBILITY_PUBLIC, WallPost::VISIBILITY_FOLLOWERS_ONLY])
             ->whereDoesntHave('hides', fn ($q) => $q->where('user_id', $viewer->id))
             ->with(['user.profile', 'media'])
             ->latest()

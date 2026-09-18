@@ -22,6 +22,35 @@ test('user can post text to their own wall', function () {
     expect($user->wallPosts()->first()->body)->toBe('Hello from the wall.');
 });
 
+test('a wall post defaults to public and can be created with a different visibility', function () {
+    $user = User::factory()->create();
+
+    Livewire::actingAs($user)
+        ->test('pages::profile.wall-composer')
+        ->assertSet('visibility', 'public')
+        ->set('body', 'Followers only, please.')
+        ->set('visibility', 'followers_only')
+        ->call('post')
+        ->assertHasNoErrors();
+
+    expect($user->wallPosts()->first()->visibility)->toBe('followers_only');
+});
+
+test('editing a wall post can change its visibility, and the composer loads the current one', function () {
+    $user = User::factory()->create();
+    $post = $user->wallPosts()->create(['body' => 'Was public.', 'visibility' => 'public']);
+
+    Livewire::actingAs($user)
+        ->test('pages::profile.wall-composer')
+        ->dispatch('edit-wall-post', postId: $post->id)
+        ->assertSet('visibility', 'public')
+        ->set('visibility', 'private')
+        ->call('post')
+        ->assertHasNoErrors();
+
+    expect($post->fresh()->visibility)->toBe('private');
+});
+
 test('user can attach photos to a wall post', function () {
     $user = User::factory()->create();
 

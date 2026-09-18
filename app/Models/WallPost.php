@@ -17,9 +17,16 @@ class WallPost extends Model
 {
     use HasBookmarks, HasComments, HasHashtags, HasHides, HasMentions, HasReactions, SoftDeletes;
 
+    public const VISIBILITY_PUBLIC = 'public';
+
+    public const VISIBILITY_FOLLOWERS_ONLY = 'followers_only';
+
+    public const VISIBILITY_PRIVATE = 'private';
+
     protected $fillable = [
         'user_id',
         'body',
+        'visibility',
         'edited_at',
     ];
 
@@ -43,5 +50,23 @@ class WallPost extends Model
     public function url(): string
     {
         return route('profile.show', $this->user);
+    }
+
+    /**
+     * Mirrors Community::canView() — public is universal, followers-only
+     * requires actually following the author (the author themself always
+     * passes), and private is nobody but the author.
+     */
+    public function canView(User $viewer): bool
+    {
+        if ($viewer->id === $this->user_id) {
+            return true;
+        }
+
+        return match ($this->visibility) {
+            self::VISIBILITY_FOLLOWERS_ONLY => $viewer->isFollowing($this->user),
+            self::VISIBILITY_PRIVATE => false,
+            default => true,
+        };
     }
 }

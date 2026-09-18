@@ -62,16 +62,18 @@ new #[Title('Bookmarks')] class extends Component {
         // of each nested reactions/comments/bookmark component querying
         // per post. filter() drops any dangling bookmark whose target post
         // was deleted (rendered as null and skipped in the template), or
-        // whose community the viewer can no longer see — bookmarking a
-        // post while a member doesn't grant permanent read access after
-        // leaving (or being removed from) a private community.
+        // whose community/visibility the viewer can no longer see —
+        // bookmarking a post while allowed to view it doesn't grant
+        // permanent read access after that access is later revoked
+        // (leaving a private community, being unfollowed, etc.).
         $viewer = Auth::user();
 
         $bookmarks = $this->bookmarksWindow
             ->take($this->loaded)
             ->map(fn ($bookmark) => $bookmark->bookmarkable)
             ->filter()
-            ->filter(fn ($post) => ! $post instanceof CommunityPost || $post->community->canView($viewer));
+            ->filter(fn ($post) => ! $post instanceof CommunityPost || $post->community->canView($viewer))
+            ->filter(fn ($post) => ! $post instanceof WallPost || $post->canView($viewer));
 
         $bookmarks
             ->loadCount(['reactions', 'comments'])

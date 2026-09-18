@@ -131,7 +131,20 @@ new class extends Component {
         // Visiting a profile is deliberate, unlike scrolling a feed — so
         // unlike the community post feed, muted/blocked authors aren't
         // filtered here. What this viewer has individually hidden still is.
+        $viewer = Auth::user();
+        $visibleStatuses = $viewer->id === $this->user->id || $viewer->isFollowing($this->user)
+            ? [WallPost::VISIBILITY_PUBLIC, WallPost::VISIBILITY_FOLLOWERS_ONLY]
+            : [WallPost::VISIBILITY_PUBLIC];
+
+        // The owner sees everything they've posted, including their own
+        // private ones — canView()'s author-always-passes rule, just
+        // expressed as a query instead of a per-row check.
+        if ($viewer->id === $this->user->id) {
+            $visibleStatuses[] = WallPost::VISIBILITY_PRIVATE;
+        }
+
         return $this->user->wallPosts()
+            ->whereIn('visibility', $visibleStatuses)
             ->whereDoesntHave('hides', fn ($q) => $q->where('user_id', Auth::id()))
             ->with(['user.profile', 'media', 'hashtags', 'mentions.user'])
             ->withCount(['reactions', 'comments'])
