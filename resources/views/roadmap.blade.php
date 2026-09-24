@@ -4,72 +4,72 @@ $pillars = [
         'id' => 'identity',
         'number' => '01',
         'icon' => 'user',
-        'title' => 'Identity & Profiles',
-        'summary' => 'Three things you fill in become the profile — there\'s no separate "about me" to write.',
+        'title' => __('Identity & Profiles'),
+        'summary' => __('Three things you fill in become the profile — there\'s no separate "about me" to write.'),
         'steps' => [
-            'You add your languages, the heritage(s) you claim, and what you\'re curious about.',
-            'Those three fields are the entire profile — nothing else is required to be visible.',
-            'Anyone who visits your profile sees exactly those fields, plus your Bridge Score.',
+            __('You add your languages, the heritage(s) you claim, and what you\'re curious about.'),
+            __('Those three fields are the entire profile — nothing else is required to be visible.'),
+            __('Anyone who visits your profile sees exactly those fields, plus your Bridge Score.'),
         ],
     ],
     [
         'id' => 'bridge-posts',
         'number' => '02',
         'icon' => 'chat-bubble-left-right',
-        'title' => 'Bridge Posts',
-        'summary' => 'One post, written by two people who never see each other\'s draft until both are done.',
+        'title' => __('Bridge Posts'),
+        'summary' => __('One post, written by two people who never see each other\'s draft until both are done.'),
         'steps' => [
-            'One person invites another and picks a shared theme — a wedding, a recipe, a proverb.',
-            'Each side writes their own half independently; neither can read the other\'s side yet.',
-            'The moment both sides are in, the post goes live as one card, split down the middle.',
+            __('One person invites another and picks a shared theme — a wedding, a recipe, a proverb.'),
+            __('Each side writes their own half independently; neither can read the other\'s side yet.'),
+            __('The moment both sides are in, the post goes live as one card, split down the middle.'),
         ],
     ],
     [
         'id' => 'circles',
         'number' => '03',
         'icon' => 'user-group',
-        'title' => 'Culture Circles',
-        'summary' => 'Two ways in, depending on how the owner set the circle up.',
+        'title' => __('Culture Circles'),
+        'summary' => __('Two ways in, depending on how the owner set the circle up.'),
         'steps' => [
-            'A public circle: you tap Join and you\'re in immediately, no approval step.',
-            'A private circle: you send a request, and it sits pending until the owner acts on it.',
-            'The owner approves or declines; only an approval actually adds you as a member.',
+            __('A public circle: you tap Join and you\'re in immediately, no approval step.'),
+            __('A private circle: you send a request, and it sits pending until the owner acts on it.'),
+            __('The owner approves or declines; only an approval actually adds you as a member.'),
         ],
     ],
     [
         'id' => 'bridge-score',
         'number' => '04',
         'icon' => 'trophy',
-        'title' => 'Bridge Score & Badges',
-        'summary' => 'Every action has a fixed point value. Cross a threshold, and your badge updates automatically.',
+        'title' => __('Bridge Score & Badges'),
+        'summary' => __('Every action has a fixed point value. Cross a threshold, and your badge updates automatically.'),
         'steps' => [
-            'Actions score differently on purpose: a reaction is worth 1, completing a Bridge Post is worth 5.',
-            'Points accumulate into a single running total — there\'s no separate list of "achievements."',
-            'Your badge is always whichever threshold your total has crossed — it updates the instant you cross it.',
+            __('Actions score differently on purpose: a reaction is worth 1, completing a Bridge Post is worth 5.'),
+            __('Points accumulate into a single running total — there\'s no separate list of "achievements."'),
+            __('Your badge is always whichever threshold your total has crossed — it updates the instant you cross it.'),
         ],
     ],
     [
         'id' => 'discovery',
         'number' => '05',
         'icon' => 'magnifying-glass',
-        'title' => 'Discovery & Matchmaking',
-        'summary' => 'Two signals overlap to decide who gets suggested to you.',
+        'title' => __('Discovery & Matchmaking'),
+        'summary' => __('Two signals overlap to decide who gets suggested to you.'),
         'steps' => [
-            'The system looks at what you\'ve said you\'re curious about.',
-            'It looks separately at whose heritage differs from yours.',
-            'People who satisfy both at once are the ones surfaced first — shared curiosity, different background.',
+            __('The system looks at what you\'ve said you\'re curious about.'),
+            __('It looks separately at whose heritage differs from yours.'),
+            __('People who satisfy both at once are the ones surfaced first — shared curiosity, different background.'),
         ],
     ],
     [
         'id' => 'live',
         'number' => '06',
         'icon' => 'video-camera',
-        'title' => 'Live & Video',
-        'summary' => 'Two different mechanics under one tab: a 1:1 ring, and a broadcast anyone can walk into.',
+        'title' => __('Live & Video'),
+        'summary' => __('Two different mechanics under one tab: a 1:1 ring, and a broadcast anyone can walk into.'),
         'steps' => [
-            'A call rings the other person for a fixed window; if they don\'t pick up, it resolves to missed.',
-            'A stream is one-to-many: you go live, and anyone on the platform can join as a viewer.',
-            'A streamer can bring a viewer on as a collaborator mid-broadcast — that\'s the one moment the two mechanics meet.',
+            __('A call rings the other person for a fixed window; if they don\'t pick up, it resolves to missed.'),
+            __('A stream is one-to-many: you go live, and anyone on the platform can join as a viewer.'),
+            __('A streamer can bring a viewer on as a collaborator mid-broadcast — that\'s the one moment the two mechanics meet.'),
         ],
     ],
 ];
@@ -86,14 +86,13 @@ $pillars = [
         <main>
             <section class="mx-auto max-w-4xl px-6 pt-16 pb-8 text-center">
                 <p class="mb-4 text-sm font-medium tracking-widest text-cyan-600 uppercase dark:text-cyan-400">
-                    How it works
+                    {{ __('How it works') }}
                 </p>
                 <h1 class="text-4xl font-bold tracking-tight text-balance sm:text-5xl">
-                    Roadmap
+                    {{ __('Roadmap') }}
                 </h1>
                 <p class="mx-auto mt-6 max-w-2xl text-lg text-stone-600 dark:text-stone-400">
-                    Not a pitch — a map of the mechanics. Six things exist on valueAFRIK, and here's
-                    exactly how each one moves from an action you take to something that happens.
+                    {{ __('Not a pitch — a map of the mechanics. Six things exist on valueAFRIK, and here\'s exactly how each one moves from an action you take to something that happens.') }}
                 </p>
             </section>
 
@@ -146,11 +145,7 @@ $pillars = [
 
             <section class="mx-auto max-w-4xl px-6 py-16 text-center">
                 <p class="text-stone-500 dark:text-stone-400">
-                    Curious what each of these looks like to use, not just how it works?
-                    <a href="{{ route('guide') }}" wire:navigate class="font-medium text-cyan-600 hover:text-cyan-500 dark:text-cyan-400">
-                        Read the Guide
-                    </a>
-                    instead.
+                    {!! __('Curious what each of these looks like to use, not just how it works? :guide instead.', ['guide' => '<a href="'.e(route('guide')).'" wire:navigate class="font-medium text-cyan-600 hover:text-cyan-500 dark:text-cyan-400">'.e(__('Read the Guide')).'</a>']) !!}
                 </p>
             </section>
         </main>

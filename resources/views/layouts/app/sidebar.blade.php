@@ -84,6 +84,8 @@
 
             <flux:spacer />
 
+            <div class="hidden lg:block"><x-language-switcher /></div>
+
             <x-desktop-user-menu class="hidden border-t border-stone-200 pt-4 lg:block dark:border-stone-800" :name="auth()->user()->name" />
         </flux:sidebar>
 
@@ -99,6 +101,7 @@
             <flux:spacer />
 
             <div class="flex items-center gap-1">
+                <x-language-switcher />
                 <livewire:pages::layout.quick-search :key="'quick-search-'.auth()->id()" />
                 <livewire:pages::layout.notifications-icon :key="'notifications-icon-'.auth()->id()" />
                 <livewire:pages::layout.messages-icon :key="'messages-icon-'.auth()->id()" />

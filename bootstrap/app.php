@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureNotBanned;
+use App\Http\Middleware\SetLocale;
 use App\Http\Middleware\ThrottlePasswordResetRequests;
 use App\Http\Middleware\TrackLastSeen;
 use Illuminate\Foundation\Application;
@@ -18,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->appendToGroup('web', SetLocale::class);
         $middleware->appendToGroup('web', EnsureNotBanned::class);
         $middleware->appendToGroup('web', TrackLastSeen::class);
         $middleware->appendToGroup('web', ThrottlePasswordResetRequests::class);
@@ -31,6 +33,13 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trustProxies(at: ['127.0.0.1', '::1']);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Error pages can render before the web middleware ran; give them the reader's language too.
+        $exceptions->render(function (Throwable $e, Request $request) {
+            SetLocale::apply($request);
+
+            return null;
+        });
+
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );

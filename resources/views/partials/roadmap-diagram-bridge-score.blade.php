@@ -35,6 +35,6 @@
     </div>
 
     <p class="text-center text-[11px] text-stone-400 dark:text-stone-600">
-        Points only ever add up — your badge is whichever threshold your running total has crossed.
+        {{ __('Points only ever add up — your badge is whichever threshold your running total has crossed.') }}
     </p>
 </div>

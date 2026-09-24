@@ -4,97 +4,97 @@ $pillars = [
         'id' => 'identity',
         'number' => '01',
         'icon' => 'user',
-        'title' => 'Identity & Profiles',
-        'tagline' => 'Your way of life is your profile — not a bio and a follower count.',
-        'phase' => 'Live',
-        'why' => "Most platforms reduce you to a headline. valueAFRIK starts from the opposite end: the languages you speak, the heritage you carry, and the traditions that shaped you are the profile — the things that actually give someone a reason to connect with you.",
+        'title' => __('Identity & Profiles'),
+        'tagline' => __('Your way of life is your profile — not a bio and a follower count.'),
+        'phase' => __('Live'),
+        'why' => __("Most platforms reduce you to a headline. valueAFRIK starts from the opposite end: the languages you speak, the heritage you carry, and the traditions that shaped you are the profile — the things that actually give someone a reason to connect with you."),
         'features' => [
-            'List every heritage and language you claim — you\'re not limited to one.',
-            'Write your "Roots": the story, values, and traditions behind where you\'re from.',
-            'Add what you\'re curious about, so the right people find you for the right reasons.',
+            __('List every heritage and language you claim — you\'re not limited to one.'),
+            __('Write your "Roots": the story, values, and traditions behind where you\'re from.'),
+            __('Add what you\'re curious about, so the right people find you for the right reasons.'),
         ],
-        'cta' => ['auth' => ['route' => 'profile.edit', 'label' => 'Edit your profile'], 'guest' => ['route' => 'register', 'label' => 'Create your profile']],
+        'cta' => ['auth' => ['route' => 'profile.edit', 'label' => __('Edit your profile')], 'guest' => ['route' => 'register', 'label' => __('Create your profile')]],
     ],
     [
         'id' => 'content',
         'number' => '02',
         'icon' => 'chat-bubble-left-right',
-        'title' => 'Cultural Spotlights & Bridge Posts',
-        'tagline' => 'Everyday moments, and posts built by two people at once.',
-        'phase' => 'Live',
-        'why' => 'A wedding photo tells one side of a story. A Bridge Post — written together by two people from different heritages, about the same tradition — tells both, side by side. That comparison is where the real curiosity lives.',
+        'title' => __('Cultural Spotlights & Bridge Posts'),
+        'tagline' => __('Everyday moments, and posts built by two people at once.'),
+        'phase' => __('Live'),
+        'why' => __('A wedding photo tells one side of a story. A Bridge Post — written together by two people from different heritages, about the same tradition — tells both, side by side. That comparison is where the real curiosity lives.'),
         'features' => [
-            'Post to your Wall — photos, text, and moments that carry culture.',
-            'Start a Bridge Post: invite someone from a different heritage to co-write about a shared theme — a wedding, a recipe, a proverb.',
-            'React, comment, and bookmark on any post — the same toolkit works on your Wall and inside Communities.',
+            __('Post to your Wall — photos, text, and moments that carry culture.'),
+            __('Start a Bridge Post: invite someone from a different heritage to co-write about a shared theme — a wedding, a recipe, a proverb.'),
+            __('React, comment, and bookmark on any post — the same toolkit works on your Wall and inside Communities.'),
         ],
-        'cta' => ['auth' => ['route' => 'dashboard', 'label' => 'Start a Bridge Post'], 'guest' => ['route' => 'register', 'label' => 'Join to post']],
+        'cta' => ['auth' => ['route' => 'dashboard', 'label' => __('Start a Bridge Post')], 'guest' => ['route' => 'register', 'label' => __('Join to post')]],
     ],
     [
         'id' => 'circles',
         'number' => '03',
         'icon' => 'user-group',
-        'title' => 'Culture Circles',
-        'tagline' => 'Small communities built around curiosity, not virality.',
-        'phase' => 'Live',
-        'why' => 'A single global feed rewards whatever is loudest. Circles are scoped on purpose — Afro-diaspora food, cross-cultural entrepreneurship, music fusion — so the conversation stays close to the topic that brought people there.',
+        'title' => __('Culture Circles'),
+        'tagline' => __('Small communities built around curiosity, not virality.'),
+        'phase' => __('Live'),
+        'why' => __('A single global feed rewards whatever is loudest. Circles are scoped on purpose — Afro-diaspora food, cross-cultural entrepreneurship, music fusion — so the conversation stays close to the topic that brought people there.'),
         'features' => [
-            'Join public circles instantly, or request to join private ones.',
-            'Followers-only circles for a smaller, trusted audience.',
-            'Owners can set a circle to view-only or open it up for everyone to post.',
+            __('Join public circles instantly, or request to join private ones.'),
+            __('Followers-only circles for a smaller, trusted audience.'),
+            __('Owners can set a circle to view-only or open it up for everyone to post.'),
         ],
-        'cta' => ['auth' => ['route' => 'communities.index', 'label' => 'Browse circles'], 'guest' => ['route' => 'register', 'label' => 'Join to browse circles']],
+        'cta' => ['auth' => ['route' => 'communities.index', 'label' => __('Browse circles')], 'guest' => ['route' => 'register', 'label' => __('Join to browse circles')]],
     ],
     [
         'id' => 'bridge-score',
         'number' => '04',
         'icon' => 'trophy',
-        'title' => 'Bridge Score & Badges',
-        'tagline' => 'Recognition for sparking exchange, not just posting.',
-        'phase' => 'Live',
-        'why' => 'The guiding rule behind every point value: engagement outweighs output. Posting earns a little. Genuinely connecting with someone — especially across a heritage line — earns a lot more.',
+        'title' => __('Bridge Score & Badges'),
+        'tagline' => __('Recognition for sparking exchange, not just posting.'),
+        'phase' => __('Live'),
+        'why' => __('The guiding rule behind every point value: engagement outweighs output. Posting earns a little. Genuinely connecting with someone — especially across a heritage line — earns a lot more.'),
         'features' => [
-            'Following someone earns a point; following across a heritage line earns a bonus.',
-            'Reacting, commenting, and completing your Roots all add to your score.',
-            'Your badge is always your highest score threshold — no separate list to manage.',
+            __('Following someone earns a point; following across a heritage line earns a bonus.'),
+            __('Reacting, commenting, and completing your Roots all add to your score.'),
+            __('Your badge is always your highest score threshold — no separate list to manage.'),
         ],
         'badges' => [
-            ['name' => 'First Bridge', 'threshold' => 10],
-            ['name' => 'Bridge Builder', 'threshold' => 50],
-            ['name' => 'Culture Connector', 'threshold' => 150],
-            ['name' => 'Bridge Architect', 'threshold' => 500],
+            ['name' => __('First Bridge'), 'threshold' => 10],
+            ['name' => __('Bridge Builder'), 'threshold' => 50],
+            ['name' => __('Culture Connector'), 'threshold' => 150],
+            ['name' => __('Bridge Architect'), 'threshold' => 500],
         ],
-        'cta' => ['auth' => ['route' => 'dashboard', 'label' => 'See your score'], 'guest' => ['route' => 'register', 'label' => 'Start earning points']],
+        'cta' => ['auth' => ['route' => 'dashboard', 'label' => __('See your score')], 'guest' => ['route' => 'register', 'label' => __('Start earning points')]],
     ],
     [
         'id' => 'discovery',
         'number' => '05',
         'icon' => 'magnifying-glass',
-        'title' => 'Discovery & Matchmaking',
-        'tagline' => 'Find people through shared curiosity, not follower overlap.',
-        'phase' => 'Live',
-        'why' => "An algorithm that only shows you people like you never actually bridges anything. Discovery is built to surface people who can widen your view — often from a different heritage than your own — alongside people who simply share what you're curious about.",
+        'title' => __('Discovery & Matchmaking'),
+        'tagline' => __('Find people through shared curiosity, not follower overlap.'),
+        'phase' => __('Live'),
+        'why' => __("An algorithm that only shows you people like you never actually bridges anything. Discovery is built to surface people who can widen your view — often from a different heritage than your own — alongside people who simply share what you're curious about."),
         'features' => [
-            'Curated sections built around cross-heritage suggestions, not popularity.',
-            'Search by name from Discover, Communities, or the header search icon.',
-            'See a person\'s followers and following before you decide to connect.',
+            __('Curated sections built around cross-heritage suggestions, not popularity.'),
+            __('Search by name from Discover, Communities, or the header search icon.'),
+            __('See a person\'s followers and following before you decide to connect.'),
         ],
-        'cta' => ['auth' => ['route' => 'discover.index', 'label' => 'Start discovering'], 'guest' => ['route' => 'register', 'label' => 'Join to discover people']],
+        'cta' => ['auth' => ['route' => 'discover.index', 'label' => __('Start discovering')], 'guest' => ['route' => 'register', 'label' => __('Join to discover people')]],
     ],
     [
         'id' => 'live',
         'number' => '06',
         'icon' => 'video-camera',
-        'title' => 'Live & Video',
-        'tagline' => 'Real-time conversation and broadcast.',
-        'phase' => 'Early access',
-        'why' => 'Text and photos carry a lot of culture, but some of it only comes through live — a conversation, a performance, a room full of people asking questions in real time. This pillar is where we\'re building next.',
+        'title' => __('Live & Video'),
+        'tagline' => __('Real-time conversation and broadcast.'),
+        'phase' => __('Early access'),
+        'why' => __('Text and photos carry a lot of culture, but some of it only comes through live — a conversation, a performance, a room full of people asking questions in real time. This pillar is where we\'re building next.'),
         'features' => [
-            'Start a stream straight from your Dashboard.',
-            'Watch what\'s live right now from the Live tab.',
-            'Calls, mentorship sessions, and cultural events are next on the roadmap.',
+            __('Start a stream straight from your Dashboard.'),
+            __('Watch what\'s live right now from the Live tab.'),
+            __('Calls, mentorship sessions, and cultural events are next on the roadmap.'),
         ],
-        'cta' => ['auth' => ['route' => 'live.index', 'label' => 'See what\'s live'], 'guest' => ['route' => 'register', 'label' => 'Join to go live']],
+        'cta' => ['auth' => ['route' => 'live.index', 'label' => __('See what\'s live')], 'guest' => ['route' => 'register', 'label' => __('Join to go live')]],
     ],
 ];
 ?>
@@ -110,15 +110,13 @@ $pillars = [
         <main>
             <section class="mx-auto max-w-4xl px-6 pt-16 pb-8 text-center">
                 <p class="mb-4 text-sm font-medium tracking-widest text-cyan-600 uppercase dark:text-cyan-400">
-                    New here?
+                    {{ __('New here?') }}
                 </p>
                 <h1 class="text-4xl font-bold tracking-tight text-balance sm:text-5xl">
-                    Six pillars. One idea.
+                    {{ __('Six pillars. One idea.') }}
                 </h1>
                 <p class="mx-auto mt-6 max-w-2xl text-lg text-stone-600 dark:text-stone-400">
-                    valueAFRIK is built around one belief: curiosity about someone else's culture is worth
-                    more than another follower. Everything below is a different way we put that into
-                    practice — start wherever looks most interesting.
+                    {{ __('valueAFRIK is built around one belief: curiosity about someone else\'s culture is worth more than another follower. Everything below is a different way we put that into practice — start wherever looks most interesting.') }}
                 </p>
             </section>
 
@@ -193,21 +191,21 @@ $pillars = [
 
             <section class="mx-auto max-w-4xl px-6 py-16 text-center">
                 @auth
-                    <h2 class="text-2xl font-bold tracking-tight">Your bridges are waiting to be built.</h2>
+                    <h2 class="text-2xl font-bold tracking-tight">{{ __('Your bridges are waiting to be built.') }}</h2>
                     <p class="mx-auto mt-3 max-w-xl text-stone-600 dark:text-stone-400">
-                        Head back to your dashboard and pick up wherever you left off.
+                        {{ __('Head back to your dashboard and pick up wherever you left off.') }}
                     </p>
                     <a href="{{ route('dashboard') }}" wire:navigate class="mt-6 inline-flex items-center gap-2 rounded-md bg-cyan-600 px-5 py-2.5 font-medium text-white hover:bg-cyan-500">
-                        Go to your dashboard
+                        {{ __('Go to your dashboard') }}
                         <flux:icon.arrow-right class="size-4" />
                     </a>
                 @else
-                    <h2 class="text-2xl font-bold tracking-tight">Ready to build your first bridge?</h2>
+                    <h2 class="text-2xl font-bold tracking-tight">{{ __('Ready to build your first bridge?') }}</h2>
                     <p class="mx-auto mt-3 max-w-xl text-stone-600 dark:text-stone-400">
-                        It starts with a profile — your languages, your heritage, your curiosity.
+                        {{ __('It starts with a profile — your languages, your heritage, your curiosity.') }}
                     </p>
                     <a href="{{ route('register') }}" class="mt-6 inline-flex items-center gap-2 rounded-md bg-cyan-600 px-5 py-2.5 font-medium text-white hover:bg-cyan-500">
-                        Join Free
+                        {{ __('Join Free') }}
                         <flux:icon.arrow-right class="size-4" />
                     </a>
                 @endauth

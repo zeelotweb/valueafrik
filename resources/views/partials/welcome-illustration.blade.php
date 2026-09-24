@@ -103,7 +103,7 @@
                 <p class="font-display mt-4 text-4xl font-semibold tracking-tight text-score-600 dark:text-score-400">
                     {{ $item['user']->bridgeScore() }}
                 </p>
-                <p class="mt-1 text-sm text-stone-500 dark:text-stone-400">bridge points earned through real exchange</p>
+                <p class="mt-1 text-sm text-stone-500 dark:text-stone-400">{{ __('bridge points earned through real exchange') }}</p>
             @break
 
             @case('discovery')
@@ -128,7 +128,7 @@
                     <span class="font-medium">{{ $item['second']->name }}</span>
                 </p>
                 <p class="mt-1 text-center text-sm text-stone-500 dark:text-stone-400">
-                    both curious about <span class="font-medium text-cyan-600 dark:text-cyan-400">{{ $item['interest']->name }}</span>
+                    {!! __('both curious about :interest', ['interest' => '<span class="font-medium text-cyan-600 dark:text-cyan-400">'.e($item['interest']->name).'</span>']) !!}
                 </p>
             @break
 
@@ -140,12 +140,12 @@
                 <div class="relative flex h-28 items-center justify-center overflow-hidden rounded-md bg-stone-900 dark:bg-black">
                     <div class="absolute top-3 left-3 flex items-center gap-1.5 rounded-full bg-black/30 px-2.5 py-1 text-xs font-medium text-white backdrop-blur">
                         <span class="size-1.5 animate-pulse rounded-full bg-white"></span>
-                        LIVE
+                        {{ __('LIVE') }}
                     </div>
                     <flux:icon.video-camera class="size-8 text-white/70" />
                 </div>
                 <p class="mt-4 font-medium">{{ $session->title }}</p>
-                <p class="mt-1 text-sm text-stone-500 dark:text-stone-400">hosted by {{ $session->host->name }}</p>
+                <p class="mt-1 text-sm text-stone-500 dark:text-stone-400">{{ __('hosted by :name', ['name' => $session->host->name]) }}</p>
             @break
         @endswitch
     </div>

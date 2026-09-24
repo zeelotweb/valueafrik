@@ -6,14 +6,12 @@ use App\Models\Community;
 
 class PromotedToMonitor extends AppNotification
 {
-    public function __construct(public Community $community)
-    {
-    }
+    public function __construct(public Community $community) {}
 
     public function toArray(object $notifiable): array
     {
         return [
-            'message' => "You've been made a monitor of \"{$this->community->name}\".",
+            'message' => __('You\'ve been made a monitor of ":community".', ['community' => $this->community->name]),
             'url' => route('communities.show', $this->community),
         ];
     }

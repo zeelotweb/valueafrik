@@ -76,8 +76,8 @@ class WelcomeShowcase
         return [
             'id' => 'identity',
             'number' => '01',
-            'title' => 'Identity & Profiles',
-            'tagline' => 'Your way of life as your profile.',
+            'title' => __('Identity & Profiles'),
+            'tagline' => __('Your way of life as your profile.'),
             'type' => 'identity',
             'user' => $user,
         ];
@@ -100,8 +100,8 @@ class WelcomeShowcase
         return [
             'id' => 'content',
             'number' => '02',
-            'title' => 'Cultural Spotlights & Bridge Posts',
-            'tagline' => 'Co-created posts comparing the same tradition across two cultures.',
+            'title' => __('Cultural Spotlights & Bridge Posts'),
+            'tagline' => __('Co-created posts comparing the same tradition across two cultures.'),
             'type' => 'bridge_post',
             'post' => $post,
         ];
@@ -124,8 +124,8 @@ class WelcomeShowcase
         return [
             'id' => 'circles',
             'number' => '03',
-            'title' => 'Culture Circles',
-            'tagline' => 'Small communities built around curiosity, not virality.',
+            'title' => __('Culture Circles'),
+            'tagline' => __('Small communities built around curiosity, not virality.'),
             'type' => 'community',
             'community' => $community,
         ];
@@ -147,8 +147,8 @@ class WelcomeShowcase
         return [
             'id' => 'bridge-score',
             'number' => '04',
-            'title' => 'Bridge Score & Badges',
-            'tagline' => 'Recognition for sparking exchange, not just posting.',
+            'title' => __('Bridge Score & Badges'),
+            'tagline' => __('Recognition for sparking exchange, not just posting.'),
             'type' => 'bridge_score',
             'user' => $user,
         ];
@@ -171,8 +171,8 @@ class WelcomeShowcase
         return [
             'id' => 'discovery',
             'number' => '05',
-            'title' => 'Discovery & Matchmaking',
-            'tagline' => 'Find people through shared curiosity, not follower overlap.',
+            'title' => __('Discovery & Matchmaking'),
+            'tagline' => __('Find people through shared curiosity, not follower overlap.'),
             'type' => 'discovery',
             'interest' => $pair,
             'first' => $first,
@@ -195,8 +195,8 @@ class WelcomeShowcase
         return [
             'id' => 'live',
             'number' => '06',
-            'title' => 'Live & Video',
-            'tagline' => 'Real-time conversation and broadcast.',
+            'title' => __('Live & Video'),
+            'tagline' => __('Real-time conversation and broadcast.'),
             'type' => 'live',
             'session' => $session,
         ];

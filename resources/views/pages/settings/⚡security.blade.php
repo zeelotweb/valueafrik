@@ -235,7 +235,7 @@ new #[Title('Security settings')] class extends Component {
                         <flux:button
                             variant="danger"
                             size="sm"
-                            x-on:click="if (confirm('{{ __('Remove this passkey?') }}')) { window.Passkeys.deletePasskey({{ $passkey->id }}).then(() => window.location.reload()); }"
+                            x-on:click="if (confirm(@js(__('Remove this passkey?')))) { window.Passkeys.deletePasskey({{ $passkey->id }}).then(() => window.location.reload()); }"
                         >
                             {{ __('Remove') }}
                         </flux:button>

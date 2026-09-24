@@ -356,9 +356,9 @@ new #[Title('Live')] class extends Component {
             <flux:heading size="xl">{{ $session->title ?: ucfirst($session->type) }}</flux:heading>
             <flux:subheading>
                 @if ($session->type === LiveSession::TYPE_CALL)
-                    {{ __('with') }} {{ $this->otherParty?->name ?? __('Unknown') }}
+                    {{ __('with :name', ['name' => $this->otherParty?->name ?? __('Unknown')]) }}
                 @else
-                    {{ __('hosted by') }} {{ $session->host->name }}
+                    {{ __('hosted by :name', ['name' => $session->host->name]) }}
                 @endif
             </flux:subheading>
         </div>
@@ -408,9 +408,10 @@ new #[Title('Live')] class extends Component {
                 <div>
                     <p class="text-lg font-semibold text-stone-900 dark:text-white">
                         @if ($this->otherParty)
-                            <a href="{{ route('profile.show', $this->otherParty) }}" wire:navigate class="hover:underline">{{ $this->otherParty->name }}</a>
+                            {!! __(':name is calling you', ['name' => '<a href="'.e(route('profile.show', $this->otherParty)).'" wire:navigate class="hover:underline">'.e($this->otherParty->name).'</a>']) !!}
+                        @else
+                            {{ __('Someone is calling you') }}
                         @endif
-                        {{ __('is calling you') }}
                     </p>
                     <p class="mt-1 text-sm text-stone-500 dark:text-stone-400" x-text="secondsLeft + ' {{ __('s') }}'"></p>
                 </div>
@@ -445,16 +446,16 @@ new #[Title('Live')] class extends Component {
             <flux:text>
                 @if ($session->status === LiveSession::STATUS_MISSED)
                     @if ($this->isHost && $session->ended_reason === LiveSession::REASON_OFFLINE)
-                        {{ $this->otherParty?->name }} {{ __('is offline — they\'ve been notified you tried to call.') }}
+                        {{ __(':name is offline — they\'ve been notified you tried to call.', ['name' => $this->otherParty?->name]) }}
                     @elseif ($this->isHost)
-                        {{ $this->otherParty?->name }} {{ __("didn't answer.") }}
+                        {{ __(':name didn\'t answer.', ['name' => $this->otherParty?->name]) }}
                     @else
-                        {{ __('You missed a call from') }} {{ $this->otherParty?->name }}.
+                        {{ __('You missed a call from :name.', ['name' => $this->otherParty?->name]) }}
                     @endif
                 @elseif ($session->status === LiveSession::STATUS_DECLINED)
-                    {{ $this->isHost ? ($this->otherParty?->name.' '.__('declined the call.')) : __('You declined the call.') }}
+                    {{ $this->isHost ? __(':name declined the call.', ['name' => $this->otherParty?->name]) : __('You declined the call.') }}
                 @else
-                    {{ $this->isHost ? __('You canceled the call.') : ($this->otherParty?->name.' '.__('canceled the call.')) }}
+                    {{ $this->isHost ? __('You canceled the call.') : __(':name canceled the call.', ['name' => $this->otherParty?->name]) }}
                 @endif
             </flux:text>
         </div>
@@ -616,7 +617,7 @@ new #[Title('Live')] class extends Component {
                         <div class="mb-3 space-y-2">
                             @foreach ($this->pendingCollaboratorRequests as $request)
                                 <div class="flex items-center justify-between gap-3 rounded-lg border border-live-200 bg-live-50 px-3 py-2 text-sm dark:border-live-900 dark:bg-live-950">
-                                    <span class="text-live-800 dark:text-live-300">{{ $request->user->name }} {{ __('wants to collaborate') }}</span>
+                                    <span class="text-live-800 dark:text-live-300">{{ __(':name wants to collaborate', ['name' => $request->user->name]) }}</span>
                                     <div class="flex items-center gap-2">
                                         <flux:button size="sm" variant="ghost" wire:click="removeCollaborator({{ $request->user_id }})">{{ __('Deny') }}</flux:button>
                                         <flux:button size="sm" variant="primary" wire:click="approveCollaborator({{ $request->user_id }})" class="!bg-live-600 hover:!bg-live-500">{{ __('Approve') }}</flux:button>
@@ -626,7 +627,7 @@ new #[Title('Live')] class extends Component {
 
                             @foreach ($this->approvedCollaborators as $collaborator)
                                 <div class="flex items-center justify-between gap-3 rounded-lg border border-stone-200 bg-white px-3 py-2 text-sm dark:border-stone-800 dark:bg-stone-900">
-                                    <span class="text-stone-700 dark:text-stone-300">{{ $collaborator->user->name }} {{ __('is collaborating') }}</span>
+                                    <span class="text-stone-700 dark:text-stone-300">{{ __(':name is collaborating', ['name' => $collaborator->user->name]) }}</span>
                                     <flux:button size="sm" variant="ghost" wire:click="removeCollaborator({{ $collaborator->user_id }})">{{ __('Remove') }}</flux:button>
                                 </div>
                             @endforeach
@@ -772,7 +773,7 @@ new #[Title('Live')] class extends Component {
                                 x-on:click="toggleDeafen"
                                 :class="deafened ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-white/10 text-white hover:bg-white/20'"
                                 class="flex size-10 items-center justify-center rounded-md"
-                                :aria-label="deafened ? '{{ __('Unmute speaker') }}' : '{{ __('Mute speaker') }}'"
+                                :aria-label="deafened ? @js(__('Unmute speaker')) : @js(__('Mute speaker'))"
                             >
                                 <flux:icon x-show="!deafened" icon="speaker-wave" class="size-5" />
                                 <flux:icon x-show="deafened" icon="speaker-x-mark" class="size-5" x-cloak />

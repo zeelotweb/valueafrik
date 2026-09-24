@@ -84,7 +84,7 @@ new #[Title('Community')] class extends Component {
         <p class="mt-2 text-sm text-stone-500 dark:text-stone-400">
             {{ trans_choice('1 member|:count members', $community->active_members_count) }}
             &middot;
-            {{ __('owned by') }} <a href="{{ route('profile.show', $community->owner) }}" wire:navigate class="hover:underline">{{ $community->owner->name }}</a>
+            {!! __('owned by :owner', ['owner' => '<a href="'.e(route('profile.show', $community->owner)).'" wire:navigate class="hover:underline">'.e($community->owner->name).'</a>']) !!}
         </p>
 
         <div class="mt-8">

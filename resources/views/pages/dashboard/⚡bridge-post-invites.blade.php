@@ -49,9 +49,7 @@ new class extends Component {
         <div class="flex flex-wrap items-center justify-between gap-3 rounded-md border border-score-400/40 p-4 dark:border-score-900" wire:key="invite-{{ $invite->id }}">
             <div class="min-w-0 flex-1">
                 <p class="text-sm text-stone-900 dark:text-white">
-                    <span class="font-medium">{{ $invite->initiator->name }}</span>
-                    {{ __('invited you to a Bridge Post on') }}
-                    <span class="font-medium">{{ $invite->theme }}</span>
+                    {!! __(':name invited you to a Bridge Post on :theme', ['name' => '<span class="font-medium">'.e($invite->initiator->name).'</span>', 'theme' => '<span class="font-medium">'.e($invite->theme).'</span>']) !!}
                 </p>
             </div>
             <div class="flex shrink-0 gap-2">

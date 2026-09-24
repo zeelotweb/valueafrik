@@ -4,6 +4,7 @@
         @include('partials.head')
     </head>
     <body class="min-h-screen bg-stone-50 antialiased dark:bg-stone-950">
+        <div class="absolute end-4 top-4 z-10"><x-language-switcher /></div>
         <div class="bg-background flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
             <div class="flex w-full max-w-sm flex-col gap-2">
                 <x-brand-mark stacked />

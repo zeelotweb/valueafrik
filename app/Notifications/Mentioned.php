@@ -10,18 +10,18 @@ use Illuminate\Database\Eloquent\Model;
 
 class Mentioned extends AppNotification
 {
-    public function __construct(public Model $mentionable, public User $mentioner)
-    {
-    }
+    public function __construct(public Model $mentionable, public User $mentioner) {}
 
     public function toArray(object $notifiable): array
     {
-        $kind = $this->mentionable instanceof Comment
-            ? __('a comment')
-            : __('a post');
+        // Two whole sentences, not one with a translated "a comment"/"a post"
+        // spliced in — word order differs between languages.
+        $message = $this->mentionable instanceof Comment
+            ? __(':name mentioned you in a comment.', ['name' => $this->mentioner->name])
+            : __(':name mentioned you in a post.', ['name' => $this->mentioner->name]);
 
         return [
-            'message' => "{$this->mentioner->name} mentioned you in {$kind}.",
+            'message' => $message,
             'url' => $this->url(),
         ];
     }

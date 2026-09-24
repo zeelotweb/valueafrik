@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\CommunityPhotoController;
+use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\MentionSearchController;
 use App\Http\Controllers\ProfileShowController;
 use App\Http\Controllers\PushSubscriptionController;
@@ -11,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
+Route::get('locale/{locale}', [LocaleController::class, 'update'])->name('locale.update')->middleware('throttle:60,1');
 Route::view('guide', 'guide')->name('guide');
 Route::view('roadmap', 'roadmap')->name('roadmap');
 Route::view('legal/privacy', 'legal.privacy')->name('legal.privacy');

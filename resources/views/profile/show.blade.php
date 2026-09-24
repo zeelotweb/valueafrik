@@ -135,7 +135,7 @@ $countryFlag = \App\Support\Countries::flag($profile?->country);
                             {{ __("You haven't filled in your Roots yet.") }}
                             <flux:link :href="route('roots.edit')" wire:navigate>{{ __('Add them now') }}</flux:link>
                         @else
-                            {{ __("{$user->name} hasn't filled in their Roots yet.") }}
+                            {{ __(':name hasn\'t filled in their Roots yet.', ['name' => $user->name]) }}
                         @endif
                     </flux:text>
                 </div>

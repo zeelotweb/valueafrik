@@ -3,12 +3,12 @@ $showcaseItems = \App\Support\WelcomeShowcase::items();
 $countries = \App\Support\WelcomeShowcase::countries();
 
 $pillars = [
-    ['type' => 'identity', 'icon' => 'user', 'title' => 'Identity & Profiles', 'blurb' => 'Your way of life as your profile — languages, heritage, traditions, not just a bio.', 'warm' => false],
-    ['type' => 'bridge_post', 'icon' => 'chat-bubble-left-right', 'title' => 'Bridge Posts', 'blurb' => 'Co-create posts with someone from another culture, comparing the same tradition side by side.', 'warm' => false],
-    ['type' => 'community', 'icon' => 'user-group', 'title' => 'Culture Circles', 'blurb' => 'Small communities built around curiosity, not virality.', 'warm' => false],
-    ['type' => 'bridge_score', 'icon' => 'trophy', 'title' => 'Bridge Score & Badges', 'blurb' => 'Recognition for sparking exchange, not just posting.', 'warm' => true],
-    ['type' => 'discovery', 'icon' => 'magnifying-glass', 'title' => 'Discovery', 'blurb' => 'Find people through shared curiosity, not follower overlap.', 'warm' => false],
-    ['type' => 'live', 'icon' => 'video-camera', 'title' => 'Live & Video', 'blurb' => 'Real-time conversation and broadcast, calls to cultural events.', 'warm' => false],
+    ['type' => 'identity', 'icon' => 'user', 'title' => __('Identity & Profiles'), 'blurb' => __('Your way of life as your profile — languages, heritage, traditions, not just a bio.'), 'warm' => false],
+    ['type' => 'bridge_post', 'icon' => 'chat-bubble-left-right', 'title' => __('Bridge Posts'), 'blurb' => __('Co-create posts with someone from another culture, comparing the same tradition side by side.'), 'warm' => false],
+    ['type' => 'community', 'icon' => 'user-group', 'title' => __('Culture Circles'), 'blurb' => __('Small communities built around curiosity, not virality.'), 'warm' => false],
+    ['type' => 'bridge_score', 'icon' => 'trophy', 'title' => __('Bridge Score & Badges'), 'blurb' => __('Recognition for sparking exchange, not just posting.'), 'warm' => true],
+    ['type' => 'discovery', 'icon' => 'magnifying-glass', 'title' => __('Discovery'), 'blurb' => __('Find people through shared curiosity, not follower overlap.'), 'warm' => false],
+    ['type' => 'live', 'icon' => 'video-camera', 'title' => __('Live & Video'), 'blurb' => __('Real-time conversation and broadcast, calls to cultural events.'), 'warm' => false],
 ];
 
 // One accent (cyan) carries every pillar badge except Bridge Score, which
@@ -83,28 +83,26 @@ $pillars = [
                                     valueAFRIK
                                 </span>
                                 <span class="rounded-full border border-cyan-600/30 bg-cyan-50 px-2 py-0.5 text-xs font-medium text-cyan-700 dark:bg-cyan-950 dark:text-cyan-400">
-                                    Beta
+                                    {{ __('Beta') }}
                                 </span>
                             </div>
                             <h1 class="font-display text-5xl font-semibold tracking-tight text-balance text-stone-900 sm:text-6xl dark:text-white">
-                                Building Bridges Across Cultures
+                                {{ __('Building Bridges Across Cultures') }}
                             </h1>
                             <p class="mx-auto mt-6 max-w-xl text-lg text-stone-600 lg:mx-0 dark:text-stone-400">
-                                A social platform where identity comes first and curiosity is the reason to connect —
-                                not another feed built for virality. Share who you are, discover others, and build
-                                culture together.
+                                {{ __('A social platform where identity comes first and curiosity is the reason to connect — not another feed built for virality. Share who you are, discover others, and build culture together.') }}
                             </p>
                             <div class="mt-8 flex flex-wrap items-center justify-center gap-4 lg:justify-start">
                                 @guest
                                     <a href="{{ route('register') }}" class="rounded-md bg-cyan-600 px-6 py-3 font-medium text-white hover:bg-cyan-500">
-                                        Join Free
+                                        {{ __('Join Free') }}
                                     </a>
                                     <a href="{{ route('login') }}" class="rounded-md border border-stone-300 px-6 py-3 font-medium text-stone-700 hover:border-stone-400 dark:border-stone-700 dark:text-stone-300 dark:hover:border-stone-600">
-                                        Log In
+                                        {{ __('Log In') }}
                                     </a>
                                 @else
                                     <a href="{{ url('/dashboard') }}" class="rounded-md bg-cyan-600 px-6 py-3 font-medium text-white hover:bg-cyan-500">
-                                        Go to Dashboard
+                                        {{ __('Go to Dashboard') }}
                                     </a>
                                 @endguest
                             </div>
@@ -118,7 +116,7 @@ $pillars = [
                             >
                                 <span class="absolute -top-3 -left-3 z-10 flex items-center gap-1.5 rounded-full bg-stone-900 px-3 py-1 text-xs font-medium text-white shadow-sm dark:bg-white dark:text-stone-900">
                                     <span class="size-1.5 rounded-full bg-emerald-400"></span>
-                                    Real profile, live on valueAFRIK
+                                    {{ __('Real profile, live on valueAFRIK') }}
                                 </span>
 
                                 {{-- All items stacked in the same grid cell and always kept in
@@ -151,7 +149,7 @@ $pillars = [
                                             <button
                                                 type="button"
                                                 x-on:click="active = {{ $index }}"
-                                                aria-label="Show showcase item {{ $index + 1 }}"
+                                                aria-label="{{ __('Show showcase item :number', ['number' => $index + 1]) }}"
                                                 class="size-1.5 rounded-full transition-all"
                                                 x-bind:class="active === {{ $index }} ? 'w-4 bg-cyan-600 dark:bg-cyan-400' : 'bg-stone-300 dark:bg-stone-700'"
                                             ></button>
@@ -164,7 +162,7 @@ $pillars = [
                                     x-on:click="modalOpen = true"
                                     class="mt-3 flex w-full items-center justify-center gap-2 text-sm font-medium text-cyan-600 hover:text-cyan-500 dark:text-cyan-400"
                                 >
-                                    See how it works
+                                    {{ __('See how it works') }}
                                     <flux:icon.arrow-right class="size-4" />
                                 </button>
                             </div>
@@ -182,24 +180,24 @@ $pillars = [
             >
                 <div class="mx-auto max-w-4xl px-6">
                     <p class="text-center text-xs font-medium tracking-widest text-stone-500 uppercase">
-                        What you won't find here
+                        {{ __('What you won\'t find here') }}
                     </p>
                     <div class="mt-6 grid gap-4 sm:grid-cols-3">
                         <div class="flex items-center justify-center gap-2 text-stone-300">
                             <flux:icon.x-circle class="size-4 shrink-0 text-rose-500" />
-                            <span>An algorithm deciding who you see</span>
+                            <span>{{ __('An algorithm deciding who you see') }}</span>
                         </div>
                         <div class="flex items-center justify-center gap-2 text-stone-300">
                             <flux:icon.x-circle class="size-4 shrink-0 text-rose-500" />
-                            <span>Follower-count pressure</span>
+                            <span>{{ __('Follower-count pressure') }}</span>
                         </div>
                         <div class="flex items-center justify-center gap-2 text-stone-300">
                             <flux:icon.x-circle class="size-4 shrink-0 text-rose-500" />
-                            <span>Infinite scroll built to keep you here</span>
+                            <span>{{ __('Infinite scroll built to keep you here') }}</span>
                         </div>
                     </div>
                     <p class="mt-6 text-center text-sm font-medium text-cyan-400">
-                        Just real people, real curiosity, and bridges worth building.
+                        {{ __('Just real people, real curiosity, and bridges worth building.') }}
                     </p>
                 </div>
             </section>
@@ -214,7 +212,7 @@ $pillars = [
                 >
                     <div class="mx-auto flex max-w-6xl flex-col items-center gap-3 px-6 text-center">
                         <p class="text-xs font-medium tracking-widest text-stone-400 uppercase dark:text-stone-600">
-                            Already on valueAFRIK
+                            {{ __('Already on valueAFRIK') }}
                         </p>
                         <div class="flex flex-wrap items-center justify-center gap-3">
                             @foreach ($countries as $code)
@@ -226,7 +224,7 @@ $pillars = [
                                     <span class="text-stone-600 dark:text-stone-400">{{ \App\Support\Countries::name($code) }}</span>
                                 </span>
                             @endforeach
-                            <span class="text-sm text-stone-400 dark:text-stone-600">and growing every day</span>
+                            <span class="text-sm text-stone-400 dark:text-stone-600">{{ __('and growing every day') }}</span>
                         </div>
                     </div>
                 </section>
@@ -241,14 +239,13 @@ $pillars = [
             >
                 <div class="mx-auto max-w-2xl text-center">
                     <p class="text-sm font-medium tracking-widest text-cyan-600 uppercase dark:text-cyan-400">
-                        What you can do here
+                        {{ __('What you can do here') }}
                     </p>
                     <h2 class="font-display mt-2 text-3xl font-semibold tracking-tight text-balance text-stone-900 dark:text-white">
-                        Six pillars, one story
+                        {{ __('Six pillars, one story') }}
                     </h2>
                     <p class="mt-4 text-stone-600 dark:text-stone-400">
-                        Everything on valueAFRIK is built to turn curiosity into a real exchange — click any
-                        piece to see it in action.
+                        {{ __('Everything on valueAFRIK is built to turn curiosity into a real exchange — click any piece to see it in action.') }}
                     </p>
                 </div>
 
@@ -272,7 +269,7 @@ $pillars = [
                             <p class="mt-1.5 text-sm text-stone-500 dark:text-stone-400">{{ $pillar['blurb'] }}</p>
                             @if ($available)
                                 <span class="mt-4 flex items-center gap-1 text-sm font-medium text-cyan-600 group-hover:gap-1.5 dark:text-cyan-400">
-                                    See a real example
+                                    {{ __('See a real example') }}
                                     <flux:icon.arrow-right class="size-3.5 transition-all" />
                                 </span>
                             @endif
@@ -297,10 +294,10 @@ $pillars = [
                 <div class="mx-auto max-w-6xl px-6">
                     <div class="mx-auto max-w-2xl text-center">
                         <p class="text-sm font-medium tracking-widest text-cyan-600 uppercase dark:text-cyan-400">
-                            Why it's different
+                            {{ __('Why it\'s different') }}
                         </p>
                         <h2 class="font-display mt-2 text-3xl font-semibold tracking-tight text-balance text-stone-900 dark:text-white">
-                            Built for exchange, not attention
+                            {{ __('Built for exchange, not attention') }}
                         </h2>
                     </div>
 
@@ -309,30 +306,27 @@ $pillars = [
                             <span class="mx-auto flex size-11 items-center justify-center rounded-md bg-cyan-50 text-cyan-700 sm:mx-0 dark:bg-cyan-950 dark:text-cyan-400">
                                 <flux:icon.identification class="size-5" />
                             </span>
-                            <h3 class="mt-3 font-semibold text-stone-900 dark:text-white">Identity first</h3>
+                            <h3 class="mt-3 font-semibold text-stone-900 dark:text-white">{{ __('Identity first') }}</h3>
                             <p class="mt-1.5 text-sm text-stone-500 dark:text-stone-400">
-                                Your heritage, languages, and traditions are the profile — not an afterthought
-                                buried under a follower count.
+                                {{ __('Your heritage, languages, and traditions are the profile — not an afterthought buried under a follower count.') }}
                             </p>
                         </div>
                         <div class="surface-card p-6 text-center sm:text-start">
                             <span class="mx-auto flex size-11 items-center justify-center rounded-md bg-cyan-50 text-cyan-700 sm:mx-0 dark:bg-cyan-950 dark:text-cyan-400">
                                 <flux:icon.globe-europe-africa class="size-5" />
                             </span>
-                            <h3 class="mt-3 font-semibold text-stone-900 dark:text-white">Curiosity over virality</h3>
+                            <h3 class="mt-3 font-semibold text-stone-900 dark:text-white">{{ __('Curiosity over virality') }}</h3>
                             <p class="mt-1.5 text-sm text-stone-500 dark:text-stone-400">
-                                Discovery surfaces people by shared interests and cross-cultural curiosity, not
-                                by who's trending.
+                                {{ __('Discovery surfaces people by shared interests and cross-cultural curiosity, not by who\'s trending.') }}
                             </p>
                         </div>
                         <div class="surface-card p-6 text-center sm:text-start">
                             <span class="mx-auto flex size-11 items-center justify-center rounded-md bg-score-100 text-score-600 sm:mx-0 dark:bg-score-950 dark:text-score-400">
                                 <flux:icon.trophy class="size-5" />
                             </span>
-                            <h3 class="mt-3 font-semibold text-stone-900 dark:text-white">Recognition that means something</h3>
+                            <h3 class="mt-3 font-semibold text-stone-900 dark:text-white">{{ __('Recognition that means something') }}</h3>
                             <p class="mt-1.5 text-sm text-stone-500 dark:text-stone-400">
-                                Bridge Score rewards follows, conversations, and community — engagement with
-                                people, not just posts.
+                                {{ __('Bridge Score rewards follows, conversations, and community — engagement with people, not just posts.') }}
                             </p>
                         </div>
                     </div>
@@ -354,18 +348,18 @@ $pillars = [
                     </div>
 
                     <h2 class="font-display text-3xl font-semibold tracking-tight text-balance text-white">
-                        Come build a bridge.
+                        {{ __('Come build a bridge.') }}
                     </h2>
                     <p class="max-w-md text-cyan-50">
-                        It's free, it's early, and every profile added makes the map a little bigger.
+                        {{ __('It\'s free, it\'s early, and every profile added makes the map a little bigger.') }}
                     </p>
                     @guest
                         <a href="{{ route('register') }}" class="rounded-md bg-white px-6 py-3 font-medium text-cyan-700 hover:bg-cyan-50">
-                            Join Free
+                            {{ __('Join Free') }}
                         </a>
                     @else
                         <a href="{{ url('/dashboard') }}" class="rounded-md bg-white px-6 py-3 font-medium text-cyan-700 hover:bg-cyan-50">
-                            Go to Dashboard
+                            {{ __('Go to Dashboard') }}
                         </a>
                     @endguest
                 </div>
@@ -402,7 +396,7 @@ $pillars = [
                             x-on:click="active = (active - 1 + total) % total"
                             class="rounded-md border border-stone-700 px-4 py-2 text-sm font-medium text-stone-200 hover:border-stone-500"
                         >
-                            Back
+                            {{ __('Back') }}
                         </button>
 
                         <div class="flex items-center gap-1.5">
@@ -419,7 +413,7 @@ $pillars = [
                             x-on:click="active = (active + 1) % total"
                             class="rounded-md bg-cyan-600 px-4 py-2 text-sm font-medium text-white hover:bg-cyan-500"
                         >
-                            Next
+                            {{ __('Next') }}
                         </button>
                     </div>
                 </div>

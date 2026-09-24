@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
@@ -37,7 +39,7 @@ use NotificationChannels\WebPush\HasPushSubscriptions;
  */
 #[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
-class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
+class User extends Authenticatable implements HasLocalePreference, MustVerifyEmail, PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
     use Billable, HasApiTokens, HasFactory, HasPushSubscriptions, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
@@ -95,6 +97,12 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     public function completeOnboarding(): void
     {
         $this->forceFill(['onboarded_at' => now()])->save();
+    }
+
+    /** Notifications and mail to this user go out in their chosen language, not the sender's. */
+    public function preferredLocale(): ?string
+    {
+        return $this->locale;
     }
 
     /**
@@ -271,7 +279,7 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
 
         try {
             $this->blocking()->syncWithoutDetaching($user->id);
-        } catch (\Illuminate\Database\UniqueConstraintViolationException) {
+        } catch (UniqueConstraintViolationException) {
             // A concurrent request already recorded this block — the
             // desired state is reached either way.
         }
@@ -313,7 +321,7 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
 
         try {
             $this->muting()->syncWithoutDetaching($user->id);
-        } catch (\Illuminate\Database\UniqueConstraintViolationException) {
+        } catch (UniqueConstraintViolationException) {
             // A concurrent request already recorded this mute — the
             // desired state is reached either way.
         }
@@ -506,7 +514,7 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
 
         foreach (config('bridge_score.badges') as $threshold => $badge) {
             if ($score >= $threshold) {
-                $earned = $badge;
+                $earned = [...$badge, 'name' => __($badge['name'])];
             }
         }
 

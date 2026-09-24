@@ -68,7 +68,7 @@ new class extends Component {
                     {{ __("You haven't joined any communities yet.") }}
                     <flux:link :href="route('communities.index')" wire:navigate>{{ __('Browse communities') }}</flux:link>
                 @else
-                    {{ __("{$user->name} hasn't joined any public communities yet.") }}
+                    {{ __(':name hasn\'t joined any public communities yet.', ['name' => $user->name]) }}
                 @endif
             </flux:text>
         </div>

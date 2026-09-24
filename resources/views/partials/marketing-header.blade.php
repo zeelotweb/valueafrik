@@ -3,12 +3,14 @@
         <x-brand-mark />
 
         <nav class="hidden items-center gap-6 text-sm text-stone-600 lg:flex dark:text-stone-400">
-            <a href="{{ route('guide') }}" class="hover:text-stone-900 dark:hover:text-white" wire:navigate>Guide</a>
+            <a href="{{ route('guide') }}" class="hover:text-stone-900 dark:hover:text-white" wire:navigate>{{ __('Guide') }}</a>
         </nav>
 
         <div class="flex items-center gap-3 text-sm">
+            <x-language-switcher />
+
             @auth
-                <a href="{{ url('/dashboard') }}" title="Dashboard" class="btn-flat-primary flex size-9 items-center justify-center rounded-md">
+                <a href="{{ url('/dashboard') }}" title="{{ __('Dashboard') }}" class="btn-flat-primary flex size-9 items-center justify-center rounded-md">
                     <flux:icon.squares-2x2 class="size-5" />
                 </a>
 
@@ -59,10 +61,10 @@
                 </flux:dropdown>
             @else
                 <a href="{{ route('login') }}" class="text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white">
-                    Log in
+                    {{ __('Log in') }}
                 </a>
                 <a href="{{ route('register') }}" class="rounded-md bg-cyan-600 px-4 py-2 font-medium text-white hover:bg-cyan-500">
-                    Join Free
+                    {{ __('Join Free') }}
                 </a>
             @endauth
         </div>

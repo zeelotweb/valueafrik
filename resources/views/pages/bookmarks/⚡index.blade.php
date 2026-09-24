@@ -110,12 +110,11 @@ new #[Title('Bookmarks')] class extends Component {
                         </a>
                         <div>
                             <div class="font-medium text-stone-900 dark:text-white">
-                                <a href="{{ route('profile.show', $post->user) }}" wire:navigate class="hover:underline">{{ $post->user->name }}</a>
+                                @php $authorLink = '<a href="'.e(route('profile.show', $post->user)).'" wire:navigate class="hover:underline">'.e($post->user->name).'</a>'; @endphp
                                 @if ($isCommunityPost)
-                                    <span class="font-normal text-stone-500 dark:text-stone-400">{{ __('in') }}</span>
-                                    <a href="{{ route('communities.show', $post->community) }}" wire:navigate class="text-communities-700 hover:text-communities-600 dark:text-communities-400">
-                                        {{ $post->community->name }}
-                                    </a>
+                                    {!! __(':name in :community', ['name' => $authorLink, 'community' => '<a href="'.e(route('communities.show', $post->community)).'" wire:navigate class="text-communities-700 hover:text-communities-600 dark:text-communities-400">'.e($post->community->name).'</a>']) !!}
+                                @else
+                                    {!! $authorLink !!}
                                 @endif
                             </div>
                             <div class="text-xs text-stone-500 dark:text-stone-400">{{ $post->created_at->diffForHumans() }}</div>

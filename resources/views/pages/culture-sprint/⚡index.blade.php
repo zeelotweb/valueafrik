@@ -377,9 +377,10 @@ new #[Title('Culture Sprint')] class extends Component {
             >
                 <flux:icon.loading class="size-6 text-live-600 dark:text-live-400" />
                 <p class="text-sm text-stone-600 dark:text-stone-400">
-                    {{ __('Waiting for a match on') }} <span class="font-semibold text-stone-900 dark:text-white">{{ $topic }}</span>
                     @if ($region)
-                        {{ __('from') }} <span class="font-semibold text-stone-900 dark:text-white">{{ $region }}</span>
+                        {!! __('Waiting for a match on :topic from :region', ['topic' => '<span class="font-semibold text-stone-900 dark:text-white">'.e($topic).'</span>', 'region' => '<span class="font-semibold text-stone-900 dark:text-white">'.e($region).'</span>']) !!}
+                    @else
+                        {!! __('Waiting for a match on :topic', ['topic' => '<span class="font-semibold text-stone-900 dark:text-white">'.e($topic).'</span>']) !!}
                     @endif
                     <span x-text="dots"></span>
                 </p>
@@ -621,7 +622,7 @@ new #[Title('Culture Sprint')] class extends Component {
                                     x-on:click="toggleDeafen"
                                     :class="deafened ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-white/10 text-white hover:bg-white/20'"
                                     class="flex size-10 items-center justify-center rounded-md"
-                                    :aria-label="deafened ? '{{ __('Unmute speaker') }}' : '{{ __('Mute speaker') }}'"
+                                    :aria-label="deafened ? @js(__('Unmute speaker')) : @js(__('Mute speaker'))"
                                 >
                                     <flux:icon x-show="!deafened" icon="speaker-wave" class="size-5" />
                                     <flux:icon x-show="deafened" icon="speaker-x-mark" class="size-5" x-cloak />
