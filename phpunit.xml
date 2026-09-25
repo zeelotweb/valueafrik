@@ -27,8 +27,6 @@
         <ini name="memory_limit" value="256M"/>
         <env name="APP_ENV" value="testing"/>
         <env name="FEATURE_LIVE" value="true"/>
-        <env name="FEATURE_GUIDE" value="true"/>
-        <env name="FEATURE_TERMS" value="true"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>

@@ -13,10 +13,10 @@ use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
 Route::get('locale/{locale}', [LocaleController::class, 'update'])->name('locale.update')->middleware('throttle:60,1');
-Route::view('guide', 'guide')->middleware('feature:guide')->name('guide');
+Route::view('guide', 'guide')->name('guide');
 Route::view('roadmap', 'roadmap')->name('roadmap');
 Route::view('legal/privacy', 'legal.privacy')->name('legal.privacy');
-Route::view('legal/terms', 'legal.terms')->middleware('feature:terms')->name('legal.terms');
+Route::view('legal/terms', 'legal.terms')->name('legal.terms');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::livewire('onboarding', 'pages::onboarding.index')->name('onboarding.index');

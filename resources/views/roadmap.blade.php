@@ -121,7 +121,7 @@ $pillars = [
                                 </span>
                             </div>
 
-                            <h2 class="mt-4 text-2xl font-bold tracking-tight">{{ $pillar['title'] }}</h2>
+                            <h2 class="mt-4 flex flex-wrap items-center gap-3 text-2xl font-bold tracking-tight">{{ $pillar['title'] }} @if ($pillar['id'] === 'live' && ! config('features.live')) <x-coming-soon-badge /> @endif</h2>
                             <p class="mt-1 text-stone-500 dark:text-stone-400">{{ $pillar['summary'] }}</p>
 
                             <div class="mt-8">
@@ -143,13 +143,11 @@ $pillars = [
                 </div>
             </section>
 
-            @if (config('features.guide'))
             <section class="mx-auto max-w-4xl px-6 py-16 text-center">
                 <p class="text-stone-500 dark:text-stone-400">
                     {!! __('Curious what each of these looks like to use, not just how it works? :guide instead.', ['guide' => '<a href="'.e(route('guide')).'" wire:navigate class="font-medium text-cyan-600 hover:text-cyan-500 dark:text-cyan-400">'.e(__('Read the Guide')).'</a>']) !!}
                 </p>
             </section>
-            @endif
         </main>
 
         @include('partials.marketing-footer')

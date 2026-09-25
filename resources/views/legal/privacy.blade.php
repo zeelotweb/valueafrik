@@ -27,15 +27,15 @@
                     <p>
                         valueAFRIK is a product of ZeelotWeb ("ZeelotWeb," "valueAFRIK," "we," "us," or "our"), based
                         in Columbus, Ohio — a social platform built to help people across the African diaspora
-                        connect across cultures through profiles, posts, communities, messaging, and live
-                        conversation. This Privacy Policy explains what information we collect when you use
+                        connect across cultures through profiles, posts, communities, messaging, and (coming
+                        soon) live conversation. This Privacy Policy explains what information we collect when you use
                         valueAFRIK, why we collect it, who we share it with, and the choices and rights you have over
                         it.
                     </p>
                     <p>
                         By creating an account or otherwise using valueAFRIK, you agree to the collection and use of
                         information as described here. If you don't agree with this policy, please don't use the
-                        platform. This policy should be read alongside our {!! config('features.terms') ? '<a href="'.e(route('legal.terms')).'" wire:navigate class="font-medium text-cyan-600 hover:underline dark:text-cyan-400">Terms of Service</a>' : 'Terms of Service' !!}.
+                        platform. This policy should be read alongside our <a href="{{ route('legal.terms') }}" wire:navigate class="font-medium text-cyan-600 hover:underline dark:text-cyan-400">Terms of Service</a>.
                     </p>
 
                     <div>
@@ -79,7 +79,7 @@
                         <h2 class="font-display text-xl font-semibold text-stone-900 dark:text-white">2. How we use your information</h2>
                         <p class="mt-2">We use the information above to:</p>
                         <ul class="mt-2 list-disc space-y-1.5 ps-5">
-                            <li>Operate the core features of the platform — your profile, feed, communities, messaging, live calls and streams, and your Bridge Score.</li>
+                            <li>Operate the core features of the platform — your profile, feed, communities, messaging, and your Bridge Score. Live calls and streams are coming soon and are currently disabled.</li>
                             <li>Personalize what you see — who we suggest you follow or which communities we surface, based on your Roots and activity.</li>
                             <li>Keep the platform safe — reviewing reported content, enforcing our Terms of Service, detecting and preventing abuse, spam, and fraud.</li>
                             <li>Communicate with you — service notifications (a new message, a follow, a community request), security alerts, and, if you've opted in, push notifications.</li>
@@ -96,7 +96,7 @@
                             <li><strong>Service providers who process data on our behalf:</strong>
                                 <ul class="mt-1.5 list-[circle] space-y-1 ps-5">
                                     <li>Our hosting provider, to run and store the platform's servers and database.</li>
-                                    <li>LiveKit, which powers real-time audio and video for calls and live sessions — your audio/video stream is routed through this service while a call or live session is active.</li>
+                                    <li>LiveKit, which will power real-time audio and video for calls and live sessions once they launch (they are currently disabled) — your audio/video stream will be routed through this service only while a call or live session is active.</li>
                                     <li>Google and Facebook, if you choose to sign in with a connected account.</li>
                                     <li>Browser push notification services (operated by Google, Mozilla, Apple, and similar), if you enable push notifications — they're the delivery mechanism for that feature by design of the Web Push standard.</li>
                                     <li>An email delivery service, to send account, security, and notification emails.</li>
@@ -127,7 +127,7 @@
                             <li><strong>Download your data:</strong> Settings &rarr; Privacy lets you download a copy of your account, profile, posts, comments, reactions, Bridge Posts, Bridge Score history, messages, and any photos you've uploaded, as a file.</li>
                             <li><strong>Delete your account:</strong> Settings &rarr; Danger zone permanently deletes your account. This can't be undone.</li>
                             <li><strong>Control notifications:</strong> manage or disable push notifications at any time in Settings &rarr; Notifications.</li>
-                            <li><strong>Block and report:</strong> you can block another member (which also prevents them from messaging or calling you) or report content or a community for review, at any time.</li>
+                            <li><strong>Block and report:</strong> you can block another member (which also prevents them from messaging you, and from calling you once calls launch) or report content or a community for review, at any time.</li>
                         </ul>
                         <p class="mt-3">
                             Depending on where you live, you may have additional rights under laws like the EU/UK
@@ -142,7 +142,7 @@
                         <h2 class="font-display text-xl font-semibold text-stone-900 dark:text-white">6. Children's privacy</h2>
                         <p class="mt-2">
                             valueAFRIK is not directed at children, and you must meet our minimum age requirement (see
-                            our {!! config('features.terms') ? '<a href="'.e(route('legal.terms')).'" wire:navigate class="font-medium text-cyan-600 hover:underline dark:text-cyan-400">Terms of Service</a>' : 'Terms of Service' !!})
+                            our <a href="{{ route('legal.terms') }}" wire:navigate class="font-medium text-cyan-600 hover:underline dark:text-cyan-400">Terms of Service</a>)
                             to create an account. We do not knowingly collect personal information from children under
                             that age. If you believe a child has created an account, contact us and we'll take
                             appropriate action, including deleting the account.

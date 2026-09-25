@@ -87,7 +87,7 @@ $pillars = [
         'icon' => 'video-camera',
         'title' => __('Live & Video'),
         'tagline' => __('Real-time conversation and broadcast.'),
-        'phase' => __('Early access'),
+        'phase' => config('features.live') ? __('Early access') : __('Coming soon'),
         'why' => __('Text and photos carry a lot of culture, but some of it only comes through live — a conversation, a performance, a room full of people asking questions in real time. This pillar is where we\'re building next.'),
         'features' => [
             __('Start a stream straight from your Dashboard.'),
@@ -151,7 +151,7 @@ $pillars = [
                                 </span>
                             </div>
 
-                            <h2 class="mt-4 text-2xl font-bold tracking-tight">{{ $pillar['title'] }}</h2>
+                            <h2 class="mt-4 flex flex-wrap items-center gap-3 text-2xl font-bold tracking-tight">{{ $pillar['title'] }} @if ($pillar['id'] === 'live' && ! config('features.live')) <x-coming-soon-badge /> @endif</h2>
                             <p class="mt-1 text-stone-500 dark:text-stone-400">{{ $pillar['tagline'] }}</p>
 
                             <p class="mt-5 leading-relaxed text-stone-600 dark:text-stone-400">{{ $pillar['why'] }}</p>
@@ -176,6 +176,12 @@ $pillars = [
                                 </div>
                             @endif
 
+                            @if ($pillar['id'] === 'live' && ! config('features.live') && auth()->check())
+                                <span class="mt-6 inline-flex cursor-not-allowed items-center gap-2 text-sm font-medium text-stone-400 dark:text-stone-500" aria-disabled="true" data-test="guide-live-coming-soon">
+                                    {{ $ctaConfig['label'] }}
+                                    <x-coming-soon-badge />
+                                </span>
+                            @else
                             <a
                                 href="{{ route($ctaConfig['route']) }}"
                                 wire:navigate
@@ -184,6 +190,7 @@ $pillars = [
                                 {{ $ctaConfig['label'] }}
                                 <flux:icon.arrow-right class="size-3.5" />
                             </a>
+                            @endif
                         </div>
                     @endforeach
                 </div>

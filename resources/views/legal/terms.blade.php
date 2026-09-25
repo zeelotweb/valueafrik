@@ -68,8 +68,8 @@
                         <ul class="mt-2 list-disc space-y-1.5 ps-5">
                             <li>Build a profile ("Roots") describing your languages, heritage, and interests.</li>
                             <li>Post to your Wall, join and post in Communities, and co-author Bridge Posts with another member.</li>
-                            <li>Follow other members, message them, and start audio or video calls.</li>
-                            <li>Join live sessions and Culture Sprint activities.</li>
+                            <li>Follow other members and message them.</li>
+                            <li>Use live video, audio calls, live sessions, and Culture Sprint once they launch. These features are coming soon and are not currently available (see Section 8).</li>
                             <li>Earn Bridge Score points for cross-cultural engagement on the platform.</li>
                         </ul>
                         <p class="mt-2">
@@ -119,7 +119,7 @@
                     <div>
                         <h2 class="font-display text-xl font-semibold text-stone-900 dark:text-white">6. Reporting and moderation</h2>
                         <p class="mt-2">
-                            You can block another member at any time, which stops them from messaging or calling you.
+                            You can block another member at any time, which stops them from messaging you (and from calling you, once calls launch).
                             You can report content or a community for review. Our moderators (and, within a
                             Community, that Community's own owners and monitors) may review reported content and
                             remove content or restrict access that violates these Terms. Community owners and
@@ -141,10 +141,13 @@
                     <div>
                         <h2 class="font-display text-xl font-semibold text-stone-900 dark:text-white">8. Live sessions and calls</h2>
                         <p class="mt-2">
-                            Audio and video for calls and live sessions is transmitted through LiveKit, a third-party
-                            real-time media service, while a session is active. valueAFRIK does not record or store
-                            call or live-session audio/video. The same conduct rules in Section 5 apply during a live
-                            or call session as anywhere else on the Service.
+                            Live video, audio calls, live sessions, and Culture Sprint are coming soon and are
+                            currently disabled. Nothing in this section applies to you until we turn them on, and we
+                            will update these Terms before we do. Once they launch, audio and video is expected to be
+                            transmitted through LiveKit, a third-party real-time media service, only while a session is
+                            active; valueAFRIK does not plan to record or store call or live-session audio/video. The
+                            same conduct rules in Section 5 will apply during a live or call session as anywhere else on
+                            the Service.
                         </p>
                     </div>
 
@@ -152,7 +155,7 @@
                         <h2 class="font-display text-xl font-semibold text-stone-900 dark:text-white">9. Third-party services</h2>
                         <p class="mt-2">
                             Some features depend on third-party services we don't control — signing in with Google or
-                            Facebook, and LiveKit for calls and live sessions. Your use of those features is also
+                            Facebook, and (once live video and calls launch) LiveKit. Your use of those features is also
                             subject to that provider's own terms, and we're not responsible for their availability or
                             conduct.
                         </p>

@@ -5,7 +5,7 @@ use App\Models\User;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 beforeEach(function () {
-    config(['features.live' => false, 'features.guide' => false, 'features.terms' => false]);
+    config(['features.live' => false]);
 });
 
 test('live, calls and culture sprint show a coming soon page', function () {
@@ -16,17 +16,20 @@ test('live, calls and culture sprint show a coming soon page', function () {
     }
 });
 
-test('the guide and terms show a coming soon page', function () {
-    $this->get(route('guide'))->assertOk()->assertSee('This is coming soon');
-    $this->get(route('legal.terms'))->assertOk()->assertSee('This is coming soon');
+test('the guide and roadmap still explain live video but mark it coming soon', function () {
+    $this->get(route('guide'))->assertOk()->assertSee('Live &amp; Video', false)->assertSee('Coming soon');
+    $this->get(route('roadmap'))->assertOk()->assertSee('Live &amp; Video', false)->assertSee('Coming soon');
+    $this->get(route('home'))->assertOk()->assertSee('Coming soon');
+});
+
+test('the terms stay available and say live video and calls are not yet available', function () {
+    $this->get(route('legal.terms'))->assertOk()->assertSee('currently disabled')->assertDontSee('This is coming soon');
 });
 
 test('links to switched-off features are replaced by a coming soon badge', function () {
     $this->get(route('home'))
         ->assertSee('Coming soon')
-        ->assertDontSee('href="'.route('guide').'"', false)
-        ->assertDontSee('href="'.route('live.index').'"', false)
-        ->assertDontSee('href="'.route('legal.terms').'"', false);
+        ->assertDontSee('href="'.route('live.index').'"', false);
 
     $this->actingAs(User::factory()->create())
         ->get(route('dashboard'))
@@ -43,8 +46,8 @@ test('a call or stream cannot be started while live is switched off', function (
 });
 
 test('everything is available again once the features are switched on', function () {
-    config(['features.live' => true, 'features.guide' => true, 'features.terms' => true]);
+    config(['features.live' => true]);
 
-    $this->get(route('guide'))->assertOk()->assertDontSee('This is coming soon');
+    $this->get(route('guide'))->assertOk()->assertDontSee('Coming soon');
     $this->get(route('legal.terms'))->assertOk()->assertDontSee('This is coming soon');
 });

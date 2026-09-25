@@ -265,7 +265,7 @@ $pillars = [
                             ])>
                                 <flux:icon :icon="$pillar['icon']" class="size-5" />
                             </span>
-                            <h3 class="mt-4 font-semibold text-stone-900 dark:text-white">{{ $pillar['title'] }}</h3>
+                            <h3 class="mt-4 flex flex-wrap items-center gap-2 font-semibold text-stone-900 dark:text-white">{{ $pillar['title'] }} @if ($pillar['type'] === 'live' && ! config('features.live')) <x-coming-soon-badge /> @endif</h3>
                             <p class="mt-1.5 text-sm text-stone-500 dark:text-stone-400">{{ $pillar['blurb'] }}</p>
                             @if ($available)
                                 <span class="mt-4 flex items-center gap-1 text-sm font-medium text-cyan-600 group-hover:gap-1.5 dark:text-cyan-400">

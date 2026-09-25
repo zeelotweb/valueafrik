@@ -8,6 +8,4 @@
 return [
     // Live streams, 1:1 calls and Culture Sprint.
     'live' => (bool) env('FEATURE_LIVE', false),
-    'guide' => (bool) env('FEATURE_GUIDE', false),
-    'terms' => (bool) env('FEATURE_TERMS', false),
 ];
