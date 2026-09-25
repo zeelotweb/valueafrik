@@ -116,9 +116,13 @@ $rootsIncomplete = ! $user->profile?->bio || $user->languages->isEmpty() || $use
                     </div>
 
                     <div class="mt-4">
-                        <flux:subheading>{{ __('Live right now') }}</flux:subheading>
+                        <flux:subheading class="flex items-center gap-2">{{ __('Live right now') }} @unless (config('features.live')) <x-coming-soon-badge /> @endunless</flux:subheading>
                         <div class="mt-2">
-                            <livewire:pages::dashboard.live-now :key="'dashboard-live-now-'.$user->id" />
+                            @if (config('features.live'))
+                                <livewire:pages::dashboard.live-now :key="'dashboard-live-now-'.$user->id" />
+                            @else
+                                <flux:text class="text-sm">{{ __('Live video and calls are coming soon.') }}</flux:text>
+                            @endif
                         </div>
                     </div>
                 </div>

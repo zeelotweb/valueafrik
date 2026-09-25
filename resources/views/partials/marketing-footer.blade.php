@@ -13,14 +13,22 @@
                 <ul class="mt-4 space-y-2 text-sm text-stone-500 dark:text-stone-400">
                     <li><a href="{{ route('discover.index') }}" class="hover:text-stone-900 dark:hover:text-white">{{ __('Discover') }}</a></li>
                     <li><a href="{{ route('communities.index') }}" class="hover:text-stone-900 dark:hover:text-white">{{ __('Communities') }}</a></li>
-                    <li><a href="{{ route('live.index') }}" class="hover:text-stone-900 dark:hover:text-white">{{ __('Live') }}</a></li>
+                    @if (config('features.live'))
+                        <li><a href="{{ route('live.index') }}" class="hover:text-stone-900 dark:hover:text-white">{{ __('Live') }}</a></li>
+                    @else
+                        <li><span class="inline-flex cursor-not-allowed items-center gap-2 text-stone-400 dark:text-stone-500" aria-disabled="true">{{ __('Live') }} <x-coming-soon-badge /></span></li>
+                    @endif
                 </ul>
             </div>
 
             <div>
                 <h3 class="text-sm font-semibold text-stone-900 dark:text-white">{{ __('Company') }}</h3>
                 <ul class="mt-4 space-y-2 text-sm text-stone-500 dark:text-stone-400">
-                    <li><a href="{{ route('guide') }}" class="hover:text-stone-900 dark:hover:text-white" wire:navigate>{{ __('Guide') }}</a></li>
+                    @if (config('features.guide'))
+                        <li><a href="{{ route('guide') }}" class="hover:text-stone-900 dark:hover:text-white" wire:navigate>{{ __('Guide') }}</a></li>
+                    @else
+                        <li><span class="inline-flex cursor-not-allowed items-center gap-2 text-stone-400 dark:text-stone-500" aria-disabled="true">{{ __('Guide') }} <x-coming-soon-badge /></span></li>
+                    @endif
                     <li><a href="{{ route('roadmap') }}" class="hover:text-stone-900 dark:hover:text-white" wire:navigate>{{ __('Roadmap') }}</a></li>
                 </ul>
             </div>
@@ -29,7 +37,11 @@
                 <h3 class="text-sm font-semibold text-stone-900 dark:text-white">{{ __('Legal') }}</h3>
                 <ul class="mt-4 space-y-2 text-sm text-stone-500 dark:text-stone-400">
                     <li><a href="{{ route('legal.privacy') }}" class="hover:text-stone-900 dark:hover:text-white" wire:navigate>{{ __('Privacy Policy') }}</a></li>
-                    <li><a href="{{ route('legal.terms') }}" class="hover:text-stone-900 dark:hover:text-white" wire:navigate>{{ __('Terms of Service') }}</a></li>
+                    @if (config('features.terms'))
+                        <li><a href="{{ route('legal.terms') }}" class="hover:text-stone-900 dark:hover:text-white" wire:navigate>{{ __('Terms of Service') }}</a></li>
+                    @else
+                        <li><span class="inline-flex cursor-not-allowed items-center gap-2 text-stone-400 dark:text-stone-500" aria-disabled="true">{{ __('Terms of Service') }} <x-coming-soon-badge /></span></li>
+                    @endif
                 </ul>
             </div>
         </div>

@@ -1,0 +1,1 @@
+<span {{ $attributes->class('inline-flex shrink-0 items-center rounded-full bg-stone-200 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-stone-600 uppercase dark:bg-stone-800 dark:text-stone-300') }}>{{ __('Coming soon') }}</span>

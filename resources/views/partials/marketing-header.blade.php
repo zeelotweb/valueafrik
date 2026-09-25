@@ -3,7 +3,11 @@
         <x-brand-mark />
 
         <nav class="hidden items-center gap-6 text-sm text-stone-600 lg:flex dark:text-stone-400">
-            <a href="{{ route('guide') }}" class="hover:text-stone-900 dark:hover:text-white" wire:navigate>{{ __('Guide') }}</a>
+            @if (config('features.guide'))
+                <a href="{{ route('guide') }}" class="hover:text-stone-900 dark:hover:text-white" wire:navigate>{{ __('Guide') }}</a>
+            @else
+                <span class="inline-flex cursor-not-allowed items-center gap-2 text-stone-400 dark:text-stone-500" aria-disabled="true">{{ __('Guide') }} <x-coming-soon-badge /></span>
+            @endif
         </nav>
 
         <div class="flex items-center gap-3 text-sm">

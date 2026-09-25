@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureFeatureEnabled;
 use App\Http\Middleware\EnsureNotBanned;
 use App\Http\Middleware\SetLocale;
 use App\Http\Middleware\ThrottlePasswordResetRequests;
@@ -19,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->alias(['feature' => EnsureFeatureEnabled::class]);
         $middleware->appendToGroup('web', SetLocale::class);
         $middleware->appendToGroup('web', EnsureNotBanned::class);
         $middleware->appendToGroup('web', TrackLastSeen::class);

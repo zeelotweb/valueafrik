@@ -56,13 +56,27 @@
                 </flux:sidebar.group>
 
                 <flux:sidebar.group :heading="$darkHeading('Live')" class="grid">
-                    <flux:sidebar.item icon="video-camera" :href="route('live.index')" :current="request()->routeIs('live.*')" wire:navigate>
-                        {{ __('Live') }}
-                    </flux:sidebar.item>
+                    @if (config('features.live'))
+                        <flux:sidebar.item icon="video-camera" :href="route('live.index')" :current="request()->routeIs('live.*')" wire:navigate>
+                            {{ __('Live') }}
+                        </flux:sidebar.item>
 
-                    <flux:sidebar.item icon="globe-alt" :href="route('culture-sprint.index')" :current="request()->routeIs('culture-sprint.*')" wire:navigate>
-                        {{ __('Culture Sprint') }}
-                    </flux:sidebar.item>
+                        <flux:sidebar.item icon="globe-alt" :href="route('culture-sprint.index')" :current="request()->routeIs('culture-sprint.*')" wire:navigate>
+                            {{ __('Culture Sprint') }}
+                        </flux:sidebar.item>
+                    @else
+                        <div class="flex cursor-not-allowed items-center gap-3 px-3 py-2 text-sm text-stone-400 dark:text-stone-500" aria-disabled="true" data-test="coming-soon-live">
+                            <flux:icon.video-camera class="size-5" />
+                            <span class="flex-1">{{ __('Live') }}</span>
+                            <x-coming-soon-badge />
+                        </div>
+
+                        <div class="flex cursor-not-allowed items-center gap-3 px-3 py-2 text-sm text-stone-400 dark:text-stone-500" aria-disabled="true" data-test="coming-soon-sprint">
+                            <flux:icon.globe-alt class="size-5" />
+                            <span class="flex-1">{{ __('Culture Sprint') }}</span>
+                            <x-coming-soon-badge />
+                        </div>
+                    @endif
                 </flux:sidebar.group>
 
                 @if (auth()->user()->isAdmin())
@@ -163,7 +177,9 @@
         @endpersist
 
         @persist('incoming-call')
-            <livewire:pages::layout.incoming-call :key="'incoming-call-'.auth()->id()" />
+            @if (config('features.live'))
+                <livewire:pages::layout.incoming-call :key="'incoming-call-'.auth()->id()" />
+            @endif
         @endpersist
 
         @persist('report-bug')

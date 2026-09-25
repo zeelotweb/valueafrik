@@ -23,6 +23,11 @@ new class extends Component {
 }; ?>
 
 <div>
+    @unless (config('features.live'))
+        <flux:button disabled variant="ghost" size="sm" icon="video-camera" class="{{ $class }}" data-test="stream-coming-soon">
+            {{ __('Start a stream') }} <x-coming-soon-badge />
+        </flux:button>
+    @else
     <flux:button wire:click="openVisibilityChoice" wire:loading.attr="disabled" variant="ghost" icon="video-camera" class="{{ $class }}" data-test="start-stream-button">
         {{ __('Start a stream') }}
     </flux:button>
@@ -62,4 +67,5 @@ new class extends Component {
             </div>
         </div>
     </flux:modal>
+    @endunless
 </div>

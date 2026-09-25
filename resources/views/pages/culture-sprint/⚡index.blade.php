@@ -155,6 +155,8 @@ new #[Title('Culture Sprint')] class extends Component {
 
     public function joinPool(): void
     {
+        abort_unless(config('features.live'), 404);
+
         abort_if($this->rootsIncomplete, 403);
 
         $this->validate([

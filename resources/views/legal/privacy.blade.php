@@ -35,7 +35,7 @@
                     <p>
                         By creating an account or otherwise using valueAFRIK, you agree to the collection and use of
                         information as described here. If you don't agree with this policy, please don't use the
-                        platform. This policy should be read alongside our <a href="{{ route('legal.terms') }}" wire:navigate class="font-medium text-cyan-600 hover:underline dark:text-cyan-400">Terms of Service</a>.
+                        platform. This policy should be read alongside our {!! config('features.terms') ? '<a href="'.e(route('legal.terms')).'" wire:navigate class="font-medium text-cyan-600 hover:underline dark:text-cyan-400">Terms of Service</a>' : 'Terms of Service' !!}.
                     </p>
 
                     <div>
@@ -142,7 +142,7 @@
                         <h2 class="font-display text-xl font-semibold text-stone-900 dark:text-white">6. Children's privacy</h2>
                         <p class="mt-2">
                             valueAFRIK is not directed at children, and you must meet our minimum age requirement (see
-                            our <a href="{{ route('legal.terms') }}" wire:navigate class="font-medium text-cyan-600 hover:underline dark:text-cyan-400">Terms of Service</a>)
+                            our {!! config('features.terms') ? '<a href="'.e(route('legal.terms')).'" wire:navigate class="font-medium text-cyan-600 hover:underline dark:text-cyan-400">Terms of Service</a>' : 'Terms of Service' !!})
                             to create an account. We do not knowingly collect personal information from children under
                             that age. If you believe a child has created an account, contact us and we'll take
                             appropriate action, including deleting the account.

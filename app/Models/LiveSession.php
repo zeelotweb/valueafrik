@@ -11,6 +11,7 @@ use App\Support\SafeNotifier;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
@@ -197,7 +198,7 @@ class LiveSession extends Model
                 ['user_id' => $user->id],
                 ['requested_at' => now()],
             );
-        } catch (\Illuminate\Database\UniqueConstraintViolationException) {
+        } catch (UniqueConstraintViolationException) {
             // A concurrent request already created this row — fetch it
             // since this method's return type promises a real record
             // either way, and skip re-broadcasting a duplicate event.
@@ -267,6 +268,7 @@ class LiveSession extends Model
      */
     public static function startCallWith(User $host, User $invitee): self
     {
+        abort_unless(config('features.live'), 404);
         abort_if($host->id === $invitee->id, 403);
         abort_if($host->hasBlockRelationWith($invitee), 403);
 
@@ -318,6 +320,8 @@ class LiveSession extends Model
 
     public static function startStream(User $host, ?string $title = null, string $visibility = self::VISIBILITY_PUBLIC): self
     {
+        abort_unless(config('features.live'), 404);
+
         return self::create([
             'host_id' => $host->id,
             'room_name' => (string) Str::uuid(),
@@ -336,6 +340,7 @@ class LiveSession extends Model
      */
     public static function startSprintMatch(User $a, User $b, string $cultureWord): self
     {
+        abort_unless(config('features.live'), 404);
         $session = self::create([
             'host_id' => $a->id,
             'callee_id' => $b->id,

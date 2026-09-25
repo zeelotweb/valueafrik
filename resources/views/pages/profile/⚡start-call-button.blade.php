@@ -20,7 +20,18 @@ new class extends Component {
 }; ?>
 
 <div>
-    @unless (Auth::user()->hasBlockRelationWith($user))
+    @if (! config('features.live') && ! Auth::user()->hasBlockRelationWith($user))
+        <flux:button
+            disabled
+            size="sm"
+            variant="ghost"
+            icon="video-camera"
+            class="{{ $overlay ? '!bg-live-50/90 !text-live-800 shadow-sm backdrop-blur dark:!bg-live-950/80 dark:!text-live-300' : '' }} max-sm:w-8! max-sm:gap-0! max-sm:ps-0! max-sm:pe-0!"
+            data-test="call-coming-soon"
+        >
+            <span class="hidden items-center gap-2 sm:inline-flex">{{ __('Call') }} <x-coming-soon-badge /></span>
+        </flux:button>
+    @elseif (config('features.live') && ! Auth::user()->hasBlockRelationWith($user))
         <flux:button
             wire:click="startCall"
             wire:loading.attr="disabled"
@@ -32,5 +43,5 @@ new class extends Component {
         >
             <span class="hidden sm:inline">{{ __('Call') }}</span>
         </flux:button>
-    @endunless
+    @endif
 </div>

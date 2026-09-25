@@ -312,9 +312,13 @@ new #[Title('Messages')] class extends Component {
             <span class="min-w-0 flex-1 truncate font-medium text-stone-900 dark:text-white">{{ __('Unknown') }}</span>
         @endif
 
-        @if ($canMessage)
+        @if ($canMessage && config('features.live'))
             <flux:button wire:click="startCall" wire:loading.attr="disabled" size="sm" variant="ghost" icon="video-camera" class="max-sm:w-8! max-sm:gap-0! max-sm:ps-0! max-sm:pe-0!" data-test="start-call-button">
                 <span class="hidden sm:inline">{{ __('Call') }}</span>
+            </flux:button>
+        @elseif ($canMessage)
+            <flux:button disabled size="sm" variant="ghost" icon="video-camera" class="max-sm:w-8! max-sm:gap-0! max-sm:ps-0! max-sm:pe-0!" data-test="call-coming-soon">
+                <span class="hidden items-center gap-2 sm:inline-flex">{{ __('Call') }} <x-coming-soon-badge /></span>
             </flux:button>
         @endif
     </div>
