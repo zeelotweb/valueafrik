@@ -51,6 +51,10 @@ Route::middleware(['auth', 'verified', EnsureOnboardingComplete::class])->group(
     Route::post('communities/{community:slug}/avatar', [CommunityPhotoController::class, 'updateAvatar'])->name('communities.avatar');
     Route::post('communities/{community:slug}/cover', [CommunityPhotoController::class, 'updateCover'])->name('communities.cover');
 
+    // A hub page (more games land here over time) plus one route per game.
+    Route::view('games', 'games')->name('games.index');
+    Route::livewire('games/ayo', 'pages::games.ayo.play')->name('games.ayo.play');
+
     Route::middleware('feature:live')->group(function () {
         Route::livewire('live', 'pages::live.index')->name('live.index');
         Route::livewire('live/{liveSession}', 'pages::live.show')->name('live.show');

@@ -79,6 +79,12 @@
                     @endif
                 </flux:sidebar.group>
 
+                <flux:sidebar.group :heading="$darkHeading('Games')" class="grid">
+                    <flux:sidebar.item icon="puzzle-piece" :href="route('games.index')" :current="request()->routeIs('games.*')" wire:navigate>
+                        {{ __('Games') }}
+                    </flux:sidebar.item>
+                </flux:sidebar.group>
+
                 @if (auth()->user()->isAdmin())
                     <flux:sidebar.group :heading="$darkHeading('Admin')" class="grid">
                         <flux:sidebar.item icon="flag" :href="route('admin.reports')" :current="request()->routeIs('admin.reports')" wire:navigate>
