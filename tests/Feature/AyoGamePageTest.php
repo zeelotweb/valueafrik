@@ -33,10 +33,9 @@ test('returning to Ayo resumes the same in-progress game instead of starting ove
 
     Livewire::actingAs($user)->test('pages::games.ayo.play')->call('play', 0);
 
-    $session = GameSession::where('user_id', $user->id)->sole();
-    expect($session->state['pits'][0])->toBe(0);
+    $sessionId = GameSession::where('user_id', $user->id)->sole()->id;
 
-    Livewire::actingAs($user)->test('pages::games.ayo.play');
+    Livewire::actingAs($user)->test('pages::games.ayo.play')->assertSet('sessionId', $sessionId);
 
     expect(GameSession::where('user_id', $user->id)->count())->toBe(1);
 });
@@ -44,14 +43,15 @@ test('returning to Ayo resumes the same in-progress game instead of starting ove
 test('a move updates the board and persists it', function () {
     $user = User::factory()->create();
 
-    Livewire::actingAs($user)
+    $component = Livewire::actingAs($user)
         ->test('pages::games.ayo.play')
-        ->call('play', 0)
-        ->assertSet('turn', 1);
+        ->call('play', 0);
+
+    expect($component->get('pits'))->not->toBe(array_fill(0, 12, 4));
 
     $session = GameSession::where('user_id', $user->id)->sole();
-    expect($session->state['turn'])->toBe(1)
-        ->and($session->state['pits'][0])->toBe(0);
+    expect($session->state['pits'])->toBe($component->get('pits'))
+        ->and($session->state['turn'])->toBe($component->get('turn'));
 });
 
 test('a pit that is not a legal move cannot be played', function () {

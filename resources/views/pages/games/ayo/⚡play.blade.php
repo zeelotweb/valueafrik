@@ -26,10 +26,10 @@ new #[Title('Ayo')] class extends Component {
     public bool $roundOver;
 
     /** @var 0|1|null */
-    public ?int $winner;
+    public ?int $winner = null;
 
     /** @var array{totals: array{0:int,1:int}, gained: array{0:int,1:int}, stuck: int}|null */
-    public ?array $roundResult;
+    public ?array $roundResult = null;
 
     public function mount(): void
     {

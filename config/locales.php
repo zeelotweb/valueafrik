@@ -23,6 +23,7 @@ return [
         'resources/views/welcome.blade.php',
         'resources/views/guide.blade.php',
         'resources/views/roadmap.blade.php',
+        'resources/views/games.blade.php',
         'resources/views/partials',
         'resources/views/layouts',
         'resources/views/components/language-switcher.blade.php',
