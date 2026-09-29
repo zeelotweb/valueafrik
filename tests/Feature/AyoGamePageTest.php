@@ -74,7 +74,7 @@ test('starting the next round is only possible once the current one is over', fu
     Livewire::actingAs($user)
         ->test('pages::games.ayo.play')
         ->call('startNextRound')
-        ->assertHasErrors();
+        ->assertStatus(422);
 });
 
 test('starting a new game finishes the old session and opens a fresh one', function () {
