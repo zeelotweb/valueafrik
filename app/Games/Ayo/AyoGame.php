@@ -45,6 +45,9 @@ class AyoGame
     /** @var array{totals: array{0:int,1:int}, gained: array{0:int,1:int}, stuck: int}|null */
     public ?array $roundResult = null;
 
+    /** @var array{0: int|null, 1: int|null} the pit each player opened the current round with */
+    public array $openingPit = [null, null];
+
     public function __construct()
     {
         $this->pits = array_fill(0, self::PITS, self::SEEDS_PER_PIT);
@@ -82,6 +85,11 @@ class AyoGame
         }
 
         $player = $this->turn;
+
+        if ($this->openingPit[$player] === null) {
+            $this->openingPit[$player] = $pit;
+        }
+
         $events = [];
         $pos = $segStart = $pit;
         $hand = $this->pits[$pit];
@@ -151,6 +159,7 @@ class AyoGame
         // The player who ran out of seeds opens the next round.
         $this->turn = $this->roundResult['stuck'];
         $this->roundResult = null;
+        $this->openingPit = [null, null];
     }
 
     public function ownedCount(int $player): int

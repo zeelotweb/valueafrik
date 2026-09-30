@@ -44,6 +44,9 @@ new #[Title('Ayo')] class extends Component {
     /** @var array{totals: array{0:int,1:int}, gained: array{0:int,1:int}, stuck: int}|null */
     public ?array $roundResult = null;
 
+    /** @var array{0: int|null, 1: int|null} */
+    public array $openingPit = [null, null];
+
     public function mount(): void
     {
         $session = GameSession::activeOfType(Auth::id(), GameSession::TYPE_AYO)->latest()->first();
@@ -202,6 +205,7 @@ new #[Title('Ayo')] class extends Component {
             'roundOver' => $this->roundOver,
             'winner' => $this->winner,
             'roundResult' => $this->roundResult,
+            'openingPit' => $this->openingPit,
         ]);
     }
 
@@ -216,6 +220,8 @@ new #[Title('Ayo')] class extends Component {
         $this->roundOver = $state['roundOver'];
         $this->winner = $state['winner'];
         $this->roundResult = $state['roundResult'];
+        // Absent on a session saved before this field existed.
+        $this->openingPit = $state['openingPit'] ?? [null, null];
     }
 
     private function persist(AyoGame $game): void
@@ -378,13 +384,13 @@ new #[Title('Ayo')] class extends Component {
             <div class="grid grid-cols-6 gap-2">
                 @php $legalPits = $this->legalPits; @endphp
                 @foreach ([11, 10, 9, 8, 7, 6] as $i)
-                    @include('pages.games.ayo.pit', ['i' => $i, 'legalPits' => $legalPits])
+                    @include('pages.games.ayo.pit', ['i' => $i, 'legalPits' => $legalPits, 'openingPit' => $openingPit])
                 @endforeach
             </div>
 
             <div class="grid grid-cols-6 gap-2 mt-2">
                 @foreach ([0, 1, 2, 3, 4, 5] as $i)
-                    @include('pages.games.ayo.pit', ['i' => $i, 'legalPits' => $legalPits])
+                    @include('pages.games.ayo.pit', ['i' => $i, 'legalPits' => $legalPits, 'openingPit' => $openingPit])
                 @endforeach
             </div>
             <div class="mt-2 flex items-center justify-between text-xs font-medium text-stone-500 dark:text-stone-400">

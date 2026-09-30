@@ -95,6 +95,23 @@ test('a move updates the board and persists it', function () {
         ->and($session->state['turn'])->toBe($component->get('turn'));
 });
 
+test('each player\'s opening pit for the round stays marked, in the persisted state and the rendered board', function () {
+    $user = User::factory()->create();
+
+    $component = Livewire::actingAs($user)
+        ->test('pages::games.ayo.play')
+        ->call('startGame', GameSession::OPPONENT_HUMAN)
+        ->call('play', 0);
+
+    expect($component->get('openingPit'))->toBe([0, null]);
+
+    $session = GameSession::where('user_id', $user->id)->sole();
+    expect($session->state['openingPit'])->toBe([0, null]);
+
+    preg_match('/wire:click="play\(0\)"(.*?)>/s', $component->html(), $m);
+    expect($m[1] ?? '')->toContain('border-green-500');
+});
+
 test('after a move, the pits enabled for play belong to whoever\'s turn it now is, not who just moved', function () {
     $user = User::factory()->create();
 

@@ -137,3 +137,47 @@ test('round state survives a trip through toArray and fromArray', function () {
         ->and($restored->owners)->toBe($game->owners)
         ->and($restored->turn)->toBe($game->turn);
 });
+
+test('a player\'s opening pit for the round is recorded on their first move and never changes after', function () {
+    $game = new AyoGame;
+
+    expect($game->openingPit)->toBe([null, null]);
+
+    $game->play(2);
+    expect($game->openingPit)->toBe([2, null]);
+
+    // A relay from pit 2 lands the turn back with player 0 (the board is
+    // symmetric and small enough that this is common); whichever pit they
+    // play next must not overwrite the one they opened with.
+    if ($game->turn === 0 && ! $game->roundOver) {
+        $secondPit = $game->legalMoves()[0];
+        $game->play($secondPit);
+
+        expect($game->openingPit[0])->toBe(2);
+    }
+});
+
+test('each player gets their own opening pit for the round, independently', function () {
+    $game = AyoGame::fromArray([
+        'pits' => [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+    ]);
+
+    $game->play(0);
+    expect($game->openingPit)->toBe([0, null]);
+
+    $game->play(6);
+    expect($game->openingPit)->toBe([0, 6]);
+});
+
+test('starting the next round clears both players\' opening pits', function () {
+    $game = AyoGame::fromArray([
+        'pits' => [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        'captured' => [28, 0],
+    ]);
+    $game->play(0);
+    expect($game->openingPit[0])->not->toBeNull();
+
+    $game->startNextRound();
+
+    expect($game->openingPit)->toBe([null, null]);
+});
