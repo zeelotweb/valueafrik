@@ -107,6 +107,12 @@ new #[Title('Ayo')] class extends Component {
         $this->letBotReplyIfDue($game, $events);
 
         $this->applyState($game->toArray());
+        // legalPits is #[Computed] — memoized from the check above, against
+        // the board before this move. Without busting that cache, the
+        // template renders whose-turn-it-was instead of whose-turn-it-is,
+        // leaving the player who just moved still clickable and the player
+        // who should move now stuck disabled.
+        unset($this->legalPits);
         $this->persist($game);
         $this->dispatch('ayo-moved', events: $events);
         $this->showEndOfRoundModalsIfAny();
@@ -126,6 +132,7 @@ new #[Title('Ayo')] class extends Component {
         $this->letBotReplyIfDue($game, $events);
 
         $this->applyState($game->toArray());
+        unset($this->legalPits);
         $this->persist($game);
         $this->modal('ayo-round-over')->close();
 

@@ -95,6 +95,45 @@ test('a move updates the board and persists it', function () {
         ->and($session->state['turn'])->toBe($component->get('turn'));
 });
 
+test('after a move, the pits enabled for play belong to whoever\'s turn it now is, not who just moved', function () {
+    $user = User::factory()->create();
+
+    $component = Livewire::actingAs($user)
+        ->test('pages::games.ayo.play')
+        ->call('startGame', GameSession::OPPONENT_HUMAN)
+        ->call('play', 0);
+
+    $owners = $component->get('owners');
+    $turn = $component->get('turn');
+
+    expect($turn)->toBe(1);
+
+    foreach ($component->instance()->legalPits() as $pit) {
+        expect($owners[$pit])->toBe($turn);
+    }
+
+    // The rendered HTML has to agree — this is what actually bit a real
+    // player: the computed property is cached per request, so a stale read
+    // of it before the move (inside play()'s own guard) could otherwise
+    // leak into the template that renders after the move, leaving the
+    // player who just moved still clickable instead of whoever's turn it
+    // now is.
+    $legalPits = $component->instance()->legalPits();
+    $view = $component->html();
+
+    foreach (range(0, 11) as $i) {
+        preg_match('/wire:click="play\('.$i.'\)"(.*?)>/s', $view, $m);
+        // wire:loading.attr="disabled" always contains the word "disabled"
+        // regardless of the pit's actual current state — only a bare
+        // `disabled` attribute (what @disabled() renders) means it's really
+        // disabled right now.
+        $attrs = str_replace('wire:loading.attr="disabled"', '', $m[1] ?? '');
+        $isDisabledInHtml = (bool) preg_match('/(^|\s)disabled(\s|$)/', trim($attrs));
+
+        expect($isDisabledInHtml)->toBe(! in_array($i, $legalPits, true), "pit {$i}'s disabled state in the rendered HTML doesn't match legalPits");
+    }
+});
+
 test('a pit that is not a legal move cannot be played', function () {
     $user = User::factory()->create();
 
