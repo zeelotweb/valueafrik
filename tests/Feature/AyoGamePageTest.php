@@ -1,5 +1,6 @@
 <?php
 
+use App\Games\Ayo\AyoBot;
 use App\Games\Ayo\AyoGame;
 use App\Models\GameSession;
 use App\Models\User;
@@ -13,29 +14,68 @@ test('the games hub links to Ayo', function () {
         ->assertSee(route('games.ayo.play'), false);
 });
 
-test('visiting Ayo for the first time starts a fresh game', function () {
+test('visiting Ayo for the first time asks who you\'re playing, without starting a game yet', function () {
     $user = User::factory()->create();
 
     $this->actingAs($user)
         ->get(route('games.ayo.play'))
         ->assertOk()
-        ->assertSee('Ayo');
+        ->assertSee('Who are you playing?');
 
-    $session = GameSession::where('user_id', $user->id)->where('type', GameSession::TYPE_AYO)->first();
+    expect(GameSession::where('user_id', $user->id)->exists())->toBeFalse();
+});
 
-    expect($session)->not->toBeNull()
-        ->and($session->status)->toBe(GameSession::STATUS_ACTIVE)
+test('choosing to play a friend starts a fresh hot-seat game', function () {
+    $user = User::factory()->create();
+
+    Livewire::actingAs($user)
+        ->test('pages::games.ayo.play')
+        ->call('startGame', GameSession::OPPONENT_HUMAN)
+        ->assertSet('setup', false);
+
+    $session = GameSession::where('user_id', $user->id)->sole();
+
+    expect($session->status)->toBe(GameSession::STATUS_ACTIVE)
+        ->and($session->opponent)->toBe(GameSession::OPPONENT_HUMAN)
+        ->and($session->difficulty)->toBeNull()
         ->and($session->state['pits'])->toBe(array_fill(0, 12, 4));
 });
 
-test('returning to Ayo resumes the same in-progress game instead of starting over', function () {
+test('choosing to play the computer requires a real difficulty', function () {
     $user = User::factory()->create();
 
-    Livewire::actingAs($user)->test('pages::games.ayo.play')->call('play', 0);
+    Livewire::actingAs($user)
+        ->test('pages::games.ayo.play')
+        ->call('startGame', GameSession::OPPONENT_COMPUTER, 'impossible')
+        ->assertStatus(422);
+
+    expect(GameSession::where('user_id', $user->id)->exists())->toBeFalse();
+});
+
+test('choosing to play the computer starts a game at that difficulty', function () {
+    $user = User::factory()->create();
+
+    Livewire::actingAs($user)
+        ->test('pages::games.ayo.play')
+        ->call('startGame', GameSession::OPPONENT_COMPUTER, AyoBot::DIFFICULTY_HIGH)
+        ->assertSet('setup', false)
+        ->assertSet('difficulty', AyoBot::DIFFICULTY_HIGH);
+
+    $session = GameSession::where('user_id', $user->id)->sole();
+    expect($session->opponent)->toBe(GameSession::OPPONENT_COMPUTER)
+        ->and($session->difficulty)->toBe(AyoBot::DIFFICULTY_HIGH);
+});
+
+test('returning to Ayo resumes the same in-progress game instead of asking again', function () {
+    $user = User::factory()->create();
+
+    Livewire::actingAs($user)->test('pages::games.ayo.play')->call('startGame', GameSession::OPPONENT_HUMAN)->call('play', 0);
 
     $sessionId = GameSession::where('user_id', $user->id)->sole()->id;
 
-    Livewire::actingAs($user)->test('pages::games.ayo.play')->assertSet('sessionId', $sessionId);
+    Livewire::actingAs($user)->test('pages::games.ayo.play')
+        ->assertSet('setup', false)
+        ->assertSet('sessionId', $sessionId);
 
     expect(GameSession::where('user_id', $user->id)->count())->toBe(1);
 });
@@ -45,6 +85,7 @@ test('a move updates the board and persists it', function () {
 
     $component = Livewire::actingAs($user)
         ->test('pages::games.ayo.play')
+        ->call('startGame', GameSession::OPPONENT_HUMAN)
         ->call('play', 0);
 
     expect($component->get('pits'))->not->toBe(array_fill(0, 12, 4));
@@ -59,6 +100,7 @@ test('a pit that is not a legal move cannot be played', function () {
 
     Livewire::actingAs($user)
         ->test('pages::games.ayo.play')
+        ->call('startGame', GameSession::OPPONENT_HUMAN)
         ->call('play', 6)
         ->assertStatus(422);
 });
@@ -68,6 +110,7 @@ test('starting the next round is only possible once the current one is over', fu
     GameSession::create([
         'user_id' => $user->id,
         'type' => GameSession::TYPE_AYO,
+        'opponent' => GameSession::OPPONENT_HUMAN,
         'state' => (new AyoGame)->toArray(),
     ]);
 
@@ -77,17 +120,19 @@ test('starting the next round is only possible once the current one is over', fu
         ->assertStatus(422);
 });
 
-test('starting a new game finishes the old session and opens a fresh one', function () {
+test('restarting finishes the current session and asks who you\'re playing again', function () {
     $user = User::factory()->create();
 
-    $component = Livewire::actingAs($user)->test('pages::games.ayo.play')->call('play', 0);
+    $component = Livewire::actingAs($user)
+        ->test('pages::games.ayo.play')
+        ->call('startGame', GameSession::OPPONENT_HUMAN)
+        ->call('play', 0);
     $firstSessionId = $component->get('sessionId');
 
-    $component->call('newGame');
+    $component->call('newGame')->assertSet('setup', true);
 
     expect(GameSession::find($firstSessionId)->status)->toBe(GameSession::STATUS_FINISHED)
-        ->and(GameSession::where('user_id', $user->id)->where('status', GameSession::STATUS_ACTIVE)->count())->toBe(1)
-        ->and($component->get('sessionId'))->not->toBe($firstSessionId);
+        ->and(GameSession::where('user_id', $user->id)->where('status', GameSession::STATUS_ACTIVE)->exists())->toBeFalse();
 });
 
 test('a signed-out visitor is sent to log in before playing', function () {
@@ -101,13 +146,57 @@ test('one player cannot touch another player\'s Ayo session', function () {
     $session = GameSession::create([
         'user_id' => $owner->id,
         'type' => GameSession::TYPE_AYO,
+        'opponent' => GameSession::OPPONENT_HUMAN,
         'state' => (new AyoGame)->toArray(),
     ]);
 
     Livewire::actingAs($intruder)
         ->test('pages::games.ayo.play')
+        ->call('startGame', GameSession::OPPONENT_HUMAN)
         ->set('sessionId', $session->id)
         ->call('play', 0);
 
     expect($session->fresh()->state['pits'][0])->toBe(4);
+});
+
+test('the computer replies on its own turn, in the same request', function () {
+    $user = User::factory()->create();
+
+    $component = Livewire::actingAs($user)
+        ->test('pages::games.ayo.play')
+        ->call('startGame', GameSession::OPPONENT_COMPUTER, AyoBot::DIFFICULTY_BASIC)
+        ->call('play', 0);
+
+    // The computer holds seat 1. If it's already moved, the turn is back to
+    // the human (seat 0) rather than sitting on the computer waiting for a
+    // client that will never come.
+    expect($component->get('turn'))->toBe(0);
+
+    $totalSeeds = array_sum($component->get('pits')) + array_sum($component->get('captured'));
+    expect($totalSeeds)->toBe(48);
+
+    $session = GameSession::where('user_id', $user->id)->sole();
+    expect($session->state['turn'])->toBe(0);
+});
+
+test('a forged move for the computer\'s own pits is rejected', function () {
+    $user = User::factory()->create();
+
+    // Hand-build a state where it's already the computer's turn, the way a
+    // tampered request could claim — the server should never let a client
+    // move on the computer's behalf, no matter what turn it claims.
+    $session = GameSession::create([
+        'user_id' => $user->id,
+        'type' => GameSession::TYPE_AYO,
+        'opponent' => GameSession::OPPONENT_COMPUTER,
+        'difficulty' => AyoBot::DIFFICULTY_BASIC,
+        'state' => AyoGame::fromArray(['turn' => 1])->toArray(),
+    ]);
+
+    Livewire::actingAs($user)
+        ->test('pages::games.ayo.play')
+        ->call('play', 6)
+        ->assertStatus(422);
+
+    expect($session->fresh()->state['pits'][6])->toBe(4);
 });

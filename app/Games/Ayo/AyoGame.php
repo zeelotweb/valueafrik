@@ -158,6 +158,26 @@ class AyoGame
         return count(array_filter($this->owners, fn ($o) => $o === $player));
     }
 
+    /**
+     * A player's running total right now: seeds already harvested plus
+     * whatever is still sitting in pits they own — the same figure
+     * endRound() splits the board by, and a natural score for anything
+     * (an AI opponent, a spectator view) that wants to gauge who's ahead
+     * mid-round.
+     */
+    public function playerTotal(int $player): int
+    {
+        $total = $this->captured[$player];
+
+        foreach ($this->pits as $i => $seeds) {
+            if ($this->owners[$i] === $player) {
+                $total += $seeds;
+            }
+        }
+
+        return $total;
+    }
+
     /** @param list<array<string, mixed>> $events */
     private function harvest(int $pit, int $to, array &$events): void
     {
@@ -171,11 +191,7 @@ class AyoGame
     private function endRound(array &$events): void
     {
         $stuck = $this->turn;
-        $totals = $this->captured;
-
-        foreach ($this->pits as $i => $n) {
-            $totals[$this->owners[$i]] += $n; // leftovers on the board count for whoever's pit they sit in
-        }
+        $totals = [$this->playerTotal(0), $this->playerTotal(1)];
 
         // totals[0] + totals[1] always equals the 48 seeds in play, so only
         // one side can ever have an excess above its own 4-per-pit baseline.

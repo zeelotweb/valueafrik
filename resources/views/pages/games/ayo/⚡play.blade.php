@@ -1,5 +1,6 @@
 <?php
 
+use App\Games\Ayo\AyoBot;
 use App\Games\Ayo\AyoGame;
 use App\Models\GameSession;
 use Illuminate\Support\Facades\Auth;
@@ -8,22 +9,34 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 new #[Title('Ayo')] class extends Component {
-    public int $sessionId;
+    /**
+     * True until an opponent is chosen. Every game-state property below
+     * gets a safe default rather than being left unset, since Livewire
+     * hydrates every public property on every request regardless of which
+     * branch the template took last time.
+     */
+    public bool $setup = false;
+
+    public int $sessionId = 0;
+
+    public string $opponent = GameSession::OPPONENT_HUMAN;
+
+    public ?string $difficulty = null;
 
     /** @var list<int> */
-    public array $pits;
+    public array $pits = [];
 
     /** @var list<int> */
-    public array $owners;
+    public array $owners = [];
 
     /** @var array{0: int, 1: int} */
-    public array $captured;
+    public array $captured = [0, 0];
 
-    public int $turn;
+    public int $turn = 0;
 
-    public int $round;
+    public int $round = 1;
 
-    public bool $roundOver;
+    public bool $roundOver = false;
 
     /** @var 0|1|null */
     public ?int $winner = null;
@@ -33,17 +46,43 @@ new #[Title('Ayo')] class extends Component {
 
     public function mount(): void
     {
-        $session = GameSession::activeOfType(Auth::id(), GameSession::TYPE_AYO)->latest()->first()
-            ?? $this->createSession();
+        $session = GameSession::activeOfType(Auth::id(), GameSession::TYPE_AYO)->latest()->first();
+
+        if (! $session) {
+            $this->setup = true;
+
+            return;
+        }
 
         $this->sessionId = $session->id;
+        $this->opponent = $session->opponent;
+        $this->difficulty = $session->difficulty;
         $this->applyState($session->state);
     }
 
     #[Computed]
     public function legalPits(): array
     {
-        return $this->roundOver || $this->winner !== null ? [] : $this->game()->legalMoves();
+        return $this->setup || $this->roundOver || $this->winner !== null ? [] : $this->game()->legalMoves();
+    }
+
+    public function startGame(string $opponent, ?string $difficulty = null): void
+    {
+        abort_unless(in_array($opponent, [GameSession::OPPONENT_HUMAN, GameSession::OPPONENT_COMPUTER], true), 422);
+
+        if ($opponent === GameSession::OPPONENT_COMPUTER) {
+            abort_unless(in_array($difficulty, [AyoBot::DIFFICULTY_BASIC, AyoBot::DIFFICULTY_MEDIUM, AyoBot::DIFFICULTY_HIGH], true), 422);
+        } else {
+            $difficulty = null;
+        }
+
+        $session = $this->createSession($opponent, $difficulty);
+
+        $this->sessionId = $session->id;
+        $this->opponent = $opponent;
+        $this->difficulty = $difficulty;
+        $this->applyState($session->state);
+        $this->setup = false;
     }
 
     public function play(int $pit): void
@@ -52,19 +91,19 @@ new #[Title('Ayo')] class extends Component {
         // is the backstop for a forged wire:click that skips the disabled
         // state entirely, not a path a real click can reach.
         abort_unless(in_array($pit, $this->legalPits, true), 422);
+        // Against the computer, seat 1 is never the client's to move —
+        // legalPits is turn-gated so a real click can't reach this either,
+        // but a forged request could still name one of the computer's pits.
+        abort_unless($this->opponent !== GameSession::OPPONENT_COMPUTER || $this->turn === 0, 422);
 
         $game = $this->game();
         $events = $game->play($pit);
+        $this->letBotReplyIfDue($game, $events);
 
         $this->applyState($game->toArray());
         $this->persist($game);
         $this->dispatch('ayo-moved', events: $events);
-
-        if ($this->winner !== null) {
-            $this->modal('ayo-game-over')->show();
-        } elseif ($this->roundOver) {
-            $this->modal('ayo-round-over')->show();
-        }
+        $this->showEndOfRoundModalsIfAny();
     }
 
     public function startNextRound(): void
@@ -73,10 +112,18 @@ new #[Title('Ayo')] class extends Component {
 
         $game = $this->game();
         $game->startNextRound();
+        $events = [];
+        $this->letBotReplyIfDue($game, $events);
 
         $this->applyState($game->toArray());
         $this->persist($game);
         $this->modal('ayo-round-over')->close();
+
+        if ($events !== []) {
+            $this->dispatch('ayo-moved', events: $events);
+        }
+
+        $this->showEndOfRoundModalsIfAny();
     }
 
     public function newGame(): void
@@ -89,17 +136,40 @@ new #[Title('Ayo')] class extends Component {
             'status' => GameSession::STATUS_FINISHED,
         ]);
 
-        $session = $this->createSession();
-        $this->sessionId = $session->id;
-        $this->applyState($session->state);
+        $this->setup = true;
         $this->modal('ayo-game-over')->close();
     }
 
-    private function createSession(): GameSession
+    /**
+     * Plays the computer's turn, if there is one due right now — after the
+     * human's move, or when the computer is the one who opens a new round.
+     * Its whole turn resolves server-side in the same request; the client
+     * never sees an intermediate state where it's waiting on the computer.
+     */
+    private function letBotReplyIfDue(AyoGame $game, array &$events): void
+    {
+        if ($this->opponent === GameSession::OPPONENT_COMPUTER && $game->turn === 1 && ! $game->roundOver && $game->winner === null) {
+            $pit = AyoBot::chooseMove($game, $this->difficulty);
+            $events = array_merge($events, $game->play($pit));
+        }
+    }
+
+    private function showEndOfRoundModalsIfAny(): void
+    {
+        if ($this->winner !== null) {
+            $this->modal('ayo-game-over')->show();
+        } elseif ($this->roundOver) {
+            $this->modal('ayo-round-over')->show();
+        }
+    }
+
+    private function createSession(string $opponent, ?string $difficulty): GameSession
     {
         return GameSession::create([
             'user_id' => Auth::id(),
             'type' => GameSession::TYPE_AYO,
+            'opponent' => $opponent,
+            'difficulty' => $difficulty,
             'state' => (new AyoGame)->toArray(),
         ]);
     }
@@ -155,21 +225,61 @@ new #[Title('Ayo')] class extends Component {
     }"
     x-on:ayo-moved.window="animate($event.detail.events)"
 >
+    @php
+        $vsComputer = $opponent === \App\Models\GameSession::OPPONENT_COMPUTER;
+        $difficultyLabels = [
+            \App\Games\Ayo\AyoBot::DIFFICULTY_BASIC => __('Basic'),
+            \App\Games\Ayo\AyoBot::DIFFICULTY_MEDIUM => __('Medium'),
+            \App\Games\Ayo\AyoBot::DIFFICULTY_HIGH => __('High'),
+        ];
+        $seat0Label = $vsComputer ? __('You') : __('Player 1');
+        $seat1Label = $vsComputer ? __('Computer (:level)', ['level' => $difficultyLabels[$difficulty] ?? $difficulty]) : __('Player 2');
+        // "Your turn" reads naturally where ":name's turn" (with $seat0Label
+        // being the pronoun "You") would not.
+        $turnLabel = $vsComputer
+            ? ($turn === 0 ? __('Your turn') : __("Computer's turn"))
+            : __(":name's turn", ['name' => $turn === 0 ? $seat0Label : $seat1Label]);
+
+        // "wins"/"wins the game" is third person — correct for "Player 1" or
+        // "Computer (High)", but not for the pronoun "You" ("You wins" is
+        // wrong), so the human's own win in vs-computer mode gets its own
+        // phrasing instead of dropping "You" into the same template.
+        $winsPitSentence = function (int $winner, int $loser, int $count) use ($vsComputer, $seat0Label, $seat1Label) {
+            $loserLabel = $loser === 0 ? $seat0Label : $seat1Label;
+
+            if ($vsComputer && $winner === 0) {
+                return trans_choice('You win 1 pit from :other.|You win :count pits from :other.', $count, ['other' => $loserLabel, 'count' => $count]);
+            }
+
+            return trans_choice(':name wins 1 pit from :other.|:name wins :count pits from :other.', $count, ['name' => $winner === 0 ? $seat0Label : $seat1Label, 'other' => $loserLabel, 'count' => $count]);
+        };
+        $winsGameSentence = function (?int $winner) use ($vsComputer, $seat0Label, $seat1Label) {
+            $winner ??= 0;
+            if ($vsComputer && $winner === 0) {
+                return __('You win the game!');
+            }
+
+            return __(':name wins the game!', ['name' => $winner === 0 ? $seat0Label : $seat1Label]);
+        };
+    @endphp
+
     <div class="flex flex-wrap items-start justify-between gap-3">
         <div>
             <flux:heading size="xl">{{ __('Ayo') }}</flux:heading>
             <flux:subheading>{{ __('A Yorùbá seed-sowing game — pass the device between turns.') }}</flux:subheading>
         </div>
 
-        <flux:button
-            wire:click="newGame"
-            wire:confirm="{{ __('Start a new game? Your current progress will be lost.') }}"
-            size="sm"
-            variant="ghost"
-            icon="arrow-path"
-        >
-            {{ __('Restart') }}
-        </flux:button>
+        @unless ($setup)
+            <flux:button
+                wire:click="newGame"
+                wire:confirm="{{ __('Start a new game? Your current progress will be lost.') }}"
+                size="sm"
+                variant="ghost"
+                icon="arrow-path"
+            >
+                {{ __('Restart') }}
+            </flux:button>
+        @endunless
     </div>
 
     <details class="surface-card mt-4 p-4 text-sm text-stone-600 dark:text-stone-400">
@@ -187,72 +297,119 @@ new #[Title('Ayo')] class extends Component {
         </div>
     </details>
 
-    <div class="surface-card mt-4 flex items-center justify-between p-3 text-sm">
-        <span class="text-stone-500 dark:text-stone-400">{{ __('Round :number', ['number' => $round]) }}</span>
-        <span class="inline-flex items-center gap-2 font-medium text-stone-900 dark:text-white">
-            <span class="size-2 rounded-full bg-stone-900 dark:bg-white"></span>
-            {{ $turn === 0 ? __('Player 1\'s turn') : __("Player 2's turn") }}
-        </span>
-    </div>
+    @if ($setup)
+        <div class="surface-card mt-4 p-5">
+            <h2 class="font-semibold text-stone-900 dark:text-white">{{ __('Who are you playing?') }}</h2>
 
-    <div class="surface-card mt-3 p-4">
-        {{-- Player 2's row: pits 11 down to 6, so it reads as a continuation of the sowing direction above Player 1's row. --}}
-        <div class="mb-2 flex items-center justify-between text-xs font-medium text-stone-500 dark:text-stone-400">
-            <span>{{ __('Player 2') }}</span>
-            <span>{{ __('Captured: :count', ['count' => $captured[1]]) }}</span>
-        </div>
-        <div class="grid grid-cols-6 gap-2">
-            @php $legalPits = $this->legalPits; @endphp
-            @foreach ([11, 10, 9, 8, 7, 6] as $i)
-                @include('pages.games.ayo.pit', ['i' => $i, 'legalPits' => $legalPits])
-            @endforeach
-        </div>
+            <div class="mt-4 grid gap-3 sm:grid-cols-2">
+                <button
+                    type="button"
+                    wire:click="startGame('human')"
+                    wire:loading.attr="disabled"
+                    class="surface-card p-4 text-start transition hover:border-stone-300 dark:hover:border-stone-700"
+                    data-test="setup-human"
+                >
+                    <flux:icon.user-group class="size-5 text-stone-500 dark:text-stone-400" />
+                    <div class="mt-2 font-medium text-stone-900 dark:text-white">{{ __('Play a friend') }}</div>
+                    <p class="mt-1 text-xs text-stone-500 dark:text-stone-400">{{ __('Same device, passed back and forth.') }}</p>
+                </button>
 
-        <div class="grid grid-cols-6 gap-2 mt-2">
-            @foreach ([0, 1, 2, 3, 4, 5] as $i)
-                @include('pages.games.ayo.pit', ['i' => $i, 'legalPits' => $legalPits])
-            @endforeach
-        </div>
-        <div class="mt-2 flex items-center justify-between text-xs font-medium text-stone-500 dark:text-stone-400">
-            <span>{{ __('Player 1') }}</span>
-            <span>{{ __('Captured: :count', ['count' => $captured[0]]) }}</span>
-        </div>
-    </div>
-
-    <flux:modal name="ayo-round-over" class="max-w-sm">
-        <div class="space-y-4">
-            <flux:heading size="lg">{{ __('Round :number is over', ['number' => $round]) }}</flux:heading>
-
-            @if ($roundResult)
-                <div class="space-y-1 text-sm text-stone-600 dark:text-stone-400">
-                    <p>{{ __('Player 1 finished with :count seeds.', ['count' => $roundResult['totals'][0]]) }}</p>
-                    <p>{{ __('Player 2 finished with :count seeds.', ['count' => $roundResult['totals'][1]]) }}</p>
-                    @if ($roundResult['gained'][0] > 0)
-                        <p>{{ trans_choice('Player 1 wins 1 pit from Player 2.|Player 1 wins :count pits from Player 2.', $roundResult['gained'][0], ['count' => $roundResult['gained'][0]]) }}</p>
-                    @elseif ($roundResult['gained'][1] > 0)
-                        <p>{{ trans_choice('Player 2 wins 1 pit from Player 1.|Player 2 wins :count pits from Player 1.', $roundResult['gained'][1], ['count' => $roundResult['gained'][1]]) }}</p>
-                    @else
-                        <p>{{ __('An even split — pit ownership stays the same.') }}</p>
-                    @endif
+                <div class="surface-card p-4">
+                    <flux:icon.cpu-chip class="size-5 text-stone-500 dark:text-stone-400" />
+                    <div class="mt-2 font-medium text-stone-900 dark:text-white">{{ __('Play the computer') }}</div>
+                    <p class="mt-1 text-xs text-stone-500 dark:text-stone-400">{{ __('Choose how hard it plays.') }}</p>
+                    <div class="mt-3 flex flex-wrap gap-2">
+                        @foreach ($difficultyLabels as $value => $label)
+                            <flux:button
+                                size="sm"
+                                variant="ghost"
+                                wire:click="startGame('computer', '{{ $value }}')"
+                                wire:loading.attr="disabled"
+                                data-test="setup-computer-{{ $value }}"
+                            >
+                                {{ $label }}
+                            </flux:button>
+                        @endforeach
+                    </div>
                 </div>
-            @endif
+            </div>
 
-            <flux:button wire:click="startNextRound" variant="primary" class="btn-flat-primary w-full">
-                {{ __('Start round :number', ['number' => $round + 1]) }}
-            </flux:button>
+            <div class="surface-card mt-3 flex items-center justify-between gap-3 p-4">
+                <div>
+                    <div class="font-medium text-stone-400 dark:text-stone-500">{{ __('Challenge a friend') }}</div>
+                    <p class="mt-1 text-xs text-stone-400 dark:text-stone-500">{{ __("Invite someone from their profile to a real match — you'll be able to let others watch, too.") }}</p>
+                </div>
+                <x-coming-soon-badge />
+            </div>
         </div>
-    </flux:modal>
-
-    <flux:modal name="ayo-game-over" class="max-w-sm">
-        <div class="space-y-4 text-center">
-            <flux:heading size="lg">
-                {{ $winner === 0 ? __('Player 1 wins the game!') : __('Player 2 wins the game!') }}
-            </flux:heading>
-            <p class="text-sm text-stone-600 dark:text-stone-400">{{ __('One side now owns every pit on the board.') }}</p>
-
-            <flux:button wire:click="newGame" variant="primary" class="btn-flat-primary w-full">
-                {{ __('Play again') }}
-            </flux:button>
+    @else
+        <div class="surface-card mt-4 flex items-center justify-between p-3 text-sm">
+            <span class="text-stone-500 dark:text-stone-400">{{ __('Round :number', ['number' => $round]) }}</span>
+            <span class="inline-flex items-center gap-2 font-medium text-stone-900 dark:text-white">
+                <span class="size-2 rounded-full bg-stone-900 dark:bg-white"></span>
+                {{ $turnLabel }}
+            </span>
         </div>
-    </flux:modal>
+
+        <div class="surface-card mt-3 p-4">
+            {{-- The top row is pits 11 down to 6, so it reads as a continuation of the sowing direction above the bottom row. --}}
+            <div class="mb-2 flex items-center justify-between text-xs font-medium text-stone-500 dark:text-stone-400">
+                <span>{{ $seat1Label }}</span>
+                <span>{{ __('Captured: :count', ['count' => $captured[1]]) }}</span>
+            </div>
+            <div class="grid grid-cols-6 gap-2">
+                @php $legalPits = $this->legalPits; @endphp
+                @foreach ([11, 10, 9, 8, 7, 6] as $i)
+                    @include('pages.games.ayo.pit', ['i' => $i, 'legalPits' => $legalPits])
+                @endforeach
+            </div>
+
+            <div class="grid grid-cols-6 gap-2 mt-2">
+                @foreach ([0, 1, 2, 3, 4, 5] as $i)
+                    @include('pages.games.ayo.pit', ['i' => $i, 'legalPits' => $legalPits])
+                @endforeach
+            </div>
+            <div class="mt-2 flex items-center justify-between text-xs font-medium text-stone-500 dark:text-stone-400">
+                <span>{{ $seat0Label }}</span>
+                <span>{{ __('Captured: :count', ['count' => $captured[0]]) }}</span>
+            </div>
+        </div>
+
+        <flux:modal name="ayo-round-over" class="max-w-sm">
+            <div class="space-y-4">
+                <flux:heading size="lg">{{ __('Round :number is over', ['number' => $round]) }}</flux:heading>
+
+                @if ($roundResult)
+                    <div class="space-y-1 text-sm text-stone-600 dark:text-stone-400">
+                        <p>{{ __(':name finished with :count seeds.', ['name' => $seat0Label, 'count' => $roundResult['totals'][0]]) }}</p>
+                        <p>{{ __(':name finished with :count seeds.', ['name' => $seat1Label, 'count' => $roundResult['totals'][1]]) }}</p>
+                        @if ($roundResult['gained'][0] > 0)
+                            <p>{{ $winsPitSentence(0, 1, $roundResult['gained'][0]) }}</p>
+                        @elseif ($roundResult['gained'][1] > 0)
+                            <p>{{ $winsPitSentence(1, 0, $roundResult['gained'][1]) }}</p>
+                        @else
+                            <p>{{ __('An even split — pit ownership stays the same.') }}</p>
+                        @endif
+                    </div>
+                @endif
+
+                <flux:button wire:click="startNextRound" variant="primary" class="btn-flat-primary w-full">
+                    {{ __('Start round :number', ['number' => $round + 1]) }}
+                </flux:button>
+            </div>
+        </flux:modal>
+
+        <flux:modal name="ayo-game-over" class="max-w-sm">
+            <div class="space-y-4 text-center">
+                <flux:heading size="lg">
+                    {{ $winsGameSentence($winner) }}
+                </flux:heading>
+                <p class="text-sm text-stone-600 dark:text-stone-400">{{ __('One side now owns every pit on the board.') }}</p>
+
+                <flux:button wire:click="newGame" variant="primary" class="btn-flat-primary w-full">
+                    {{ __('Play again') }}
+                </flux:button>
+            </div>
+        </flux:modal>
+    @endif
 </div>

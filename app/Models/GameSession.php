@@ -7,9 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * One person's hot-seat game (they hold both seats on one screen). 'type'
- * picks the game and 'state' is that game's own toArray()/fromArray() shape
- * — this table doesn't know or care what's inside it.
+ * One person's game. 'type' picks the game and 'state' is that game's own
+ * toArray()/fromArray() shape — this table doesn't know or care what's
+ * inside it. 'opponent' is who's on the other side: today that's either the
+ * same person passing the device ('human', hot-seat) or the computer;
+ * 'online' — a real second account — is reserved for real multiplayer.
  */
 class GameSession extends Model
 {
@@ -19,9 +21,15 @@ class GameSession extends Model
 
     public const STATUS_FINISHED = 'finished';
 
+    public const OPPONENT_HUMAN = 'human';
+
+    public const OPPONENT_COMPUTER = 'computer';
+
     protected $fillable = [
         'user_id',
         'type',
+        'opponent',
+        'difficulty',
         'state',
         'status',
     ];
