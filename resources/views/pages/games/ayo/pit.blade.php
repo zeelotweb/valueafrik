@@ -7,6 +7,8 @@
 <button
     type="button"
     wire:click="play({{ $i }})"
+    wire:loading.attr="disabled"
+    wire:target="play,startNextRound"
     @disabled(! $canPlay)
     x-bind:class="flash === {{ $i }} ? 'scale-105 ring-2 ring-stone-900 dark:ring-white' : ''"
     class="flex aspect-square flex-col items-center justify-center gap-1 rounded-lg border text-sm font-semibold transition

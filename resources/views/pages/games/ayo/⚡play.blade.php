@@ -87,14 +87,20 @@ new #[Title('Ayo')] class extends Component {
 
     public function play(int $pit): void
     {
-        // legalPits is what disables a pit's button in the template — this
-        // is the backstop for a forged wire:click that skips the disabled
-        // state entirely, not a path a real click can reach.
-        abort_unless(in_array($pit, $this->legalPits, true), 422);
-        // Against the computer, seat 1 is never the client's to move —
-        // legalPits is turn-gated so a real click can't reach this either,
-        // but a forged request could still name one of the computer's pits.
-        abort_unless($this->opponent !== GameSession::OPPONENT_COMPUTER || $this->turn === 0, 422);
+        // legalPits is what disables a pit's button in the template, so a
+        // real click can't name an illegal pit or one of the computer's —
+        // except a slow request (the board is otherwise still clickable
+        // while one is in flight) can get double-submitted from a snapshot
+        // that's gone stale the moment the first one resolves. That's not
+        // an attack, just a race, so it's a silent no-op rather than an
+        // error page; a genuinely forged request gets the same non-answer.
+        if (! in_array($pit, $this->legalPits, true)) {
+            return;
+        }
+
+        if ($this->opponent === GameSession::OPPONENT_COMPUTER && $this->turn !== 0) {
+            return;
+        }
 
         $game = $this->game();
         $events = $game->play($pit);
@@ -108,7 +114,11 @@ new #[Title('Ayo')] class extends Component {
 
     public function startNextRound(): void
     {
-        abort_unless($this->roundOver && $this->winner === null, 422);
+        // Same reasoning as play(): a stale double-submit of this button is
+        // a race, not an attack, so it's a no-op rather than an error page.
+        if (! $this->roundOver || $this->winner !== null) {
+            return;
+        }
 
         $game = $this->game();
         $game->startNextRound();
@@ -273,6 +283,7 @@ new #[Title('Ayo')] class extends Component {
             <flux:button
                 wire:click="newGame"
                 wire:confirm="{{ __('Start a new game? Your current progress will be lost.') }}"
+                wire:loading.attr="disabled"
                 size="sm"
                 variant="ghost"
                 icon="arrow-path"
@@ -393,7 +404,7 @@ new #[Title('Ayo')] class extends Component {
                     </div>
                 @endif
 
-                <flux:button wire:click="startNextRound" variant="primary" class="btn-flat-primary w-full">
+                <flux:button wire:click="startNextRound" wire:loading.attr="disabled" variant="primary" class="btn-flat-primary w-full">
                     {{ __('Start round :number', ['number' => $round + 1]) }}
                 </flux:button>
             </div>
@@ -406,7 +417,7 @@ new #[Title('Ayo')] class extends Component {
                 </flux:heading>
                 <p class="text-sm text-stone-600 dark:text-stone-400">{{ __('One side now owns every pit on the board.') }}</p>
 
-                <flux:button wire:click="newGame" variant="primary" class="btn-flat-primary w-full">
+                <flux:button wire:click="newGame" wire:loading.attr="disabled" variant="primary" class="btn-flat-primary w-full">
                     {{ __('Play again') }}
                 </flux:button>
             </div>

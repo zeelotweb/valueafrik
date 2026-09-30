@@ -98,11 +98,17 @@ test('a move updates the board and persists it', function () {
 test('a pit that is not a legal move cannot be played', function () {
     $user = User::factory()->create();
 
-    Livewire::actingAs($user)
+    // Illegal — either forged, or a stale double-submit of an already-used
+    // pit — is a silent no-op, not an error page: nothing about the board
+    // changes.
+    $component = Livewire::actingAs($user)
         ->test('pages::games.ayo.play')
         ->call('startGame', GameSession::OPPONENT_HUMAN)
         ->call('play', 6)
-        ->assertStatus(422);
+        ->assertOk();
+
+    expect($component->get('pits'))->toBe(array_fill(0, 12, 4))
+        ->and($component->get('turn'))->toBe(0);
 });
 
 test('starting the next round is only possible once the current one is over', function () {
@@ -117,7 +123,8 @@ test('starting the next round is only possible once the current one is over', fu
     Livewire::actingAs($user)
         ->test('pages::games.ayo.play')
         ->call('startNextRound')
-        ->assertStatus(422);
+        ->assertOk()
+        ->assertSet('round', 1);
 });
 
 test('restarting finishes the current session and asks who you\'re playing again', function () {
@@ -183,8 +190,9 @@ test('a forged move for the computer\'s own pits is rejected', function () {
     $user = User::factory()->create();
 
     // Hand-build a state where it's already the computer's turn, the way a
-    // tampered request could claim — the server should never let a client
-    // move on the computer's behalf, no matter what turn it claims.
+    // tampered request (or a stale double-submit) could claim — the server
+    // should never let a client move on the computer's behalf, no matter
+    // what turn it claims, but it should just ignore it rather than error.
     $session = GameSession::create([
         'user_id' => $user->id,
         'type' => GameSession::TYPE_AYO,
@@ -196,7 +204,7 @@ test('a forged move for the computer\'s own pits is rejected', function () {
     Livewire::actingAs($user)
         ->test('pages::games.ayo.play')
         ->call('play', 6)
-        ->assertStatus(422);
+        ->assertOk();
 
     expect($session->fresh()->state['pits'][6])->toBe(4);
 });
