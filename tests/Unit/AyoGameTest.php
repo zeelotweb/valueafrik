@@ -138,46 +138,46 @@ test('round state survives a trip through toArray and fromArray', function () {
         ->and($restored->turn)->toBe($game->turn);
 });
 
-test('a player\'s opening pit for the round is recorded on their first move and never changes after', function () {
-    $game = new AyoGame;
+test('a player\'s last-move pit is recorded on each move and updates every time they move again', function () {
+    $game = AyoGame::fromArray([
+        'pits' => [1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+    ]);
 
-    expect($game->openingPit)->toBe([null, null]);
+    expect($game->lastMovePit)->toBe([null, null]);
 
+    $game->play(0);
+    expect($game->lastMovePit)->toBe([0, null]);
+
+    $game->play(6);
+    expect($game->lastMovePit)->toBe([0, 6]);
+
+    // Player 0's second move, from a different pit than their first — the
+    // marker moves with it, it isn't frozen on their opening move.
     $game->play(2);
-    expect($game->openingPit)->toBe([2, null]);
-
-    // A relay from pit 2 lands the turn back with player 0 (the board is
-    // symmetric and small enough that this is common); whichever pit they
-    // play next must not overwrite the one they opened with.
-    if ($game->turn === 0 && ! $game->roundOver) {
-        $secondPit = $game->legalMoves()[0];
-        $game->play($secondPit);
-
-        expect($game->openingPit[0])->toBe(2);
-    }
+    expect($game->lastMovePit)->toBe([2, 6]);
 });
 
-test('each player gets their own opening pit for the round, independently', function () {
+test('each player\'s last-move pit is tracked independently', function () {
     $game = AyoGame::fromArray([
         'pits' => [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
     ]);
 
     $game->play(0);
-    expect($game->openingPit)->toBe([0, null]);
+    expect($game->lastMovePit)->toBe([0, null]);
 
     $game->play(6);
-    expect($game->openingPit)->toBe([0, 6]);
+    expect($game->lastMovePit)->toBe([0, 6]);
 });
 
-test('starting the next round clears both players\' opening pits', function () {
+test('starting the next round clears both players\' last-move pits', function () {
     $game = AyoGame::fromArray([
         'pits' => [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         'captured' => [28, 0],
     ]);
     $game->play(0);
-    expect($game->openingPit[0])->not->toBeNull();
+    expect($game->lastMovePit[0])->not->toBeNull();
 
     $game->startNextRound();
 
-    expect($game->openingPit)->toBe([null, null]);
+    expect($game->lastMovePit)->toBe([null, null]);
 });

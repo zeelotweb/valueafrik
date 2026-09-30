@@ -95,21 +95,38 @@ test('a move updates the board and persists it', function () {
         ->and($session->state['turn'])->toBe($component->get('turn'));
 });
 
-test('each player\'s opening pit for the round stays marked, in the persisted state and the rendered board', function () {
+test('a player\'s last-move pit is marked, in the persisted state and the rendered board, and updates with their next move', function () {
     $user = User::factory()->create();
 
-    $component = Livewire::actingAs($user)
-        ->test('pages::games.ayo.play')
-        ->call('startGame', GameSession::OPPONENT_HUMAN)
-        ->call('play', 0);
+    // A deliberately sparse, non-relaying board so each move is a single
+    // pickup-and-land-in-an-empty-pit turn — deterministic to test against.
+    GameSession::create([
+        'user_id' => $user->id,
+        'type' => GameSession::TYPE_AYO,
+        'opponent' => GameSession::OPPONENT_HUMAN,
+        'state' => AyoGame::fromArray(['pits' => [1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0]])->toArray(),
+    ]);
 
-    expect($component->get('openingPit'))->toBe([0, null]);
+    $component = Livewire::actingAs($user)->test('pages::games.ayo.play')->call('play', 0);
+
+    expect($component->get('lastMovePit'))->toBe([0, null]);
 
     $session = GameSession::where('user_id', $user->id)->sole();
-    expect($session->state['openingPit'])->toBe([0, null]);
+    expect($session->state['lastMovePit'])->toBe([0, null]);
 
     preg_match('/wire:click="play\(0\)"(.*?)>/s', $component->html(), $m);
     expect($m[1] ?? '')->toContain('border-green-500');
+
+    // Player 2 moves, then player 1 moves again from a different pit — the
+    // marker has to follow, not stay frozen on their first move.
+    $component->call('play', 6)->call('play', 2);
+
+    expect($component->get('lastMovePit'))->toBe([2, 6]);
+
+    preg_match('/wire:click="play\(0\)"(.*?)>/s', $component->html(), $m0);
+    preg_match('/wire:click="play\(2\)"(.*?)>/s', $component->html(), $m2);
+    expect($m0[1] ?? '')->not->toContain('border-green-500')
+        ->and($m2[1] ?? '')->toContain('border-green-500');
 });
 
 test('after a move, the pits enabled for play belong to whoever\'s turn it now is, not who just moved', function () {
