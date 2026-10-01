@@ -105,6 +105,13 @@ new #[Title('Ayo')] class extends Component {
             return;
         }
 
+        // The board before this move — so the browser can animate seed
+        // counts climbing from here up to the final numbers one sown seed
+        // at a time, instead of the whole board jumping straight to the
+        // result the instant the response arrives.
+        $beforePits = $this->pits;
+        $beforeCaptured = $this->captured;
+
         $game = $this->game();
         $events = $game->play($pit);
         $this->letBotReplyIfDue($game, $events);
@@ -117,7 +124,7 @@ new #[Title('Ayo')] class extends Component {
         // who should move now stuck disabled.
         unset($this->legalPits);
         $this->persist($game);
-        $this->dispatch('ayo-moved', events: $events);
+        $this->dispatch('ayo-moved', events: $events, beforePits: $beforePits, beforeCaptured: $beforeCaptured);
         $this->showEndOfRoundModalsIfAny();
     }
 
@@ -131,6 +138,12 @@ new #[Title('Ayo')] class extends Component {
 
         $game = $this->game();
         $game->startNextRound();
+        // The reset itself (every pit snapping to 4) isn't something to
+        // animate — only a bot's opening move of the new round is, so the
+        // "before" snapshot for that animation is the freshly reset board,
+        // not the round that just ended.
+        $beforePits = $game->pits;
+        $beforeCaptured = $game->captured;
         $events = [];
         $this->letBotReplyIfDue($game, $events);
 
@@ -140,7 +153,7 @@ new #[Title('Ayo')] class extends Component {
         $this->modal('ayo-round-over')->close();
 
         if ($events !== []) {
-            $this->dispatch('ayo-moved', events: $events);
+            $this->dispatch('ayo-moved', events: $events, beforePits: $beforePits, beforeCaptured: $beforeCaptured);
         }
 
         $this->showEndOfRoundModalsIfAny();
@@ -240,6 +253,15 @@ new #[Title('Ayo')] class extends Component {
         seedVisible: false,
         seedX: 0,
         seedY: 0,
+        // Whether a pit's count or a captured total is reading from the
+        // board below in real time right now, versus the number the last
+        // Livewire response actually rendered (always correct, but already
+        // at the end result). Every pit falls back to that rendered number
+        // on its own the instant this goes false again — nothing to
+        // reconcile by hand once a move finishes animating.
+        animating: false,
+        overridePits: [],
+        overrideCaptured: [0, 0],
         seedPit(pit) {
             const el = this.$refs.board?.querySelector('[data-test=\'ayo-pit-' + pit + '\']');
             if (! el || ! this.$refs.board) { return null; }
@@ -250,11 +272,27 @@ new #[Title('Ayo')] class extends Component {
                 y: target.top - board.top + target.height / 2,
             };
         },
-        async animate(events) {
+        async animate(events, beforePits, beforeCaptured) {
             this.seedVisible = false;
+            this.overridePits = [...beforePits];
+            this.overrideCaptured = [...beforeCaptured];
+            this.animating = true;
+
             for (const event of events) {
                 if (event.pit === undefined) { continue; }
                 this.flash = event.pit;
+
+                // The whole point: a pit's displayed count only moves at
+                // the instant the seed sowed into it is actually planted —
+                // never before, and the dot arrives in that same tick.
+                if (event.type === 'sow') {
+                    this.overridePits[event.pit]++;
+                } else if (event.type === 'pickup') {
+                    this.overridePits[event.pit] = 0;
+                } else if (event.type === 'harvest') {
+                    this.overrideCaptured[event.by] += event.seeds;
+                    this.overridePits[event.pit] = 0;
+                }
 
                 // A pickup only moves the seed dot when it's the very start
                 // of the turn — a relay pickup happens at the pit the dot
@@ -280,9 +318,10 @@ new #[Title('Ayo')] class extends Component {
             }
             this.flash = null;
             this.seedVisible = false;
+            this.animating = false;
         },
     }"
-    x-on:ayo-moved.window="animate($event.detail.events)"
+    x-on:ayo-moved.window="animate($event.detail.events, $event.detail.beforePits, $event.detail.beforeCaptured)"
 >
     @php
         $vsComputer = $opponent === \App\Models\GameSession::OPPONENT_COMPUTER;
