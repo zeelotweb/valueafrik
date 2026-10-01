@@ -237,13 +237,43 @@ new #[Title('Ayo')] class extends Component {
     class="mx-auto w-full max-w-2xl"
     x-data="{
         flash: null,
+        seedVisible: false,
+        seedX: 0,
+        seedY: 0,
+        seedPit(pit) {
+            const el = this.$refs.board?.querySelector('[data-test=\'ayo-pit-' + pit + '\']');
+            if (! el || ! this.$refs.board) { return null; }
+            const board = this.$refs.board.getBoundingClientRect();
+            const target = el.getBoundingClientRect();
+            return {
+                x: target.left - board.left + target.width / 2,
+                y: target.top - board.top + target.height / 2,
+            };
+        },
         async animate(events) {
+            this.seedVisible = false;
             for (const event of events) {
                 if (event.pit === undefined) { continue; }
                 this.flash = event.pit;
+
+                // A pickup only moves the seed dot when it's the very start
+                // of the turn — a relay pickup happens at the pit the dot
+                // already sits on (the one it just sowed into), so there's
+                // nothing to glide to.
+                const moveSeed = event.type === 'sow' || (event.type === 'pickup' && ! this.seedVisible);
+                if (moveSeed) {
+                    const pos = this.seedPit(event.pit);
+                    if (pos) {
+                        this.seedX = pos.x;
+                        this.seedY = pos.y;
+                        this.seedVisible = true;
+                    }
+                }
+
                 await new Promise((resolve) => setTimeout(resolve, 90));
             }
             this.flash = null;
+            this.seedVisible = false;
         },
     }"
     x-on:ayo-moved.window="animate($event.detail.events)"
@@ -375,7 +405,7 @@ new #[Title('Ayo')] class extends Component {
             </span>
         </div>
 
-        <div class="surface-card mt-3 p-4">
+        <div class="surface-card relative mt-3 p-4" x-ref="board">
             {{-- The top row is pits 11 down to 6, so it reads as a continuation of the sowing direction above the bottom row. --}}
             <div class="mb-2 flex items-center justify-between text-xs font-medium text-stone-500 dark:text-stone-400">
                 <span>{{ $seat1Label }}</span>
@@ -397,6 +427,15 @@ new #[Title('Ayo')] class extends Component {
                 <span>{{ $seat0Label }}</span>
                 <span>{{ __('Captured: :count', ['count' => $captured[0]]) }}</span>
             </div>
+
+            {{-- The seed that visibly travels pit to pit while a turn resolves — a literal stand-in for "a seed is being sown," not just an abstract highlight. --}}
+            <div
+                x-show="seedVisible"
+                x-transition.opacity.duration.150ms
+                x-bind:style="`top: ${seedY}px; left: ${seedX}px; transition: top 90ms ease, left 90ms ease;`"
+                class="pointer-events-none absolute size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-stone-900 shadow-[0_0_0_4px_rgba(28,25,23,0.12)] dark:bg-white dark:shadow-[0_0_0_4px_rgba(255,255,255,0.18)]"
+                style="display: none;"
+            ></div>
         </div>
 
         <flux:modal name="ayo-round-over" class="max-w-sm">
