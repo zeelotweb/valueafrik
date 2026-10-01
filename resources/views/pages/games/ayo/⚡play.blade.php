@@ -270,7 +270,13 @@ new #[Title('Ayo')] class extends Component {
                     }
                 }
 
-                await new Promise((resolve) => setTimeout(resolve, 90));
+                // 180ms a step is the sweet spot: fast enough that a short
+                // move doesn't drag, slow enough that a long relay chain
+                // reads as a seed visibly moving pit to pit instead of a
+                // blur. The dot's own glide (below) is set a touch shorter
+                // than this, so it settles at each pit before the next step
+                // starts instead of still sliding when it's interrupted.
+                await new Promise((resolve) => setTimeout(resolve, 180));
             }
             this.flash = null;
             this.seedVisible = false;
@@ -432,7 +438,7 @@ new #[Title('Ayo')] class extends Component {
             <div
                 x-show="seedVisible"
                 x-transition.opacity.duration.150ms
-                x-bind:style="`top: ${seedY}px; left: ${seedX}px; transition: top 90ms ease, left 90ms ease;`"
+                x-bind:style="`top: ${seedY}px; left: ${seedX}px; transition: top 140ms ease, left 140ms ease;`"
                 class="pointer-events-none absolute size-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-stone-900 shadow-[0_0_0_4px_rgba(28,25,23,0.12)] dark:bg-white dark:shadow-[0_0_0_4px_rgba(255,255,255,0.18)]"
                 style="display: none;"
             ></div>
