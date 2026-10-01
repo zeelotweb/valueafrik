@@ -26,7 +26,10 @@
     data-test="ayo-pit-{{ $i }}"
     @if ($isLastMovePit) title="{{ __("This side's last move started here") }}" @endif
 >
-    <span class="{{ $canPlay ? 'text-stone-900 dark:text-white' : '' }}">{{ $seeds }}</span>
+    <span
+        class="{{ $canPlay ? 'text-stone-900 dark:text-white' : '' }}"
+        x-text="(animating && overridePits[{{ $i }}] !== undefined) ? overridePits[{{ $i }}] : {{ $seeds }}"
+    >{{ $seeds }}</span>
     <span
         class="size-1.5 rounded-full {{ $owner === 0 ? 'bg-stone-900 dark:bg-white' : 'border border-stone-400 dark:border-stone-500' }}"
         aria-hidden="true"
